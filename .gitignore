@@ -2,4 +2,4 @@ bin/
 bin/*.*
 *.class
 *.txt
-
+*.swp
