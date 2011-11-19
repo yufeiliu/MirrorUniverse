@@ -1,4 +1,4 @@
-package mirroruniverse.ProxyPlayer;
+package mirroruniverse.g5;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -18,7 +18,7 @@ public class ProxyPlayer implements Player
 	
 	public ProxyPlayer() {
 		try {
-			ProcessBuilder builder = new ProcessBuilder("ruby", "src/mirroruniverse/ProxyPlayer/player.rb");
+			ProcessBuilder builder = new ProcessBuilder("ruby", "src/mirroruniverse/g5/player.rb");
 			builder.redirectErrorStream(true);
 			process = builder.start();
 			OutputStream stdin = process.getOutputStream();
