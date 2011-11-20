@@ -12,9 +12,17 @@ import mirroruniverse.sim.Player;
 
 public class ProxyPlayer implements Player
 {
+	
+	//knowledge of whats at each map
+	int[][] leftMapKnowledge;
+	int[][] rightMapKnowledge;
+	boolean didInitialize = false;
+	
 	Process process;
 	BufferedReader reader;
 	BufferedWriter writer;
+	
+	
 	
 	public ProxyPlayer() {
 		try {
@@ -44,6 +52,20 @@ public class ProxyPlayer implements Player
 		out+="]";
 		return out;
 	}
+	
+	public void initializeMapKnowledge() {
+		if(didInitialize)
+			return;		
+		//initialize the map knowledge to all -1;
+	}
+	
+	//exploration strategy
+	public void Explore(int[][] leftMap, int[][] rightMap) {
+		//check which squares havent been seen
+		//choose the square that will give the most information
+		//store whats seen
+	}
+	
 	
 	public int lookAndMove( int[][] aintViewL, int[][] aintViewR ) {
 		int out = -1;
