@@ -1,23 +1,25 @@
 package mirroruniverse.g5;
 
+import java.util.ArrayList;
+
 import mirroruniverse.g5.Utils.Move;
 
 public abstract class Solver {
 	
 	
 	public int[] solve(int[][] firstMap, int[][] secondMap) {
-		Move[] moves = solveInternal(firstMap, secondMap);
+		ArrayList<Move> moves = solveInternal(firstMap, secondMap);
 		return movesToInt(moves);
 	}
 	
-	private int[] movesToInt(Move[] solution) {
-		int[] convertedSolution = new int[solution.length];
-		for (int i = 0; i < solution.length; i++) {
-			convertedSolution[i] = Utils.moveToShen(solution[i]);
+	private int[] movesToInt(ArrayList<Move> solution) {
+		int[] convertedSolution = new int[solution.size()];
+		for (int i = 0; i < solution.size(); i++) {
+			convertedSolution[i] = Utils.moveToShen(solution.get(i));
 		}
 		return convertedSolution;
 	}
 	
-	abstract Move[] solveInternal(int[][] firstMap, int[][] secondMap);
+	abstract ArrayList<Move> solveInternal(int[][] firstMap, int[][] secondMap);
 
 }
