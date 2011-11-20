@@ -17,8 +17,8 @@ public class State<V> {
 		transitions.add(trans);
 	}
 	
-	public void addTransition(State<V> end) {
-		transitions.add(new Transition<V>(end));
+	public void addTransition(V value, State<V> end) {
+		transitions.add(new Transition<V>(value, this, end));
 	}
 	
 	public V getValue() {
@@ -32,4 +32,5 @@ public class State<V> {
 	public ArrayList<Transition<V>> getTransitions() {
 		return transitions;
 	}
+	
 }
