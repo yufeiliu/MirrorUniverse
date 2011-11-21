@@ -12,9 +12,6 @@ import mirroruniverse.g5.Utils.Move;
 
 public class DFA<V, T> {
 	
-	// TODO - should use a different generic for the node value and for the
-	// transitions...
-	
 	ArrayList<State<V, T>> goalStates;
 	ArrayList<State<V, T>> states;
 	State<V, T> startState;
@@ -161,7 +158,7 @@ public class DFA<V, T> {
 					continue;
 				}
 				String key = selfState.getValue() + ", " + otherState.getValue();
-				// TODO - figure out what this houlsd be if the value is ever
+				// TODO - figure out what this should be if the value is ever
 				// used?
 				Entity e = selfState.getValue();
 				State<Entity, Move> s = new State<Entity, Move>(
