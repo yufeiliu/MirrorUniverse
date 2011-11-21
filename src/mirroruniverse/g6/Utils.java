@@ -1,4 +1,4 @@
-package mirroruniverse.g5;
+package mirroruniverse.g6;
 
 import mirroruniverse.sim.MUMap;
 

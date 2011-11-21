@@ -1,8 +1,8 @@
-package mirroruniverse.g5;
+package mirroruniverse.g6;
 
 import java.util.ArrayList;
 
-import mirroruniverse.g5.Utils.Move;
+import mirroruniverse.g6.Utils.Move;
 
 public abstract class Solver {
 	

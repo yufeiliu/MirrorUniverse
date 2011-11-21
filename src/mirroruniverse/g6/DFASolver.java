@@ -1,10 +1,10 @@
-package mirroruniverse.g5;
+package mirroruniverse.g6;
 
 import java.util.ArrayList;
 
-import mirroruniverse.g5.Utils.Entity;
-import mirroruniverse.g5.Utils.Move;
-import mirroruniverse.g5.dfa.DFA;
+import mirroruniverse.g6.Utils.Entity;
+import mirroruniverse.g6.Utils.Move;
+import mirroruniverse.g6.dfa.DFA;
 
 public class DFASolver extends Solver {
 
