@@ -3,6 +3,7 @@ package mirroruniverse.g5.dfa;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -106,6 +107,7 @@ public class DFA<V, T> {
 		HashMap<State<V, T>, Transition<V, T>> used =
 				new HashMap<State<V, T>, Transition<V, T>>();
 		Queue<State<V, T>> q = new LinkedList<State<V, T>>();
+		used.put(startState, null);
 		q.add(startState);
 		State<V, T> currentState;
 		while(!q.isEmpty()) {
@@ -114,6 +116,10 @@ public class DFA<V, T> {
 				return recoverPath(currentState, used);
 			}
 			for (Transition<V, T> t : currentState.getTransitions()) {
+				// self-transitions should not be part of shortest path
+				if(t.getStart().equals(t.getEnd())) {
+					continue;
+				}
 				State<V, T> nextState = t.getEnd();
 				if (!used.containsKey(nextState)) {
 					used.put(nextState, t);
@@ -124,7 +130,7 @@ public class DFA<V, T> {
 		return null;
 	}
 	
-	private ArrayList<T> recoverPath(State<V, T> currentState,
+	protected ArrayList<T> recoverPath(State<V, T> currentState,
 			HashMap<State<V, T>, Transition<V, T>> used) {
 		ArrayList<T> path = new ArrayList<T>();
 		Transition<V, T> trans = used.get(currentState);
