@@ -2,23 +2,33 @@ package mirroruniverse.g5.dfa;
 
 import java.util.ArrayList;
 
-public class State<V> {
+public class State<V, T> {
 	
 	private V value;
-	private ArrayList<Transition<V>> transitions;
+	private ArrayList<Transition<V, T>> transitions;
 	private boolean goal;
+	private String id;
+	
+	private static int idCounter = 0; 
 	
 	public State(V value, boolean goal) {
 		this.value = value;
 		this.goal = goal;
+		this.id = String.valueOf(idCounter++);
 	}
 	
-	public void addTransition(Transition<V> trans) {
+	public State(V value, boolean goal, String id) {
+		this.value = value;
+		this.goal = goal;
+		this.id = id;
+	}
+	
+	public void addTransition(Transition<V, T> trans) {
 		transitions.add(trans);
 	}
 	
-	public void addTransition(V value, State<V> end) {
-		transitions.add(new Transition<V>(value, this, end));
+	public void addTransition(V value, State<V, T> end) {
+		transitions.add(new Transition<V, T>(value, this, end));
 	}
 	
 	public V getValue() {
@@ -28,8 +38,12 @@ public class State<V> {
 	public boolean isGoal() {
 		return goal;
 	}
+	
+	public String getId() {
+		return this.id;
+	}
 
-	public ArrayList<Transition<V>> getTransitions() {
+	public ArrayList<Transition<V, T>> getTransitions() {
 		return transitions;
 	}
 	
