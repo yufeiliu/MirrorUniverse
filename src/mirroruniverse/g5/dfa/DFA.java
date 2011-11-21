@@ -20,6 +20,7 @@ public class DFA<V, T> {
 	State<V, T> startState;
 
 	// TODO
+	@SuppressWarnings("unchecked")
 	public DFA(int[][] firstMap) {
 		this();
 		
@@ -37,6 +38,8 @@ public class DFA<V, T> {
 					node = allStates.get(x+","+y);
 				} else {
 					node = new State<Entity, Move>(Utils.shenToEntities(firstMap[x][y]), firstMap[x][y]==2);
+					//This is janky
+					if (firstMap[x][y]==2) startState = (State<V, T>) node;
 					allStates.put(x+","+y, node);
 				}
 				
@@ -57,6 +60,8 @@ public class DFA<V, T> {
 								neighbor = allStates.get((x+dx)+","+(y+dy));
 							} else {
 								neighbor = new State<Entity, Move>(Utils.shenToEntities(firstMap[x+dx][y+dy]), firstMap[x+dx][y+dy]==2);
+								if (firstMap[x+dx][y+dy]==2) startState = (State<V, T>) neighbor;
+								
 								allStates.put((x+dx)+","+(y+dy), neighbor);
 							}
 							
