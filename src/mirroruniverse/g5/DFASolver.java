@@ -12,22 +12,17 @@ public class DFASolver extends Solver {
 	
 	@Override
 	ArrayList<Move> solveInternal(int[][] firstMap, int[][] secondMap) {
-		ArrayList<String> solution = null;
+		ArrayList<Move> solution = null;
 		int attempts = 0;
 		while (solution == null && attempts < MAX_DISTANCE) {
 			// TODO(yufei) - this doesn't step backwards yet when the actual
 			// goal doesn't work
 			// Probably add multithreading
-//			solution = 
-//					DFA.intersect(new DFA<Entity, Move>(firstMap),
-//							new DFA<Entity, Move>(secondMap))
-//					.findShortestPath();
+			solution = DFA.intersect(new DFA<Entity, Move>(firstMap),
+							new DFA<Entity, Move>(secondMap))
+					.findShortestPath();
 		}
-		return toMove(solution);
+		return solution;
 	}
-
-	private ArrayList<Move> toMove(ArrayList<String> solution) {
-		return null;
-	}
-
+	
 }

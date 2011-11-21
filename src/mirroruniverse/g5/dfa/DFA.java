@@ -127,7 +127,8 @@ public class DFA<V, T> {
 					continue;
 				}
 				String key = selfState.getValue() + ", " + otherState.getValue();
-				// TODO - does this matter?
+				// TODO - figure out what this houlsd be if the value is ever
+				// used?
 				Entity e = selfState.getValue();
 				State<Entity, Move> s = new State<Entity, Move>(
 						selfState.getValue(),

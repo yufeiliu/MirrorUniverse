@@ -31,6 +31,7 @@ public class State<V, T> {
 		transitions.add(new Transition<V, T>(value, this, end));
 	}
 	
+	// NOTE - this value is not meaningful for intersected DFAs
 	public V getValue() {
 		return value;
 	}
