@@ -70,7 +70,7 @@ public class DFA<V, T> {
 												firstMap[x+dx][y+dy]),
 												firstMap[x+dx][y+dy] == Utils.entitiesToShen(Entity.EXIT)
 										);
-								if (firstMap[x+dx][y+dy]==Utils.entitiesToShen(Entity.EXIT)) {
+								if (firstMap[x+dx][y+dy]==Utils.entitiesToShen(Entity.PLAYER)) {
 									startState = (State<V, T>) neighbor;
 								}
 								
