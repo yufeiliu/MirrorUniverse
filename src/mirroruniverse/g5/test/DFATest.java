@@ -8,7 +8,7 @@ import org.junit.Test;
 import java.util.ArrayList;
 
 import mirroruniverse.g5.Utils.*;
-import mirroruniverse.g5.dfa.DFA;
+import mirroruniverse.g5.dfa.*;
 
 public class DFATest {
 
@@ -27,10 +27,23 @@ public class DFATest {
 	
 	@Test
 	public void testFindShortestPath() {
-		int[][] map1 = new int[][] {{0, 0}, {0, 2}};
+		DFA<Entity, Move> dfa = new DFA<Entity, Move>();
+		State<Entity, Move> state1 = new State<Entity, Move>(Entity.PLAYER, false);
+		State<Entity, Move> state2 = new State<Entity, Move>(Entity.EXIT, true);
+		state1.addTransition(new Transition<Entity, Move>(Move.N, state1, state2));
+		
+		dfa.addStartState(state1);
+		dfa.addState(state2);
+		ArrayList<Move> solution = dfa.findShortestPath();
+		assertNotNull(solution.get(0));
+	}
+	
+	@Test
+	public void testConstructorWithMap() {
+		int[][] map1 = new int[][] {{3, 0}, {0, 2}};
 		DFA<Entity, Move> dfa = new DFA<Entity, Move>(map1);
 		ArrayList<Move> solution = dfa.findShortestPath();
-		assertNotNull(solution);
+		assertNotNull(solution.get(0));
 	}
 
 }

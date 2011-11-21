@@ -92,7 +92,12 @@ public class DFA<V, T> {
 		states = new ArrayList<State<V, T>>();
 	}
 	
-	private State<V, T> addState(State<V, T> s) {
+	public State<V, T> addStartState(State<V, T> s) {
+		startState = s;
+		return s;
+	}
+	
+	public State<V, T> addState(State<V, T> s) {
 		if (s.isGoal()) {
 			goalStates.add(s);
 		}
@@ -113,7 +118,7 @@ public class DFA<V, T> {
 			}
 			for (Transition<V, T> t : currentState.getTransitions()) {
 				State<V, T> nextState = t.getEnd();
-				if (used.get(nextState) != null) {
+				if (!used.containsKey(nextState)) {
 					used.put(nextState, t);
 					q.add(nextState);
 				}
