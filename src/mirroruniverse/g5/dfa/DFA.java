@@ -20,7 +20,6 @@ public class DFA<V, T> {
 	State<V, T> startState;
 
 	// TODO
-	// Yufei: why is the int array used? I thought we defined the entities enum
 	public DFA(int[][] firstMap) {
 		this();
 		
@@ -33,17 +32,35 @@ public class DFA<V, T> {
 		for (int x = 0; x < x_cap; x++) {
 			for (int y = 0; y < y_cap; y++) {
 
-				State<Entity, Move> node = new State<Entity, Move>(Utils.shenToEntities(firstMap[x][y]), firstMap[x][y]==2);
+				State<Entity, Move> node;
+				if (allStates.containsKey(x+","+y)) {
+					node = allStates.get(x+","+y);
+				} else {
+					node = new State<Entity, Move>(Utils.shenToEntities(firstMap[x][y]), firstMap[x][y]==2);
+					allStates.put(x+","+y, node);
+				}
 				
-				for (int dx = -1; dx <= 1; dx+=2) {
+				for (int dx = -1; dx <= 1; dx++) {
 					
-					for (int dy = -1; dy <= 1; dy+=2) {
+					for (int dy = -1; dy <= 1; dy++) {
+						
+						if (dx==0 && dy==0) continue;
 						
 						int new_x = x + dx, new_y = y + dy;
 						
 						//If out of bound, transition onto self
 						if (new_x >= x_cap || new_x < 0 || new_y >= y_cap || new_y < 0) {
-							//node.addTransition(new Transition)
+							node.addTransition(new Transition<Entity, Move>(Utils.dxdyToMove(dx, dy),node,node));
+						} else {
+							State<Entity, Move> neighbor;
+							if (allStates.containsKey((x+dx)+","+(y+dy))) {
+								neighbor = allStates.get((x+dx)+","+(y+dy));
+							} else {
+								neighbor = new State<Entity, Move>(Utils.shenToEntities(firstMap[x+dx][y+dy]), firstMap[x+dx][y+dy]==2);
+								allStates.put((x+dx)+","+(y+dy), neighbor);
+							}
+							
+							node.addTransition(new Transition<Entity, Move>(Utils.dxdyToMove(dx,dy), node, neighbor));
 						}
 					}
 				}
