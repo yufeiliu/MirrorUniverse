@@ -24,10 +24,9 @@ public class DFA<V, T> {
 	public DFA(int[][] firstMap) {
 		this();
 		
-		
-		
-		//Not an insurance company
-		HashMap<String, State<Entity, Move>> allStates = new HashMap<String, State<Entity, Move>>(); 
+		// Not an insurance company
+		HashMap<String, State<Entity, Move>> allStates =
+				new HashMap<String, State<Entity, Move>>(); 
 		
 		int x_cap = firstMap.length;
 		int y_cap = firstMap[0].length;
@@ -39,9 +38,13 @@ public class DFA<V, T> {
 				if (allStates.containsKey(x+","+y)) {
 					node = allStates.get(x+","+y);
 				} else {
-					node = new State<Entity, Move>(Utils.shenToEntities(firstMap[x][y]), firstMap[x][y]==2);
-					//This is janky
-					if (firstMap[x][y]==2) startState = (State<V, T>) node;
+					node = new State<Entity, Move>(
+							Utils.shenToEntities(firstMap[x][y]),
+							firstMap[x][y]==Utils.entitiesToShen(Entity.EXIT));
+					if (firstMap[x][y]== Utils.entitiesToShen(Entity.PLAYER)) {
+						// This is janky
+						startState = (State<V, T>) node;
+					}
 					allStates.put(x+","+y, node);
 				}
 				
@@ -61,8 +64,14 @@ public class DFA<V, T> {
 							if (allStates.containsKey((x+dx)+","+(y+dy))) {
 								neighbor = allStates.get((x+dx)+","+(y+dy));
 							} else {
-								neighbor = new State<Entity, Move>(Utils.shenToEntities(firstMap[x+dx][y+dy]), firstMap[x+dx][y+dy]==2);
-								if (firstMap[x+dx][y+dy]==2) startState = (State<V, T>) neighbor;
+								neighbor = new State<Entity, Move>(
+										Utils.shenToEntities(
+												firstMap[x+dx][y+dy]),
+												firstMap[x+dx][y+dy] == Utils.entitiesToShen(Entity.EXIT)
+										);
+								if (firstMap[x+dx][y+dy]==2) {
+									startState = (State<V, T>) neighbor;
+								}
 								
 								allStates.put((x+dx)+","+(y+dy), neighbor);
 							}
