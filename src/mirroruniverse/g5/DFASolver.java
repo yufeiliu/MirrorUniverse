@@ -2,6 +2,7 @@ package mirroruniverse.g5;
 
 import java.util.ArrayList;
 
+import mirroruniverse.g5.Utils.Entity;
 import mirroruniverse.g5.Utils.Move;
 import mirroruniverse.g5.dfa.DFA;
 
@@ -17,9 +18,10 @@ public class DFASolver extends Solver {
 			// TODO(yufei) - this doesn't step backwards yet when the actual
 			// goal doesn't work
 			// Probably add multithreading
-			solution = 
-					DFA.intersect(new DFA<String>(firstMap), new DFA<String>(secondMap))
-					.findShortestPath();
+//			solution = 
+//					DFA.intersect(new DFA<Entity, Move>(firstMap),
+//							new DFA<Entity, Move>(secondMap))
+//					.findShortestPath();
 		}
 		return toMove(solution);
 	}
