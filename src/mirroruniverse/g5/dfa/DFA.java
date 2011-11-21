@@ -21,8 +21,10 @@ public class DFA<V, T> {
 
 	// TODO
 	// Yufei: why is the int array used? I thought we defined the entities enum
-	public DFA(int[][] firstMap) {
+	public <Entity, Move> DFA(int[][] firstMap) {
 		this();
+		
+		
 		
 		//Not an insurance company
 		HashMap<String, State<Entity, Move>> allStates = new HashMap<String, State<Entity, Move>>(); 
