@@ -15,12 +15,14 @@ public class State<V, T> {
 		this.value = value;
 		this.goal = goal;
 		this.id = String.valueOf(idCounter++);
+		this.transitions = new ArrayList<Transition<V, T>>();
 	}
 	
 	public State(V value, boolean goal, String id) {
 		this.value = value;
 		this.goal = goal;
 		this.id = id;
+		this.transitions = new ArrayList<Transition<V, T>>();
 	}
 
 	public void addTransition(Transition<V, T> trans) {
