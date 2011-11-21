@@ -23,10 +23,8 @@ public class DFA<V, T> {
 	@SuppressWarnings("unchecked")
 	public DFA(int[][] firstMap) {
 		this();
-		
-		// Not an insurance company
-		HashMap<String, State<Entity, Move>> allStates =
-				new HashMap<String, State<Entity, Move>>(); 
+		//Not an insurance company
+		HashMap<String, State<Entity, Move>> allStates = new HashMap<String, State<Entity, Move>>(); 
 		
 		int x_cap = firstMap.length;
 		int y_cap = firstMap[0].length;
@@ -34,6 +32,8 @@ public class DFA<V, T> {
 		for (int x = 0; x < x_cap; x++) {
 			for (int y = 0; y < y_cap; y++) {
 
+				if (firstMap[x][y]==Utils.entitiesToShen(Entity.OBSTACLE)) continue;
+				
 				State<Entity, Move> node;
 				if (allStates.containsKey(x+","+y)) {
 					node = allStates.get(x+","+y);
@@ -57,7 +57,8 @@ public class DFA<V, T> {
 						int new_x = x + dx, new_y = y + dy;
 						
 						//If out of bound, transition onto self
-						if (new_x >= x_cap || new_x < 0 || new_y >= y_cap || new_y < 0) {
+						if (new_x >= x_cap || new_x < 0 || new_y >= y_cap || new_y < 0 ||
+								firstMap[x+dx][y+dy]==Utils.entitiesToShen(Entity.OBSTACLE)) {
 							node.addTransition(new Transition<Entity, Move>(Utils.dxdyToMove(dx, dy),node,node));
 						} else {
 							State<Entity, Move> neighbor;
@@ -69,7 +70,7 @@ public class DFA<V, T> {
 												firstMap[x+dx][y+dy]),
 												firstMap[x+dx][y+dy] == Utils.entitiesToShen(Entity.EXIT)
 										);
-								if (firstMap[x+dx][y+dy]==2) {
+								if (firstMap[x+dx][y+dy]==Utils.entitiesToShen(Entity.EXIT)) {
 									startState = (State<V, T>) neighbor;
 								}
 								
