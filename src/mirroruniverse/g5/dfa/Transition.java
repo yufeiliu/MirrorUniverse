@@ -31,5 +31,4 @@ public class Transition<V, T> {
 	public String getId() {
 		return id;
 	}
-	
 }
