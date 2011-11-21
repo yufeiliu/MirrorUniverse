@@ -22,7 +22,7 @@ public class State<V, T> {
 		this.goal = goal;
 		this.id = id;
 	}
-	
+
 	public void addTransition(Transition<V, T> trans) {
 		transitions.add(trans);
 	}
