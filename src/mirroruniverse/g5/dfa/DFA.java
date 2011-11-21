@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Queue;
 
+import mirroruniverse.g5.Utils;
 import mirroruniverse.g5.Utils.Entity;
 import mirroruniverse.g5.Utils.Move;
 
@@ -23,13 +24,16 @@ public class DFA<V, T> {
 	public DFA(int[][] firstMap) {
 		this();
 		
+		//Not an insurance company
+		HashMap<String, State<Entity, Move>> allStates = new HashMap<String, State<Entity, Move>>(); 
+		
 		int x_cap = firstMap.length;
 		int y_cap = firstMap[0].length;
 		
 		for (int x = 0; x < x_cap; x++) {
 			for (int y = 0; y < y_cap; y++) {
 
-				State<String> node = new State<String>("Value", firstMap[x][y]==2);
+				State<Entity, Move> node = new State<Entity, Move>(Utils.shenToEntities(firstMap[x][y]), firstMap[x][y]==2);
 				
 				for (int dx = -1; dx <= 1; dx+=2) {
 					
@@ -39,7 +43,7 @@ public class DFA<V, T> {
 						
 						//If out of bound, transition onto self
 						if (new_x >= x_cap || new_x < 0 || new_y >= y_cap || new_y < 0) {
-							
+							//node.addTransition(new Transition)
 						}
 					}
 				}
