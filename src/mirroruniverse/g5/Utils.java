@@ -1,5 +1,7 @@
 package mirroruniverse.g5;
 
+import mirroruniverse.sim.MUMap;
+
 public class Utils {
 	
 	public static int moveToShen(Move m) {
@@ -46,6 +48,16 @@ public class Utils {
 		default:
 			return Move.E;
 		}
+	}
+	
+	public static Move dxdyToMove(int dx, int dy) {
+		int counter = 0;
+		for (int[] elem : MUMap.aintDToM) {
+			if (elem[0]==dx && elem[1]==dy) return Utils.shenToMove(counter); 
+			counter++;
+		}
+		
+		return null;
 	}
 	
 	public static enum Move {
