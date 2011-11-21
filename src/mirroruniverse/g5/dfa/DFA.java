@@ -24,8 +24,6 @@ public class DFA<V, T> {
 	public DFA(int[][] firstMap) {
 		this();
 		
-		
-		
 		//Not an insurance company
 		HashMap<String, State<Entity, Move>> allStates = new HashMap<String, State<Entity, Move>>(); 
 		
