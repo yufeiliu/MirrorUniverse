@@ -16,8 +16,34 @@ public class DFA<V> {
 	State<V> startState;
 
 	// TODO
+	// Yufei: why is the int array used? I thought we defined the entities enum
 	public DFA(int[][] firstMap) {
 		this();
+		
+		int x_cap = firstMap.length;
+		int y_cap = firstMap[0].length;
+		
+		for (int x = 0; x < x_cap; x++) {
+			for (int y = 0; y < y_cap; y++) {
+
+				State<String> node = new State<String>("Value", firstMap[x][y]==2);
+				
+				for (int dx = -1; dx <= 1; dx+=2) {
+					
+					for (int dy = -1; dy <= 1; dy+=2) {
+						
+						int new_x = x + dx, new_y = y + dy;
+						
+						//If out of bound, transition onto self
+						if (new_x >= x_cap || new_x < 0 || new_y >= y_cap || new_y < 0) {
+							
+						}
+					}
+				}
+				
+			}
+		}
+		
 	}
 	
 	public DFA() {
