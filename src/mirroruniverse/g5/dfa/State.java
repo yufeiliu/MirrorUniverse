@@ -27,7 +27,7 @@ public class State<V, T> {
 		transitions.add(trans);
 	}
 	
-	public void addTransition(V value, State<V, T> end) {
+	public void addTransition(T value, State<V, T> end) {
 		transitions.add(new Transition<V, T>(value, this, end));
 	}
 	
