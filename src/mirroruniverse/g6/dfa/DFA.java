@@ -1,4 +1,4 @@
-package mirroruniverse.g5.dfa;
+package mirroruniverse.g6.dfa;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -7,9 +7,9 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Queue;
 
-import mirroruniverse.g5.Utils;
-import mirroruniverse.g5.Utils.Entity;
-import mirroruniverse.g5.Utils.Move;
+import mirroruniverse.g6.Utils;
+import mirroruniverse.g6.Utils.Entity;
+import mirroruniverse.g6.Utils.Move;
 
 public class DFA<V, T> {
 	
