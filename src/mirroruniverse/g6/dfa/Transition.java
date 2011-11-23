@@ -33,6 +33,6 @@ public class Transition<V, T> {
 	}
 	
 	public String toString() {
-		return "Go " + value + " from " + start + " to " + end;
+		return "Go " + value + " from (" + start + ") to (" + end + ")\n";
 	}
 }

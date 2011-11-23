@@ -16,20 +16,33 @@ public class TestDFA {
 	private State<Entity, Move> endState;
 	private DFA<Entity, Move> dfa;
 	private State<Entity, Move> startState;
+	
+	private State<Entity, Move> otherEndState;
+	private DFA<Entity, Move> otherDfa;
+	private State<Entity, Move> otherStartState;
 
 	@Before
 	public void setUp() throws Exception {
 		dfa = new DFA<Entity, Move>();
 		startState = new State<Entity, Move>(Entity.PLAYER, false);
 		endState = new State<Entity, Move>(Entity.EXIT, true);
+		dfa.addStartState(startState);
+		dfa.addState(endState);
+	}
+	
+	public void setUpOtherDFA() {
+		otherDfa = new DFA<Entity, Move>();
+		otherStartState = new State<Entity, Move>(Entity.PLAYER, false);
+		otherEndState = new State<Entity, Move>(Entity.EXIT, true);
+		otherDfa.addStartState(otherStartState);
+		otherDfa.addState(otherEndState);
 	}
 
 	@Test
 	public void testFindShortestPathOnTwoCell() {
 		startState.addTransition(Move.N, endState);
-		dfa.addStartState(startState);
-		dfa.addState(endState);
 		ArrayList<Move> solution = dfa.findShortestPath();
+		assertEquals(solution.size(), 1);
 		assertEquals(solution.get(0), Move.N);
 	}
 	
@@ -50,7 +63,6 @@ public class TestDFA {
 	 */
 	@Test
 	public void testShortestPathOfTwo() {
-		dfa.addStartState(startState);
 		addManyStates(Move.N, 3, startState, endState);
 		addManyStates(Move.S, 2, startState, endState);
 		ArrayList<Move> solution = dfa.findShortestPath();
@@ -62,7 +74,6 @@ public class TestDFA {
 	
 	@Test
 	public void testShortestPathOnImpossible() {
-		dfa.addStartState(startState);
 		State<Entity, Move> beforeEnd = new State<Entity, Move>(Entity.OBSTACLE);
 		addManyStates(Move.N, 10, startState, beforeEnd);
 		beforeEnd.addTransition(Move.N, beforeEnd);
@@ -72,8 +83,6 @@ public class TestDFA {
 	
 	@Test
 	public void testShortestPathOnLong() {
-		dfa.addStartState(startState);
-		dfa.addState(endState);
 		addManyStates(Move.N, 10, startState, endState);
 		ArrayList<Move> solution = dfa.findShortestPath();
 		assertEquals(11, solution.size());
@@ -90,8 +99,6 @@ public class TestDFA {
 	public void testRecoverPath() {
 		startState.addTransition(new Transition<Entity, Move>(Move.N,
 				startState, endState));
-		dfa.addStartState(startState);
-		dfa.addState(endState);
 		
 		HashMap<State<Entity, Move>, Transition<Entity, Move>> used = 
 				new HashMap<State<Entity, Move>, Transition<Entity, Move>>();
@@ -114,7 +121,50 @@ public class TestDFA {
 	}
 	
 	@Test
-	public void testIntersect() {
-		fail("Sid, please write testIntersect.");
+	public void testIntersectOnTwoLengthPaths() {
+		setUpOtherDFA();
+		startState.addTransition(Move.N, endState);
+		otherStartState.addTransition(Move.N, otherEndState);
+		DFA<Entity, Move> intersection = DFA.intersect(dfa, otherDfa);
+		ArrayList<Move> solution = intersection.findShortestPath();
+		assertNotNull(solution);
+		assertEquals(1, solution.size());
+		assertEquals(Move.N, solution.get(0));
 	}
+	
+	@Test
+	public void testIntersectOnTwoAndThreeLengthPaths() {
+		
+	}
+	
+	@Test
+	public void testIntersectOnTwoPath() {
+		
+	}
+	
+	@Test
+	public void testIntersectOnNonEquivalentGraphs() {
+		
+	}
+	
+	@Test
+	/*
+	 * First graph has a shorter path to exit, but it shouldn't be taken.
+	 */
+	public void testIntersectOnNonEquivalentGraphsWithEarlySolution() {
+		
+	}
+	
+	@Test
+	public void testNoSolution() {
+		setUpOtherDFA();
+		startState.addTransition(Move.N, endState);
+		otherStartState.addTransition(Move.S, otherEndState);
+		DFA<Entity, Move> intersection = DFA.intersect(dfa, otherDfa);
+		ArrayList<Move> solution = intersection.findShortestPath();
+		assertEquals(solution, null);
+	}
+	
+	// TODO - test for optimal > 0
+	
 }
