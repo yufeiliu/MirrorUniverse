@@ -1,11 +1,11 @@
+40, 40, 3, -1, maps/bigLeft.txt
+40, 40, 3, -1, maps/bigRight.txt
+
 4, 4, 2, -1, maps/easyLeft.txt
 4, 4, 2, -1, maps/easyRight.txt
 
 7, 6, 3, -1, maps/identical/left.txt
 7, 6, 3, -1, maps/identical/right.txt
-
-40, 40, 3, -1, maps/bigLeft.txt
-40, 40, 3, -1, maps/bigRight.txt
 
 1, 30, 3, -1, maps/g5LongMap1.txt
 1, 30, 3, -1, maps/g5LongMap2.txt
