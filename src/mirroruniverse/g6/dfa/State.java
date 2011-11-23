@@ -11,11 +11,11 @@ public class State<V, T> {
 	
 	private static int idCounter = 0; 
 	
+	public State(V value) {
+		this(value, false);
+	}
 	public State(V value, boolean goal) {
-		this.value = value;
-		this.goal = goal;
-		this.id = String.valueOf(idCounter++);
-		this.transitions = new ArrayList<Transition<V, T>>();
+		this(value, goal, String.valueOf(idCounter++));
 	}
 	
 	public State(V value, boolean goal, String id) {
