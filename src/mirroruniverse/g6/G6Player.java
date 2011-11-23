@@ -1,175 +1,131 @@
 package mirroruniverse.g6;
 
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import mirroruniverse.g6.Utils.Entity;
 import mirroruniverse.sim.MUMap;
 import mirroruniverse.sim.Player;
 
 public class G6Player implements Player {
 	
 	//knowledge of whats at each map
-	int[][] leftMapKnowledge;
-	int[][] rightMapKnowledge;
-	boolean didInitialize = false;
-	boolean keepExploringLeft = true;
-	boolean keepExploringRight = true;
+	private int[][] left = new int[200][200];
+	private int[][] right = new int[200][200];
 	
-	boolean leftMapExitFound = false;
-	boolean rightMapExitFound = false;
 	
+	
+	private int x1 = 0;
+	private int y1 = 0;
+	private int x2 = 0;
+	private int y2 = 0;
+	
+	
+	private int r1 = -1;
+	private int r2 = -1;
+	
+
 	private int[] solution;
 	private Solver solver;
 	private int solutionStep;
 
 	public G6Player() {
+		for (int i = 0; i < 200; i++) {
+			for (int j = 0; j < 200; j++) {
+				left[i][j]=-1;
+				right[i][j]=-1;
+			}
+		}
+		
+		left[x1][y1]=0;
+		right[x2][y2]=0;
+		
 		solution = null;
 		solver = new DFASolver();
 	}
-	
-	public void initializeMapKnowledge(int[][] lMap, int[][] rMap) {
-		
-		//TODO: how the hell can we get dimensions of the maps? 
-		leftMapKnowledge = new int[lMap.length][lMap[0].length];
-		rightMapKnowledge = new int[rMap.length][rMap[0].length];
-		
-		//initialize the left map knowledge to all -1;
-		//num of rows
-		for(int i = 0; i < lMap.length; i++) {
-			//System.out.println("rows: " + lMap.length);
-			//num of cols
-			for(int j = 0; j < lMap[0].length; j++) {
-				//System.out.println("cols: " + lMap[0].length);
-				leftMapKnowledge[i][j] = -1;
-			}
-		}
-		
-		//initalize the right map knowledge to all -1
-		for(int i = 0; i < rMap.length; i++) {
-			for(int j = 0; j < rMap[0].length; j++) {
-				rightMapKnowledge[i][j] = -1;
-			}
-		}
-		
-		didInitialize = false;
-	}
-	
+
 	//exploration strategy 
 	public int[] Explore(int[][] leftMap, int[][] rightMap) {
 		
-		//stores which position a player should explore next
-		//left map is index 0, right map is index 1
-		int[] whichSpaceToMove = new int[2];
 		
-		//initialize explored arrays if empty
-		if(!didInitialize)
-			initializeMapKnowledge(leftMap, rightMap);
-		
-		//get the players current position
-		//need to update this so that we can store accurate information of the exact x y location of a map
-		//at the moment it refreshes and sees the boxes immediately adjacent to it and chooses which location to go
-		//int[] currentPosition = myMap.getLocation();
-		
-		//check which squares havent been seen
-		//to see the immediate adjacent square
-		int[][] leftLocalView = new int[ 3 ][ 3 ];
-		int intMidL = leftMap.length / 2;
-		for ( int i = -1; i <= 1; i ++ )
-		{
-			for ( int j = -1; j <= 1; j ++ )
-			{
-				leftLocalView[ 1 + j ][ 1 + i ] = leftMap[ intMidL + j ][ intMidL + i ];
-				//take note of whats on the adjacency squares
-				//leftMapKnowledge[1+j][1+i] = leftMap[intMidL+j][intMidL+i];
-			}
-		}
-		
-		//find best spot to explore left map
-		boolean lExplored = false;
-		//traverse what spaces have been unexplored and chose best pick
-		for(int i = 0; i < leftMapKnowledge.length; i++) {
-			for(int j = 0; j < leftMapKnowledge[0].length; j++) {
-				if(leftMapKnowledge[i][j] == 0) {
-					lExplored = true;
-					whichSpaceToMove[0] = MUMap.aintMToD[ j + 1 ][ i + 1 ];
-				}
-					
-			}
-		}
-		
-		//to see the immediate adjacent square
-		int[][] rightLocalView = new int[ 3 ][ 3 ];
-		int intMidR = rightMap.length / 2;
-		for ( int i = -1; i <= 1; i ++ )
-		{
-			for ( int j = -1; j <= 1; j ++ )
-			{
-				rightLocalView[ 1 + j ][ 1 + i ] = rightMap[ intMidR + j ][ intMidR + i ];
-				//take note of whats on the adjacency squares
-				rightMapKnowledge[1+j][1+i] = rightMap[intMidR+j][intMidR+i];
-			}
-		}
-		
-		//find best spot to move right map
-		boolean rExplored = false;
-		//traverse what spaces have been unexplored and chose best pick
-		for(int i = 0; i < rightMapKnowledge.length; i++) {
-			for(int j = 0; j < rightMapKnowledge[0].length; j++) {
-				if(rightMapKnowledge[i][j] == 0) {
-					rExplored = true;
-					whichSpaceToMove[1] = MUMap.aintMToD[ j + 1 ][ i + 1 ];
-				}
-					
-			}
-		}
-		
-		int rightUnknownSpaces = 0;
-		int leftUnknownSpaces = 0;
-		//check to see if we explored almost all unknowned squares
-		for(int i = 0; i < leftMapKnowledge.length; i ++) {
-			for(int j = 0; j < leftMapKnowledge.length; j++) {
-				if(leftMapKnowledge[i][j] == -1)
-					leftUnknownSpaces++;
-			}
-		}
-		
-		//if there is less than 20% left of unknown knowledge spaces than stop exploring
-		//need to update this as this is not optimal
-		if(leftUnknownSpaces <= (leftMap.length + leftMap[0].length) * .2)
-			keepExploringLeft = false;
-		
-		for(int i = 0; i < rightMapKnowledge.length; i ++) {
-			for(int j = 0; j < rightMapKnowledge.length; j++) {
-				if(rightMapKnowledge[i][j] == -1) 
-					rightUnknownSpaces++;
-			}
-		}
-	
-		if(rightUnknownSpaces <= (rightMap.length + rightMap[0].length) * .2)
-			keepExploringRight = false;
-		
-		return whichSpaceToMove;
-		
+		return null;
 	}
 	
 	@Override
-	public int lookAndMove(int[][] aintViewL, int[][] aintViewR) {
-		int out = -1;
+	public int lookAndMove(int[][] leftView, int[][] rightView) {
 		
-		int[] whichSpaceToMove = new int[2];
-		
-		//run the explore strategy first
-		if(keepExploringRight || keepExploringLeft) {
-			whichSpaceToMove = Explore(aintViewL, aintViewR);
-			//return move for the left map
-			return whichSpaceToMove[0]; //need to fix this logic
+		if (r1 == -1 || r2 == -1) {
+			r1 = (leftView.length-1) / 2;
+			r2 = (rightView.length-1) / 2;
 		}
 		
+		updateKnowledge(left, x1, y1, leftView);
+		updateKnowledge(right, x2, y2, rightView);
+		
+		
+		int dir = 0;
+		
+		List<Pair<Integer, Integer>> possibilities = new ArrayList<Pair<Integer, Integer>>(); 
+		
+		//TODO: if no direction exists that uncovers squares, go to direction with most/least space
+		//Loop over directions
+		for (int i = 1; i <= 8; i++) {
+			int[] curDir = MUMap.aintDToM[i];
+			int dx = curDir[0];
+			int dy = curDir[1];
+			
+			if (leftView[x1+dx][y1+dy] == Utils.entitiesToShen(Entity.SPACE) && 
+					rightView[x2+dx][y2+dy] == Utils.entitiesToShen(Entity.SPACE)) {
+				possibilities.add(new Pair<Integer, Integer>(
+						squaresUncovered(x1 + dx, y1 + dy, r1, left) + 
+						squaresUncovered(x2 + dx, y2 + dy, r2, right)
+						, i));
+			}
+		}
+		
+		Collections.sort(possibilities);
+		dir = possibilities.get(0).getBack();
+		
+		int[] dirArray = MUMap.aintDToM[dir];
+		x1 += dirArray[0];
+		x2 += dirArray[0];
+		y1 += dirArray[1];
+		y2 += dirArray[1];
+		
+		return dir;
+		
 		//TODO: add logic for re-recomputing solution upon uncovering more fogged area
+		/*
 		if (solution==null) {
-			solution = solver.solve(leftMapKnowledge, rightMapKnowledge);
+			solution = solver.solve(left, right);
 			solutionStep = 0;
 		}
 		
 		return solution[solutionStep++];
+		
+		*/
+	}
+	
+	private void updateKnowledge(int[][] knowledge, int x, int y, int[][] view) {
+		for (int i = 0; i < view.length; i++) {
+			for (int j = 0; j < view[0].length; j++) {
+				knowledge[i- (view.length - 1)/2][j - (view[0].length-1)/2] = view[i][j];
+			}
+		}
+	}
+	
+	private int squaresUncovered(int newX, int newY, int r, int[][] knowledge) {
+		int counter = 0;
+		
+		for (int i = newX - r; i <= newX + r; i++) {
+			for (int j = newY - r; j <= newY + r; j++) {
+				counter += (knowledge[i][j] == -1 ? 1 : 0);
+			}
+		}
+		
+		return counter;
 	}
 
 }
