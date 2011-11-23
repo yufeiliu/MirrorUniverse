@@ -66,5 +66,9 @@ public class TestDFA {
 		assertEquals(solution.size(), 1);
 		assertEquals(solution.get(0), Move.SE);
 	}
-
+	
+	@Test
+	public void testIntersect() {
+		fail("Sid, please write testIntersect.");
+	}
 }
