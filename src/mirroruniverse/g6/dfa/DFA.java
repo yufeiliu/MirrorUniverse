@@ -90,6 +90,7 @@ public class DFA<V, T> {
 	
 	public State<V, T> addStartState(State<V, T> s) {
 		startState = s;
+		addState(s);
 		return s;
 	}
 	
@@ -159,14 +160,25 @@ public class DFA<V, T> {
 		HashMap<String, State<Entity, Move>> newStates =
 				new HashMap<String, State<Entity, Move>>();
 		
+		addIntersectionStates(first, other, intersection, newStates);
+		addIntersectionTransitions(first, other, newStates);
+		
+		return intersection;
+	}
+
+	private static void addIntersectionStates(DFA<Entity, Move> first,
+			DFA<Entity, Move> other, DFA<Entity, Move> intersection,
+			HashMap<String, State<Entity, Move>> newStates) {
 		for (State<Entity, Move> selfState : first.states) {
 			for (State<Entity, Move> otherState : other.states) {
-				// Don't accidentally step on an exit
-				if ((selfState.isGoal() || !otherState.isGoal()) ||
-						(!selfState.isGoal() || otherState.isGoal())) {
+				// Don't accidentally step on an exit - these states cannot
+				// be part of our solution
+				if ((selfState.isGoal() && !otherState.isGoal()) ||
+						(!selfState.isGoal() && otherState.isGoal())) {
 					continue;
 				}
-				String key = selfState.getValue() + ", " + otherState.getValue();
+				String key = makeKey(selfState, otherState);
+				
 				// TODO - figure out what this should be if the value is ever
 				// used?
 				Entity e = selfState.getValue();
@@ -174,37 +186,51 @@ public class DFA<V, T> {
 						e,
 						selfState.isGoal() && otherState.isGoal(), key);
 				newStates.put(key, s);
-				intersection.addState(s);
+				
+				// Add the state to the DFA
+				if (selfState == first.startState &&
+						otherState == other.startState) {
+					intersection.addStartState(s);
+				} else {
+					intersection.addState(s);
+				}
 			}
 		}
-		
-		HashMap<String, Transition<Entity, Move>> firstTransitionValues =
-				new HashMap<String, Transition<Entity, Move>>();
+	}
+
+	private static void addIntersectionTransitions(DFA<Entity, Move> first,
+			DFA<Entity, Move> other,
+			HashMap<String, State<Entity, Move>> newStates) {
 		for (State<Entity, Move> selfState : first.states) {
-			for (Transition<Entity, Move> t : selfState.getTransitions()) {
-				firstTransitionValues.put(t.getId(), t);
-			}
-		}
-		
-		for (State<Entity, Move> otherState : other.states) {
-			for (Transition<Entity, Move> t : otherState.getTransitions()) {
-				Transition<Entity, Move> firstTransition =
-						firstTransitionValues.get(t.getValue());
-				if (firstTransition != null) {
-					State<Entity, Move> start = newStates.get(
-							firstTransition.getStart().getValue() + ", " +
-							t.getStart().getValue());
-					State<Entity, Move> end = newStates.get(
-							firstTransition.getEnd().getValue() + ", " +
-							t.getEnd().getValue());
-					// These are null when exactly one of them was a goal state
-					if (start != null && end != null) {
-						start.addTransition(t.getValue(), end);
+			for (State<Entity, Move> otherState : other.states) {
+				String startKey = makeKey(selfState, otherState);
+				State<Entity, Move> source = newStates.get(startKey);
+				for (Transition<Entity, Move> selfTrans :
+							selfState.getTransitions()) {
+					for (Transition<Entity, Move> otherTrans :
+							otherState.getTransitions()) {
+						Move m = selfTrans.getValue();
+						if (otherTrans.getValue() != m) {
+							continue;
+						};
+						String endKey = makeKey(
+								selfTrans.getEnd(), otherTrans.getEnd());
+						State<Entity, Move> dest = newStates.get(endKey);
+						// dest is null if it would have one exit
+						if (dest != null) {
+							source.addTransition(m, dest);
+						}
 					}
 				}
 			}
 		}
-		return intersection;
+	}
+
+	private static String makeKey(State<Entity, Move> selfState,
+			State<Entity, Move> otherState) {
+		String key = selfState.getValue() + selfState.getId() + "; " +
+				otherState.getValue() + otherState.getId();
+		return key;
 	}
 	
 	public boolean hasNonEmptyLanguage() {
@@ -217,6 +243,24 @@ public class DFA<V, T> {
 	public ArrayList<DFA<V, T>> shiftGoals() {
 		// TODO
 		return null;
+	}
+	
+	public String toString() {
+		String s = "";
+		s += "=====START STATE=====\n";
+		s += startState + "\n";
+		s += "\n=====GOAL STATES=====\n";
+		for (State<V, T> state : goalStates) {
+			s += state + "\n";
+		}
+		s += "\n=====ALL STATES=====\n";
+		for (State<V, T> state : states) {
+			s += state + "\n";
+			for (Transition<V, T> t : state.getTransitions()) {
+				s += "\t" + t;
+			}
+		}
+		return s;
 	}
 
 }
