@@ -31,4 +31,8 @@ public class Transition<V, T> {
 	public String getId() {
 		return id;
 	}
+	
+	public String toString() {
+		return "Go " + value + " from " + start + " to " + end;
+	}
 }

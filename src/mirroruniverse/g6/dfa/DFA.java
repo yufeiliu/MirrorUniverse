@@ -3,7 +3,6 @@ package mirroruniverse.g6.dfa;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -13,14 +12,10 @@ import mirroruniverse.g6.Utils.Move;
 
 public class DFA<V, T> {
 	
-	// TODO - should use a different generic for the node value and for the
-	// transitions...
-	
 	ArrayList<State<V, T>> goalStates;
 	ArrayList<State<V, T>> states;
 	State<V, T> startState;
 
-	// TODO
 	@SuppressWarnings("unchecked")
 	public DFA(int[][] firstMap) {
 		this();
@@ -118,7 +113,7 @@ public class DFA<V, T> {
 			if (currentState.isGoal()) {
 				return recoverPath(currentState, used);
 			}
-			for (Transition<V, T> t : currentState.getTransitions()) {
+			for (Transition<V, T> t : currentState.getTransitions()) {				
 				// self-transitions should not be part of shortest path
 				if(t.getStart().equals(t.getEnd())) {
 					continue;
@@ -176,7 +171,7 @@ public class DFA<V, T> {
 				// used?
 				Entity e = selfState.getValue();
 				State<Entity, Move> s = new State<Entity, Move>(
-						selfState.getValue(),
+						e,
 						selfState.isGoal() && otherState.isGoal(), key);
 				newStates.put(key, s);
 				intersection.addState(s);
