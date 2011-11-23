@@ -47,15 +47,7 @@ public class G6Player implements Player {
 	}
 
 	//exploration strategy 
-	public int[] Explore(int[][] leftMap, int[][] rightMap) {
-		
-		
-		return null;
-	}
-	
-	@Override
-	public int lookAndMove(int[][] leftView, int[][] rightView) {
-		
+	public int explore(int[][] leftView, int[][] rightView) {
 		if (r1 == -1 || r2 == -1) {
 			r1 = (leftView.length-1) / 2;
 			r2 = (rightView.length-1) / 2;
@@ -95,17 +87,20 @@ public class G6Player implements Player {
 		y2 += dirArray[1];
 		
 		return dir;
-		
+	}
+	
+	@Override
+	public int lookAndMove(int[][] leftView, int[][] rightView) {
 		//TODO: add logic for re-recomputing solution upon uncovering more fogged area
-		/*
-		if (solution==null) {
+		
+		if (solution == null && switchPhase(leftView, rightView)) {
 			solution = solver.solve(left, right);
 			solutionStep = 0;
 		}
-		
-		return solution[solutionStep++];
-		
-		*/
+		if(solution != null) {
+			return solution[solutionStep++];
+		}
+		return explore(leftView, rightView);
 	}
 	
 	private void updateKnowledge(int[][] knowledge, int x, int y, int[][] view) {
@@ -126,6 +121,22 @@ public class G6Player implements Player {
 		}
 		
 		return counter;
+	}
+	
+	private boolean switchPhase(int[][] left, int[][] right) {
+		//check for exit in both
+		return isExitFoundIn(left) && isExitFoundIn(right);
+	}
+	
+	private boolean isExitFoundIn(int[][] knowledge) {
+		for(int i = 0; i < knowledge.length; i++) {
+			for(int j = 0; j < knowledge[0].length; j++) {
+				if(knowledge[i][j] == Utils.entitiesToShen(Entity.EXIT)) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 }
