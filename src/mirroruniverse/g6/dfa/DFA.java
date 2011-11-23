@@ -112,10 +112,7 @@ public class DFA<V, T> {
 		while(!q.isEmpty()) {
 			currentState = q.poll();
 			if (currentState.isGoal()) {
-				System.out.println("boom");
 				return recoverPath(currentState, used);
-			} else {
-				System.out.println("sheeet");
 			}
 			for (Transition<V, T> t : currentState.getTransitions()) {
 				// self-transitions should not be part of shortest path

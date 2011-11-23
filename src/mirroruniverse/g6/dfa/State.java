@@ -50,4 +50,8 @@ public class State<V, T> {
 		return transitions;
 	}
 	
+	public String toString() {
+		return this.id + " " + this.goal + " " + this.value;
+	}
+	
 }

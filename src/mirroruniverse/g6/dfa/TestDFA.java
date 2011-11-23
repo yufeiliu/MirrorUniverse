@@ -35,8 +35,6 @@ public class TestDFA {
 	
 	@Test
 	public void testShortestPathOnLong() {
-		startState.addTransition(
-				new Transition<Entity, Move>(Move.N, startState, endState));
 		dfa.addStartState(startState);
 		dfa.addState(endState);
 		State<Entity, Move> previousState = startState;
@@ -48,7 +46,7 @@ public class TestDFA {
 		}
 		previousState.addTransition(Move.N, endState);
 		ArrayList<Move> solution = dfa.findShortestPath();
-		assertEquals(10, solution.size());
+		assertEquals(11, solution.size());
 		for (int i = 0; i < solution.size(); i++) {
 			assertEquals(solution.get(i), Move.N);
 		}
