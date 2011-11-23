@@ -29,7 +29,8 @@ public class DFA<V, T> {
 			for (int y = 0; y < y_cap; y++) {
 
 				if (firstMap[x][y]==Utils.entitiesToShen(Entity.OBSTACLE)) continue;
-				
+
+				System.out.println(firstMap[x][y]);
 				State<Entity, Move> node;
 				if (allStates.containsKey(x+","+y)) {
 					node = allStates.get(x+","+y);

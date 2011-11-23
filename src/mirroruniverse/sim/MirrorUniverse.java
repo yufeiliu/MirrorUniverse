@@ -24,7 +24,7 @@ public class MirrorUniverse
 		
 		Scanner scnGame = null;
 		try {
-			scnGame = new Scanner( new File( "game/GameConfig.txt" ) );
+			scnGame = new Scanner( new File( "game/EasyGameConfig.txt" ) );
 		} catch (FileNotFoundException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
