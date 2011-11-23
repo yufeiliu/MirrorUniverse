@@ -17,10 +17,10 @@ public class G6Player implements Player {
 	
 	
 	
-	private int x1 = 0;
-	private int y1 = 0;
-	private int x2 = 0;
-	private int y2 = 0;
+	private int x1 = -999;
+	private int y1;
+	private int x2;
+	private int y2;
 	
 	
 	private int r1 = -1;
@@ -39,9 +39,6 @@ public class G6Player implements Player {
 			}
 		}
 		
-		left[x1][y1]=0;
-		right[x2][y2]=0;
-		
 		solution = null;
 		solver = new DFASolver();
 	}
@@ -51,6 +48,15 @@ public class G6Player implements Player {
 		if (r1 == -1 || r2 == -1) {
 			r1 = (leftView.length-1) / 2;
 			r2 = (rightView.length-1) / 2;
+		}
+		if(x1 == -999) {
+			x1 = r1;
+			y1 = r1;
+			x2 = r2;
+			y2 = r2;
+			
+			left[x1][y1]=0;
+			right[x2][y2]=0;
 		}
 		
 		updateKnowledge(left, x1, y1, leftView);
@@ -67,12 +73,17 @@ public class G6Player implements Player {
 			int[] curDir = MUMap.aintDToM[i];
 			int dx = curDir[0];
 			int dy = curDir[1];
+			int newx1 = Math.max(x1+dx, 0);
+			int newy1 = Math.max(y1+dy, 0);
+			int newx2 = Math.max(x2+dx, 0);
+			int newy2 = Math.max(y2+dy, 0);
 			
-			if (leftView[x1+dx][y1+dy] == Utils.entitiesToShen(Entity.SPACE) && 
-					rightView[x2+dx][y2+dy] == Utils.entitiesToShen(Entity.SPACE)) {
+			if (leftView[newx1][newy1] == Utils.entitiesToShen(Entity.SPACE) && 
+					rightView[newx2][newy2] == Utils.entitiesToShen(Entity.SPACE)) {
+				//TODO: remove duplicates
 				possibilities.add(new Pair<Integer, Integer>(
-						squaresUncovered(x1 + dx, y1 + dy, r1, left) + 
-						squaresUncovered(x2 + dx, y2 + dy, r2, right)
+						squaresUncovered(newx1, newy1, r1, left) + 
+						squaresUncovered(newx2, newy2, r2, right)
 						, i));
 			}
 		}
@@ -93,7 +104,7 @@ public class G6Player implements Player {
 	public int lookAndMove(int[][] leftView, int[][] rightView) {
 		//TODO: add logic for re-recomputing solution upon uncovering more fogged area
 		
-		if (solution == null && switchPhase(leftView, rightView)) {
+		if (solution == null && switchPhase(left, right)) {
 			solution = solver.solve(left, right);
 			solutionStep = 0;
 		}
@@ -104,8 +115,8 @@ public class G6Player implements Player {
 	}
 	
 	private void updateKnowledge(int[][] knowledge, int x, int y, int[][] view) {
-		for (int i = 0; i < view.length; i++) {
-			for (int j = 0; j < view[0].length; j++) {
+		for (int i = (view.length - 1)/2; i < view.length; i++) {
+			for (int j = (view[0].length-1)/2; j < view[0].length; j++) {
 				knowledge[i- (view.length - 1)/2][j - (view[0].length-1)/2] = view[i][j];
 			}
 		}
@@ -114,9 +125,9 @@ public class G6Player implements Player {
 	private int squaresUncovered(int newX, int newY, int r, int[][] knowledge) {
 		int counter = 0;
 		
-		for (int i = newX - r; i <= newX + r; i++) {
-			for (int j = newY - r; j <= newY + r; j++) {
-				counter += (knowledge[i][j] == -1 ? 1 : 0);
+		for (int i = Math.max(newX - r, 0); i <= Math.min(newX + r, knowledge[0].length-1); i++) {
+			for (int j = Math.max(newY - r, 0); j <= Math.min(newY + r, knowledge.length-1); j++) {
+				counter += (knowledge[j][i] == -1 ? 1 : 0);
 			}
 		}
 		
