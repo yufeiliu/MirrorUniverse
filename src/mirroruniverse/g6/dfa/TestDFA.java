@@ -170,8 +170,14 @@ public class TestDFA {
 			otherDfa.addState(s);
 		}
 		
+		/*
+		 * First graph has some shorter paths to exit, but it shouldn't be
+		 * taken.
+		 */
 		startState.addTransition(Move.E, firstDfaStates.get(0));
+		startState.addTransition(Move.W, endState);
 		firstDfaStates.get(0).addTransition(Move.N, firstDfaStates.get(0));
+		firstDfaStates.get(0).addTransition(Move.S, endState);
 		firstDfaStates.get(0).addTransition(Move.E, firstDfaStates.get(1));
 		firstDfaStates.get(1).addTransition(Move.E, endState);
 		
@@ -188,14 +194,6 @@ public class TestDFA {
 		assertEquals(Move.N, solution.get(1));
 		assertEquals(Move.E, solution.get(2));
 		assertEquals(Move.E, solution.get(3));
-	}
-	
-	@Test
-	/*
-	 * First graph has a shorter path to exit, but it shouldn't be taken.
-	 */
-	public void testIntersectOnNonEquivalentGraphsWithEarlySolution() {
-		
 	}
 	
 	@Test
