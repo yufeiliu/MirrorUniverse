@@ -1,3 +1,6 @@
+4, 4, 2, -1, maps/easyLeft.txt
+4, 4, 2, -1, maps/easyRight.txt
+
 7, 6, 3, -1, maps/identical/left.txt
 7, 6, 3, -1, maps/identical/right.txt
 
