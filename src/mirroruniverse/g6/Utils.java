@@ -89,6 +89,8 @@ public class Utils {
 			return Entity.PLAYER;
 		case 2:
 			return Entity.EXIT;
+		case -1:
+			return Entity.UNKNOWN;
 		default:
 			return Entity.SPACE;
 		}

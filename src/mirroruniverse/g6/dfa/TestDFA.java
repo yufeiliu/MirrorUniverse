@@ -8,52 +8,98 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import mirroruniverse.g6.Utils.*;
-import mirroruniverse.g6.dfa.*;
+import mirroruniverse.g6.Utils.Entity;
+import mirroruniverse.g6.Utils.Move;
 
 public class TestDFA {
 
-	/*
+	private State<Entity, Move> endState;
+	private DFA<Entity, Move> dfa;
+	private State<Entity, Move> startState;
+
 	@Before
 	public void setUp() throws Exception {
-	
+		dfa = new DFA<Entity, Move>();
+		startState = new State<Entity, Move>(Entity.PLAYER, false);
+		endState = new State<Entity, Move>(Entity.EXIT, true);
 	}
-	*/
 
 	@Test
-	public void testConstructor() {
-		DFA<Entity, Move> dfa = new DFA<Entity, Move>();
-		assertNotNull(dfa);
-	}
-	
-	@Test
-	public void testFindShortestPath() {
-		DFA<Entity, Move> dfa = new DFA<Entity, Move>();
-		State<Entity, Move> state1 = new State<Entity, Move>(Entity.PLAYER, false);
-		State<Entity, Move> state2 = new State<Entity, Move>(Entity.EXIT, true);
-		state1.addTransition(new Transition<Entity, Move>(Move.N, state1, state2));
-		dfa.addStartState(state1);
-		dfa.addState(state2);
+	public void testFindShortestPathOnTwoCell() {
+		startState.addTransition(Move.N, endState);
+		dfa.addStartState(startState);
+		dfa.addState(endState);
 		ArrayList<Move> solution = dfa.findShortestPath();
-		assertNotNull(solution.get(0));
 		assertEquals(solution.get(0), Move.N);
 	}
 	
+	public void addManyStates(Move m, int num,
+			State<Entity, Move> startingPoint,
+			State<Entity, Move> end) {
+		for (int i = 0; i < num; i++) {
+			State<Entity, Move> newState = new State<Entity, Move>(Entity.SPACE);
+			dfa.addState(newState);
+			startingPoint.addTransition(m, newState);
+			startingPoint = newState;
+		}
+		startingPoint.addTransition(m, end);
+	}
+
+	/*
+	 * Pick between two possible paths. 
+	 */
+	@Test
+	public void testShortestPathOfTwo() {
+		dfa.addStartState(startState);
+		addManyStates(Move.N, 3, startState, endState);
+		addManyStates(Move.S, 2, startState, endState);
+		ArrayList<Move> solution = dfa.findShortestPath();
+		assertEquals(3, solution.size());
+		for (int i = 0; i < solution.size(); i++) {
+			assertEquals(solution.get(i), Move.S);
+		}
+	}
+	
+	@Test
+	public void testShortestPathOnImpossible() {
+		dfa.addStartState(startState);
+		State<Entity, Move> beforeEnd = new State<Entity, Move>(Entity.OBSTACLE);
+		addManyStates(Move.N, 10, startState, beforeEnd);
+		beforeEnd.addTransition(Move.N, beforeEnd);
+		ArrayList<Move> solution = dfa.findShortestPath();
+		assertNull(solution);
+	}
+	
+	@Test
+	public void testShortestPathOnLong() {
+		dfa.addStartState(startState);
+		dfa.addState(endState);
+		addManyStates(Move.N, 10, startState, endState);
+		ArrayList<Move> solution = dfa.findShortestPath();
+		assertEquals(11, solution.size());
+		for (int i = 0; i < solution.size(); i++) {
+			assertEquals(solution.get(i), Move.N);
+		}
+	}
+	
+	/*
+	 * We just do a basic sanity check. We don't test a bunch of cases since
+	 * if recover path breaks, the shortest path test should let us know.
+	 */
 	@Test
 	public void testRecoverPath() {
-		DFA<Entity, Move> dfa = new DFA<Entity, Move>();
-		State<Entity, Move> state1 = new State<Entity, Move>(Entity.PLAYER, false);
-		State<Entity, Move> state2 = new State<Entity, Move>(Entity.EXIT, true);
-		state1.addTransition(new Transition<Entity, Move>(Move.N, state1, state2));
-		dfa.addStartState(state1);
-		dfa.addState(state2);
+		startState.addTransition(new Transition<Entity, Move>(Move.N,
+				startState, endState));
+		dfa.addStartState(startState);
+		dfa.addState(endState);
 		
 		HashMap<State<Entity, Move>, Transition<Entity, Move>> used = 
 				new HashMap<State<Entity, Move>, Transition<Entity, Move>>();
-		used.put(state2, state1.getTransitions().get(0));
+		used.put(endState, startState.getTransitions().get(0));
 		
-		ArrayList<Move> path = dfa.recoverPath(state2, used);
+		ArrayList<Move> path = dfa.recoverPath(endState, used);
 		assertNotNull(path);
+		assertEquals(1, path.size());
 		assertEquals(path.get(0), Move.N);
 	}
 	
