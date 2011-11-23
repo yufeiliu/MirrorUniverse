@@ -1,4 +1,4 @@
-package mirroruniverse.g5.dfa;
+package mirroruniverse.g6.dfa;
 
 import static org.junit.Assert.*;
 
@@ -8,8 +8,8 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import mirroruniverse.g5.Utils.*;
-import mirroruniverse.g5.dfa.*;
+import mirroruniverse.g6.Utils.*;
+import mirroruniverse.g6.dfa.*;
 
 public class TestDFA {
 

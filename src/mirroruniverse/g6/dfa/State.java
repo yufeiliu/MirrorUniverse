@@ -1,4 +1,4 @@
-package mirroruniverse.g5.dfa;
+package mirroruniverse.g6.dfa;
 
 import java.util.ArrayList;
 

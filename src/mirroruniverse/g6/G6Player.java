@@ -1,21 +1,10 @@
-package mirroruniverse.g5;
+package mirroruniverse.g6;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.util.Random;
 
 import mirroruniverse.sim.MUMap;
-import mirroruniverse.sim.MUMapConfig;
 import mirroruniverse.sim.Player;
 
-public class ProxyPlayer implements Player
-{
-	private MUMap myMap;
+public class G6Player implements Player {
 	
 	//knowledge of whats at each map
 	int[][] leftMapKnowledge;
@@ -27,49 +16,28 @@ public class ProxyPlayer implements Player
 	boolean leftMapExitFound = false;
 	boolean rightMapExitFound = false;
 	
-	Process process;
-	BufferedReader reader;
-	BufferedWriter writer;
-	
-	
-	
-	public ProxyPlayer() {
-		try {
-			ProcessBuilder builder = new ProcessBuilder("ruby", "src/mirroruniverse/g5/player.rb");
-			builder.redirectErrorStream(true);
-			process = builder.start();
-			OutputStream stdin = process.getOutputStream();
-			InputStream stdout = process.getInputStream();
-			reader = new BufferedReader(new InputStreamReader(stdout));
-			writer = new BufferedWriter(new OutputStreamWriter(stdin));
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-	
-	private static String serialize(int[][] doubleArray) {
-		String out = "[";
-		
-		for (int i=0; i<doubleArray.length; i++) {
-			out+="[";
-			
-			for (int j=0; j<doubleArray[i].length; j++) {
-				out+=doubleArray[i][j]+(j==doubleArray[i].length-1 ? "" : ",");
-			}
-			out+="]" + (i==doubleArray.length-1 ? "" : ",");
-		}
-		out+="]";
-		return out;
+	private int[] solution;
+	private Solver solver;
+	private int solutionStep;
+
+	public G6Player() {
+		solution = null;
+		solver = new DFASolver();
 	}
 	
 	public void initializeMapKnowledge(int[][] lMap, int[][] rMap) {
+		
+		//TODO: how the hell can we get dimensions of the maps? 
+		leftMapKnowledge = new int[lMap.length][lMap[0].length];
+		rightMapKnowledge = new int[rMap.length][rMap[0].length];
+		
 		//initialize the left map knowledge to all -1;
 		//num of rows
 		for(int i = 0; i < lMap.length; i++) {
-			System.out.println("rows: " + lMap.length);
+			//System.out.println("rows: " + lMap.length);
 			//num of cols
 			for(int j = 0; j < lMap[0].length; j++) {
-				System.out.println("cols: " + lMap[0].length);
+				//System.out.println("cols: " + lMap[0].length);
 				leftMapKnowledge[i][j] = -1;
 			}
 		}
@@ -182,77 +150,26 @@ public class ProxyPlayer implements Player
 		
 	}
 	
-	
-	public int lookAndMove( int[][] aintViewL, int[][] aintViewR ) {
+	@Override
+	public int lookAndMove(int[][] aintViewL, int[][] aintViewR) {
 		int out = -1;
 		
 		int[] whichSpaceToMove = new int[2];
 		
-//		//run the explore strategy first
-//		if(keepExploringRight || keepExploringLeft) {
-//			whichSpaceToMove = Explore(aintViewL, aintViewR);
-//			//return move for the left map
-//			return whichSpaceToMove[0]; //need to fix this logic
-//		}
-
-		//to see the immediate adjacent square
-		int[][] leftLocalView = new int[ 3 ][ 3 ];
-		int intMid = aintViewL.length / 2;
-		for ( int i = -1; i <= 1; i ++ )
-		{
-			for ( int j = -1; j <= 1; j ++ )
-			{
-				leftLocalView[ 1 + j ][ 1 + i ] = aintViewL[ intMid + j ][ intMid + i ];
-				if ( leftLocalView[ 1 + j ][ 1 + i ] == 2 )
-				{
-					if ( i == 0 && j == 0 )
-						continue;
-					leftMapExitFound = true;
-					return MUMap.aintMToD[ j + 1 ][ i + 1 ];
-				}
-			}
+		//run the explore strategy first
+		if(keepExploringRight || keepExploringLeft) {
+			whichSpaceToMove = Explore(aintViewL, aintViewR);
+			//return move for the left map
+			return whichSpaceToMove[0]; //need to fix this logic
 		}
 		
-		intMid = aintViewR.length / 2;
-		int[][] rightLocalView = new int[ 3 ][ 3 ];
-		for ( int i = -1; i <= 1; i ++ )
-		{
-			for ( int j = -1; j <= 1; j ++ )
-			{
-				rightLocalView[ 1 + j ][ 1 + i ] = aintViewR[ intMid + j ][ intMid + i ];
-				if ( aintViewR[ intMid + j ][ intMid + i ] == 2 )
-				{
-					if ( i == 0 && j == 0 )
-						continue;
-					rightMapExitFound = true;
-					return MUMap.aintMToD[ j + 1 ][ i + 1 ];
-				}
-			}
+		//TODO: add logic for re-recomputing solution upon uncovering more fogged area
+		if (solution==null) {
+			solution = solver.solve(leftMapKnowledge, rightMapKnowledge);
+			solutionStep = 0;
 		}
 		
-		Random rdmTemp = new Random();
-		int intD;
-		int intDeltaX;
-		int intDeltaY;
-		if ( !leftMapExitFound )
-		{
-			do
-			{
-				intD = rdmTemp.nextInt( 8 ) + 1;
-				intDeltaX = MUMap.aintDToM[ intD ][ 0 ];
-				intDeltaY = MUMap.aintDToM[ intD ][ 1 ];
-			} while ( leftLocalView[ 1 + intDeltaY ][ 1 + intDeltaX ] == 1 );
-		}
-		else
-		{
-			do
-			{
-				intD = rdmTemp.nextInt( 8 ) + 1;
-				intDeltaX = MUMap.aintDToM[ intD ][ 0 ];
-				intDeltaY = MUMap.aintDToM[ intD ][ 1 ];
-			} while ( rightLocalView[ 1 + intDeltaY ][ 1 + intDeltaX ] == 1 );
-		}
-		return intD;
+		return solution[solutionStep++];
 	}
-		
+
 }

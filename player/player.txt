@@ -1,1 +1,1 @@
-mirroruniverse.g5.ProxyPlayer
+mirroruniverse.g5.G5Player
