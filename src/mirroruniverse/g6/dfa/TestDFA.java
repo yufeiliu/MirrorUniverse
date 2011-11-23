@@ -33,18 +33,48 @@ public class TestDFA {
 		assertEquals(solution.get(0), Move.N);
 	}
 	
+	public void addManyStates(Move m, int num,
+			State<Entity, Move> startingPoint,
+			State<Entity, Move> end) {
+		for (int i = 0; i < num; i++) {
+			State<Entity, Move> newState = new State<Entity, Move>(Entity.SPACE);
+			dfa.addState(newState);
+			startingPoint.addTransition(m, newState);
+			startingPoint = newState;
+		}
+		startingPoint.addTransition(m, end);
+	}
+
+	/*
+	 * Pick between two possible paths. 
+	 */
+	@Test
+	public void testShortestPathOfTwo() {
+		dfa.addStartState(startState);
+		addManyStates(Move.N, 3, startState, endState);
+		addManyStates(Move.S, 2, startState, endState);
+		ArrayList<Move> solution = dfa.findShortestPath();
+		assertEquals(3, solution.size());
+		for (int i = 0; i < solution.size(); i++) {
+			assertEquals(solution.get(i), Move.S);
+		}
+	}
+	
+	@Test
+	public void testShortestPathOnImpossible() {
+		dfa.addStartState(startState);
+		State<Entity, Move> beforeEnd = new State<Entity, Move>(Entity.OBSTACLE);
+		addManyStates(Move.N, 10, startState, beforeEnd);
+		beforeEnd.addTransition(Move.N, beforeEnd);
+		ArrayList<Move> solution = dfa.findShortestPath();
+		assertNull(solution);
+	}
+	
 	@Test
 	public void testShortestPathOnLong() {
 		dfa.addStartState(startState);
 		dfa.addState(endState);
-		State<Entity, Move> previousState = startState;
-		for (int i = 0; i < 10; i++) {
-			State<Entity, Move> newState = new State<Entity, Move>(Entity.SPACE);
-			dfa.addState(newState);
-			previousState.addTransition(Move.N, newState);
-			previousState = newState;
-		}
-		previousState.addTransition(Move.N, endState);
+		addManyStates(Move.N, 10, startState, endState);
 		ArrayList<Move> solution = dfa.findShortestPath();
 		assertEquals(11, solution.size());
 		for (int i = 0; i < solution.size(); i++) {
@@ -52,9 +82,14 @@ public class TestDFA {
 		}
 	}
 	
+	/*
+	 * We just do a basic sanity check. We don't test a bunch of cases since
+	 * if recover path breaks, the shortest path test should let us know.
+	 */
 	@Test
 	public void testRecoverPath() {
-		startState.addTransition(new Transition<Entity, Move>(Move.N, startState, endState));
+		startState.addTransition(new Transition<Entity, Move>(Move.N,
+				startState, endState));
 		dfa.addStartState(startState);
 		dfa.addState(endState);
 		
@@ -64,6 +99,7 @@ public class TestDFA {
 		
 		ArrayList<Move> path = dfa.recoverPath(endState, used);
 		assertNotNull(path);
+		assertEquals(1, path.size());
 		assertEquals(path.get(0), Move.N);
 	}
 	

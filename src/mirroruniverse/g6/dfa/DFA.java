@@ -16,7 +16,6 @@ public class DFA<V, T> {
 	ArrayList<State<V, T>> states;
 	State<V, T> startState;
 
-	// TODO
 	@SuppressWarnings("unchecked")
 	public DFA(int[][] firstMap) {
 		this();
@@ -114,7 +113,7 @@ public class DFA<V, T> {
 			if (currentState.isGoal()) {
 				return recoverPath(currentState, used);
 			}
-			for (Transition<V, T> t : currentState.getTransitions()) {
+			for (Transition<V, T> t : currentState.getTransitions()) {				
 				// self-transitions should not be part of shortest path
 				if(t.getStart().equals(t.getEnd())) {
 					continue;
