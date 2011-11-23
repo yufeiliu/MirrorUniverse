@@ -127,5 +127,21 @@ public class G6Player implements Player {
 		
 		return counter;
 	}
+	
+	private boolean switchPhase(int[][] left, int[][] right) {
+		//check for exit in both
+		return isExitFoundIn(left) && isExitFoundIn(right);
+	}
+	
+	private boolean isExitFoundIn(int[][] knowledge) {
+		for(int i = 0; i < knowledge.length; i++) {
+			for(int j = 0; j < knowledge[0].length; j++) {
+				if(knowledge[i][j] == Utils.entitiesToShen(Entity.EXIT)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 
 }
