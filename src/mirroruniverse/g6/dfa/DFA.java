@@ -164,40 +164,6 @@ public class DFA<V, T> {
 		addIntersectionTransitions(first, other, newStates);
 		
 		return intersection;
-		
-		
-		/*
-		HashMap<String, Transition<Entity, Move>> firstTransitionValues =
-				new HashMap<String, Transition<Entity, Move>>();
-		for (State<Entity, Move> selfState : first.states) {
-			for (Transition<Entity, Move> t : selfState.getTransitions()) {
-				firstTransitionValues.put(t.getId(), t);
-			}	
-		}
-		System.out.println(firstTransitionValues);
-		
-		for (State<Entity, Move> otherState : other.states) {
-			for (Transition<Entity, Move> t : otherState.getTransitions()) {
-				Transition<Entity, Move> firstTransition =
-						firstTransitionValues.get(t.getValue());
-				if (firstTransition != null) {
-					System.out.println("SWEET JESUS");
-					
-					State<Entity, Move> start = newStates.get(
-							firstTransition.getStart().getValue() + ", " +
-							t.getStart().getValue());
-					State<Entity, Move> end = newStates.get(
-							firstTransition.getEnd().getValue() + ", " +
-							t.getEnd().getValue());
-					// These are null when exactly one of them was a goal state
-					if (start != null && end != null) {
-						start.addTransition(t.getValue(), end);
-					}
-				} else {
-				}
-			}
-		}
-		*/
 	}
 
 	private static void addIntersectionStates(DFA<Entity, Move> first,
@@ -250,7 +216,10 @@ public class DFA<V, T> {
 						String endKey = makeKey(
 								selfTrans.getEnd(), otherTrans.getEnd());
 						State<Entity, Move> dest = newStates.get(endKey);
-						source.addTransition(m, dest);
+						// dest is null if it would have one exit
+						if (dest != null) {
+							source.addTransition(m, dest);
+						}
 					}
 				}
 			}
@@ -259,7 +228,8 @@ public class DFA<V, T> {
 
 	private static String makeKey(State<Entity, Move> selfState,
 			State<Entity, Move> otherState) {
-		String key = selfState.getValue() + ", " + otherState.getValue();
+		String key = selfState.getValue() + selfState.getId() + "; " +
+				otherState.getValue() + otherState.getId();
 		return key;
 	}
 	

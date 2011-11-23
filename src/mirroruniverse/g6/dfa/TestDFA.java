@@ -134,17 +134,60 @@ public class TestDFA {
 	
 	@Test
 	public void testIntersectOnTwoAndThreeLengthPaths() {
-		
-	}
-	
-	@Test
-	public void testIntersectOnTwoPath() {
-		
+		setUpOtherDFA();
+		startState.addTransition(Move.N, endState);
+		State<Entity, Move> noiseState = new State<Entity, Move>(Entity.SPACE);
+		otherDfa.addState(noiseState);
+		otherStartState.addTransition(Move.S, noiseState);
+		otherStartState.addTransition(Move.N, otherEndState);
+		DFA<Entity, Move> intersection = DFA.intersect(dfa, otherDfa);
+		ArrayList<Move> solution = intersection.findShortestPath();
+		assertNotNull(solution);
+		assertEquals(1, solution.size());
+		assertEquals(Move.N, solution.get(0));
 	}
 	
 	@Test
 	public void testIntersectOnNonEquivalentGraphs() {
+		setUpOtherDFA();
+		ArrayList<State<Entity, Move>> firstDfaStates =
+				new ArrayList<State<Entity, Move>>();
+		ArrayList<State<Entity, Move>> otherDfaStates =
+				new ArrayList<State<Entity, Move>>();
 		
+		firstDfaStates.add(new State<Entity, Move>(Entity.SPACE));
+		firstDfaStates.add(new State<Entity, Move>(Entity.SPACE));
+		
+		otherDfaStates.add(new State<Entity, Move>(Entity.SPACE));
+		otherDfaStates.add(new State<Entity, Move>(Entity.SPACE));
+		otherDfaStates.add(new State<Entity, Move>(Entity.SPACE));
+		
+		for (State<Entity, Move> s : firstDfaStates) {
+			dfa.addState(s);
+		}
+		
+		for (State<Entity, Move> s : otherDfaStates) {
+			otherDfa.addState(s);
+		}
+		
+		startState.addTransition(Move.E, firstDfaStates.get(0));
+		firstDfaStates.get(0).addTransition(Move.N, firstDfaStates.get(0));
+		firstDfaStates.get(0).addTransition(Move.E, firstDfaStates.get(1));
+		firstDfaStates.get(1).addTransition(Move.E, endState);
+		
+		otherStartState.addTransition(Move.E, otherDfaStates.get(0));
+		otherDfaStates.get(0).addTransition(Move.N, otherDfaStates.get(1));
+		otherDfaStates.get(1).addTransition(Move.E, otherDfaStates.get(2));
+		otherDfaStates.get(2).addTransition(Move.E, otherEndState);
+		DFA<Entity, Move> intersection = DFA.intersect(dfa, otherDfa);
+		ArrayList<Move> solution = intersection.findShortestPath();
+		// E, N, E, E
+		assertNotNull(solution);
+		assertEquals(4, solution.size());
+		assertEquals(Move.E, solution.get(0));
+		assertEquals(Move.N, solution.get(1));
+		assertEquals(Move.E, solution.get(2));
+		assertEquals(Move.E, solution.get(3));
 	}
 	
 	@Test
