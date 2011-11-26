@@ -17,7 +17,6 @@ public class MUMap
 	private int intPositionX = -1;
 	private int intPositionY = -1;
 	private int intSightRadius;
-	private int intRound = 0;
 	private int intExitX = -1;
 	private int intExitY = -1;
 	private boolean blnMapOver = false;
@@ -168,7 +167,6 @@ public class MUMap
 			}
 			for ( int i = 0; i < intXLength; i ++ )
 			{
-				System.out.println( astrMapRow[ i ] );
 				int intMapGrid = Integer.parseInt( astrMapRow[ i ] );
 				if ( intMapGrid >= 0 && intMapGrid <= 1 )
 				{
@@ -251,23 +249,26 @@ public class MUMap
 		return aintExit;
 	}
 	
-	protected void move( int intDeltaX, int intDeltaY )
+	protected boolean move( int intDeltaX, int intDeltaY )
 	{
 		if ( !blnMapOver )
 		{
-			intRound ++;
 			if ( intDeltaX < -1 || intDeltaX > 1 || intDeltaY < -1 || intDeltaY > 1 )
-				return;
+				return false;
 			int x = intPositionX + intDeltaX;
 			int y = intPositionY + intDeltaY;
+			boolean moved = false;
 			if ( inMap( x, y ) && aintMap[ y ][ x ] != 1 )
 			{
 				intPositionX = x;
 				intPositionY = y;
+				moved = true;
 			}
 			blnMapOver = checkExit();
 			intStep ++;
+			return moved;
 		}
+		return false;
 	}
 	
 	public int getStep()
@@ -284,12 +285,12 @@ public class MUMap
 		return false;
 	}
 	
-	protected void move( int intDirection )
+	protected boolean move( int intDirection )
 	{
 		int[] aintMove = aintDToM[ intDirection ];
 		int intDeltaX = aintMove[ 0 ];
 		int intDeltaY = aintMove[ 1 ];
-		move( intDeltaX, intDeltaY );
+		return move( intDeltaX, intDeltaY );
 	}
 	
 	protected int[] getLocation()
@@ -433,6 +434,7 @@ public class MUMap
 		
 	}
 	
+	@SuppressWarnings("unused")
 	private void dfsMap( int[][] aintReached, int intSubRootX, int intSubRootY )
 	{
 		aintReached[ intSubRootY ][ intSubRootX ] = 1;
