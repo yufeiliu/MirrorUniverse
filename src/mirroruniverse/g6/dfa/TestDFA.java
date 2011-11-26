@@ -37,6 +37,10 @@ public class TestDFA {
 		otherDfa.addStartState(otherStartState);
 		otherDfa.addState(otherEndState);
 	}
+	
+	public void testConstructor() {
+		
+	}
 
 	@Test
 	public void testFindShortestPathOnTwoCell() {
@@ -112,8 +116,8 @@ public class TestDFA {
 	
 	@Test
 	public void testConstructorWithMap() {
-		int[][] map1 = new int[][] {{3, 0}, {0, 2}};
-		DFA<Entity, Move> dfa = new DFA<Entity, Move>(map1);
+		int[][] map = new int[][] {{3, 0}, {0, 2}};
+		DFA<Entity, Move> dfa = new DFA<Entity, Move>(map);
 		ArrayList<Move> solution = dfa.findShortestPath();
 		assertNotNull(solution.get(0));
 		assertEquals(solution.size(), 1);

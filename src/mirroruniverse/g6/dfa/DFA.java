@@ -16,74 +16,69 @@ public class DFA<V, T> {
 	ArrayList<State<V, T>> states;
 	State<V, T> startState;
 
-	@SuppressWarnings("unchecked")
-	public DFA(int[][] firstMap) {
+	public DFA(int[][] map) {
 		this();
-		//Not an insurance company
-		HashMap<String, State<Entity, Move>> allStates = new HashMap<String, State<Entity, Move>>(); 
+		HashMap<String, State<Entity, Move>> allStates =
+				new HashMap<String, State<Entity, Move>>(); 
+		int xCap = map.length;
+		int yCap = map[0].length;
 		
-		int x_cap = firstMap.length;
-		int y_cap = firstMap[0].length;
-		
-		for (int x = 0; x < x_cap; x++) {
-			for (int y = 0; y < y_cap; y++) {
-
-				if (firstMap[x][y]==Utils.entitiesToShen(Entity.OBSTACLE)) continue;
-
-				System.out.println(firstMap[x][y]);
-				State<Entity, Move> node;
-				if (allStates.containsKey(x+","+y)) {
-					node = allStates.get(x+","+y);
-				} else {
-					node = new State<Entity, Move>(
-							Utils.shenToEntities(firstMap[x][y]),
-							firstMap[x][y]==Utils.entitiesToShen(Entity.EXIT));
-					if (firstMap[x][y]== Utils.entitiesToShen(Entity.PLAYER)) {
-						// This is janky
-						startState = (State<V, T>) node;
-					}
-					allStates.put(x+","+y, node);
+		addStates(map, allStates, xCap, yCap);
+		for (int x = 0; x < xCap; x++) {
+			for (int y = 0; y < yCap; y++) {
+				if (allStates.containsKey(makeKey(x, y))) {
+					State<Entity, Move> node = allStates.get(makeKey(x, y));
+					addTransitions(map, allStates, xCap, yCap, x, y, node);
 				}
-				
-				for (int dx = -1; dx <= 1; dx++) {
-					
-					for (int dy = -1; dy <= 1; dy++) {
-						
-						if (dx==0 && dy==0) continue;
-						
-						int new_x = x + dx, new_y = y + dy;
-						
-						//If out of bound, transition onto self
-						if (new_x >= x_cap || new_x < 0 || new_y >= y_cap || new_y < 0 ||
-								firstMap[x+dx][y+dy]==Utils.entitiesToShen(Entity.OBSTACLE)) {
-							node.addTransition(new Transition<Entity, Move>(Utils.dxdyToMove(dx, dy),node,node));
-						} else {
-							State<Entity, Move> neighbor;
-							if (allStates.containsKey((x+dx)+","+(y+dy))) {
-								neighbor = allStates.get((x+dx)+","+(y+dy));
-							} else {
-								neighbor = new State<Entity, Move>(
-										Utils.shenToEntities(
-												firstMap[x+dx][y+dy]),
-												firstMap[x+dx][y+dy] == Utils.entitiesToShen(Entity.EXIT)
-										);
-								if (firstMap[x+dx][y+dy]==Utils.entitiesToShen(Entity.PLAYER)) {
-									startState = (State<V, T>) neighbor;
-								}
-								
-								allStates.put((x+dx)+","+(y+dy), neighbor);
-							}
-							
-							node.addTransition(new Transition<Entity, Move>(Utils.dxdyToMove(dx,dy), node, neighbor));
-						}
-					}
-				}
-				
 			}
 		}
-		
+	}
+
+	@SuppressWarnings("unchecked")
+	private void addStates(int[][] map,
+			HashMap<String, State<Entity, Move>> allStates, int xCap, int yCap) {
+		for (int x = 0; x < xCap; x++) {
+			for (int y = 0; y < yCap; y++) {
+				if (map[x][y] == Utils.entitiesToShen(Entity.OBSTACLE))
+					continue;
+				Entity entity = Utils.shenToEntities(map[x][y]);
+				boolean isStart = entity == Entity.PLAYER;
+				boolean isGoal = entity == Entity.EXIT;
+				State<Entity, Move> node = new State<Entity, Move>(entity, isGoal);
+				allStates.put(makeKey(x, y), node);
+				if (isStart) {
+					startState = (State<V, T>) node;
+				}
+				if (node.isGoal()) {
+					goalStates.add((State<V, T>) node);
+				}
+				states.add((State<V, T>) node);
+			}
+		}
+	}
+
+	private void addTransitions(int[][] map,
+			HashMap<String, State<Entity, Move>> allStates, int xCap, int yCap,
+			int x, int y, State<Entity, Move> node) {
+		for (int dx = -1; dx <= 1; dx++) {
+			for (int dy = -1; dy <= 1; dy++) {
+				if (dx == 0 && dy == 0) {
+					continue;
+				}
+				if (!allStates.containsKey(makeKey(x+dx,y+dy))) {
+					node.addTransition(Utils.dxdyToMove(dx, dy), node);
+				} else {
+					State<Entity, Move> neighbor = allStates.get(makeKey(x+dx, y+dy));
+					node.addTransition(Utils.dxdyToMove(dx, dy), neighbor);
+				}
+			}
+		}
 	}
 	
+	private String makeKey(int x, int y) {
+		return x + "," + y;
+	}
+
 	public DFA() {
 		goalStates = new ArrayList<State<V, T>>();
 		states = new ArrayList<State<V, T>>();
