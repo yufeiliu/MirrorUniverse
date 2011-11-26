@@ -10,7 +10,6 @@ public class Pair<T extends Comparable<T>, W> implements Comparable<Pair<T, W>> 
 		this.back = aBack;
 	}
 	
-	@SuppressWarnings("unused")
 	public T getFront() { return front; }
 	public W getBack() { return back; }
 	
