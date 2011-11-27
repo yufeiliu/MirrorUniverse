@@ -15,7 +15,7 @@ public class DFASolver extends Solver {
 		ArrayList<Move> solution = null;
 		int attempts = 0;
 		while (solution == null && attempts < MAX_DISTANCE) {
-			// TODO(yufei) - this doesn't step backwards yet when the actual
+			// TODO - this doesn't step backwards yet when the actual
 			// goal doesn't work
 			// Probably add multithreading
 			solution = DFA.intersect(new DFA<Entity, Move>(firstMap),

@@ -115,11 +115,21 @@ public class TestDFA {
 	}
 	
 	@Test
+	public void testConstructorWithBigMaps() {
+		int[][] map = new int[][] {{1, 1, 0, 0, 2}, {1, 1, 0, 1, 0}, {1, 1, 3, 0, 0}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}};
+		DFA<Entity, Move> dfa = new DFA<Entity, Move>(map);
+//		System.out.println(dfa);
+//		int[][] map2 = new int[][] {{2, 0, 0, 1, 1}, {0, 1, 0, 1, 1}, {0, 0, 3, 1, 1}, {1, 1, 1, 1, 1}, {1, 1, 1, 1, 1}};
+//		DFA<Entity, Move> dfa2 = new DFA<Entity, Move>(map2);
+		ArrayList<Move> solution = dfa.findShortestPath();
+		assertNotNull(solution.get(0));
+	}
+	
+	@Test
 	public void testConstructorWithMap() {
 		int[][] map = new int[][] {{3, 0}, {0, 2}};
 		DFA<Entity, Move> dfa = new DFA<Entity, Move>(map);
 		ArrayList<Move> solution = dfa.findShortestPath();
-		assertNotNull(solution.get(0));
 		assertEquals(solution.size(), 1);
 		assertEquals(solution.get(0), Move.SE);
 	}

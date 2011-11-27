@@ -24,11 +24,12 @@ public class DFA<V, T> {
 		int yCap = map[0].length;
 		
 		addStates(map, allStates, xCap, yCap);
+
 		for (int x = 0; x < xCap; x++) {
 			for (int y = 0; y < yCap; y++) {
 				if (allStates.containsKey(makeKey(x, y))) {
 					State<Entity, Move> node = allStates.get(makeKey(x, y));
-					addTransitions(map, allStates, xCap, yCap, x, y, node);
+					addTransitions(map, allStates, x, y, node);
 				}
 			}
 		}
@@ -41,34 +42,39 @@ public class DFA<V, T> {
 			for (int y = 0; y < yCap; y++) {
 				if (map[x][y] == Utils.entitiesToShen(Entity.OBSTACLE))
 					continue;
+				
 				Entity entity = Utils.shenToEntities(map[x][y]);
-				boolean isStart = entity == Entity.PLAYER;
-				boolean isGoal = entity == Entity.EXIT;
-				State<Entity, Move> node = new State<Entity, Move>(entity, isGoal);
-				allStates.put(makeKey(x, y), node);
-				if (isStart) {
-					startState = (State<V, T>) node;
+				boolean isStart = (entity == Entity.PLAYER);
+				boolean isGoal = (entity == Entity.EXIT);
+				boolean isKnown = (entity != Entity.UNKNOWN);
+				if (isKnown) {
+					State<Entity, Move> node = new State<Entity, Move>(entity, isGoal);
+					allStates.put(makeKey(x, y), node);
+					if (isStart) {
+						startState = (State<V, T>) node;
+					}
+					if (node.isGoal()) {
+						goalStates.add((State<V, T>) node);
+					}
+					states.add((State<V, T>) node);
 				}
-				if (node.isGoal()) {
-					goalStates.add((State<V, T>) node);
-				}
-				states.add((State<V, T>) node);
 			}
 		}
 	}
 
 	private void addTransitions(int[][] map,
-			HashMap<String, State<Entity, Move>> allStates, int xCap, int yCap,
+			HashMap<String, State<Entity, Move>> allStates,
 			int x, int y, State<Entity, Move> node) {
 		for (int dx = -1; dx <= 1; dx++) {
 			for (int dy = -1; dy <= 1; dy++) {
 				if (dx == 0 && dy == 0) {
 					continue;
 				}
-				if (!allStates.containsKey(makeKey(x+dx,y+dy))) {
+				String key = makeKey(x+dy, y+dx);
+				if (!allStates.containsKey(key)) {
 					node.addTransition(Utils.dxdyToMove(dx, dy), node);
 				} else {
-					State<Entity, Move> neighbor = allStates.get(makeKey(x+dx, y+dy));
+					State<Entity, Move> neighbor = allStates.get(key);
 					node.addTransition(Utils.dxdyToMove(dx, dy), neighbor);
 				}
 			}
@@ -155,10 +161,8 @@ public class DFA<V, T> {
 		DFA<Entity, Move> intersection = new DFA<Entity, Move>();
 		HashMap<String, State<Entity, Move>> newStates =
 				new HashMap<String, State<Entity, Move>>();
-		
 		addIntersectionStates(first, other, intersection, newStates);
 		addIntersectionTransitions(first, other, newStates);
-		
 		return intersection;
 	}
 
@@ -174,9 +178,7 @@ public class DFA<V, T> {
 					continue;
 				}
 				String key = makeKey(selfState, otherState);
-				
-				// TODO - figure out what this should be if the value is ever
-				// used?
+				// This value 
 				Entity e = selfState.getValue();
 				State<Entity, Move> s = new State<Entity, Move>(
 						e,
@@ -201,6 +203,10 @@ public class DFA<V, T> {
 			for (State<Entity, Move> otherState : other.states) {
 				String startKey = makeKey(selfState, otherState);
 				State<Entity, Move> source = newStates.get(startKey);
+				// null if it's an exit for one of them
+				if (source == null) {
+					continue;
+				}
 				for (Transition<Entity, Move> selfTrans :
 							selfState.getTransitions()) {
 					for (Transition<Entity, Move> otherTrans :

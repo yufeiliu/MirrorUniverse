@@ -1,68 +1,84 @@
 package mirroruniverse.g6;
 
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import mirroruniverse.g6.Utils.Entity;
-import mirroruniverse.sim.MUMap;
 import mirroruniverse.sim.Player;
 
 public class G6Player implements Player {
-	
-	//knowledge of whats at each map
-	private int[][] left = new int[200][200];
-	private int[][] right = new int[200][200];
-	
-	
-	
-	private int x1 = -999;
-	private int y1;
-	private int x2;
-	private int y2;
-	
-	
-	private int r1 = -1;
-	private int r2 = -1;
-	
 
+	private static final boolean DEBUG = false;
+	
+	private static final int MAX_MAP_SIZE = 100;
+	private static final int INTERNAL_MAP_SIZE = MAX_MAP_SIZE * 2;
+	
+	// Stores maps.
+	private int[][] left = new int[INTERNAL_MAP_SIZE][INTERNAL_MAP_SIZE];
+	private int[][] right = new int[INTERNAL_MAP_SIZE][INTERNAL_MAP_SIZE];
+	
+	/*
+	 * The current location of each player within the 200x200 grid.
+	 */
+	private int x1, x2, y1, y2;
+	
+	/*
+	 * True if the exists have been found. Used to cache this knowledge
+	 * and avoid unnecessary computation.
+	 */
+	private boolean exitsFound;
+
+	/*
+	 * Array of moves for the solution. null if unsolved.
+	 */
 	private int[] solution;
+	
+	/*
+	 * Solver used to provide the solution. Can be swapped out to use
+	 * a different method if necessary.
+	 */
 	private Solver solver;
+	
+	/*
+	 * Step of the solution which the player currently is on.
+	 */
 	private int solutionStep;
 
 	public G6Player() {
-		for (int i = 0; i < 200; i++) {
-			for (int j = 0; j < 200; j++) {
-				left[i][j]=-1;
-				right[i][j]=-1;
+		// Set all points to be unknown.
+		for (int i = 0; i < INTERNAL_MAP_SIZE; i++) {
+			for (int j = 0; j < INTERNAL_MAP_SIZE; j++) {
+				left[i][j] = Utils.entitiesToShen(Entity.UNKNOWN);
+				right[i][j] = Utils.entitiesToShen(Entity.UNKNOWN);
 			}
 		}
-		
-		solution = null;
+		// Start coordinates to be the center of map so that we can
+		// deal with a 100x100 map in any direction. Subtract by 1
+		// to account for 0 based indexing.
+		x1 = x2 = y1 = y2 = INTERNAL_MAP_SIZE / 2 - 1;
 		solver = new DFASolver();
 	}
 
-	//exploration strategy 
+	// TODO - implement 
 	public int explore(int[][] leftView, int[][] rightView) {
-		if (r1 == -1 || r2 == -1) {
-			r1 = (leftView.length-1) / 2;
-			r2 = (rightView.length-1) / 2;
+		int exit = Utils.entitiesToShen(Entity.EXIT);
+		int dir = 0;
+		int dx, dy;
+		int leftMidY = leftView.length / 2;
+		int leftMidX = leftView[0].length / 2;
+		int rightMidY = rightView.length / 2;
+		int rightMidX = rightView[0].length / 2;
+		// Random, but don't step on exit.
+		do {
+			int[] deltas = { -1, 0, 1 };
+			dx = deltas[(int) (Math.random() * 3)];
+			dy = deltas[(int) (Math.random() * 3)];
+		} while(leftView[leftMidY + dy][leftMidX + dx] == exit ||
+				rightView[rightMidY + dy][rightMidX + dx] == exit);
+		dir = Utils.moveToShen(Utils.dxdyToMove(dx, dy));
+		if (DEBUG) {
+			System.out.println(dir);
 		}
-		if(x1 == -999) {
-			x1 = r1;
-			y1 = r1;
-			x2 = r2;
-			y2 = r2;
-			
-			left[x1][y1]=0;
-			right[x2][y2]=0;
-		}
+		return dir;
 		
-		updateKnowledge(left, x1, y1, leftView);
-		updateKnowledge(right, x2, y2, rightView);
-		
-		
+		/*
 		int dir = 0;
 		
 		List<Pair<Integer, Integer>> possibilities = new ArrayList<Pair<Integer, Integer>>(); 
@@ -96,28 +112,48 @@ public class G6Player implements Player {
 		x2 += dirArray[0];
 		y1 += dirArray[1];
 		y2 += dirArray[1];
-		
 		return dir;
+		*/
 	}
 	
 	@Override
 	public int lookAndMove(int[][] leftView, int[][] rightView) {
-		//TODO: add logic for re-recomputing solution upon uncovering more fogged area
+		updateKnowledge(left, x1, y1, leftView);
+		updateKnowledge(right, x2, y2, rightView);
+
+		int dir;
 		
-		if (solution == null && switchPhase(left, right)) {
-			solution = solver.solve(left, right);
-			solutionStep = 0;
+		dir = getSolutionStep();
+		if (dir > 0) {
+			return dir;
 		}
-		if(solution != null) {
-			return solution[solutionStep++];
-		}
-		return explore(leftView, rightView);
+		dir = explore(leftView, rightView);
+		return dir;
+	}
+
+	/*
+	 * Shen's code does not show the player.
+	 */
+	private void addPlayerToView(int[][] view) {
+		// 0-indexed, and add 1 for integer division ==> we can just divide by
+		// 2 (view.length is always odd)
+		int midX = view.length / 2;
+		int midY = view[0].length / 2;
+		view[midY][midX] = Utils.entitiesToShen(Entity.PLAYER);
 	}
 	
+	/*
+	 * Update the knowledge grids.
+	 */
 	private void updateKnowledge(int[][] knowledge, int x, int y, int[][] view) {
-		for (int i = (view.length - 1)/2; i < view.length; i++) {
-			for (int j = (view[0].length-1)/2; j < view[0].length; j++) {
-				knowledge[i- (view.length - 1)/2][j - (view[0].length-1)/2] = view[i][j];
+		addPlayerToView(view);
+		
+		int leftX = x - view.length / 2;
+		int botY = y - view.length / 2;
+		
+		for (int i = 0; i < view.length; i++) {
+			for (int j = 0; j < view[0].length; j++) {
+				knowledge[leftX + i][botY + j] = view[i][j];
 			}
 		}
 	}
@@ -134,12 +170,19 @@ public class G6Player implements Player {
 		return counter;
 	}
 	
-	private boolean switchPhase(int[][] left, int[][] right) {
-		//check for exit in both
-		return isExitFoundIn(left) && isExitFoundIn(right);
+	private boolean areExitsFound(int[][] left, int[][] right) {
+		// Exits can never be "unfound", so just cache our knowledge to avoid
+		// unnecessary computation.
+		if (!exitsFound) {
+			exitsFound = isExitSeen(left) && isExitSeen(right);
+		}
+		return exitsFound;
 	}
 	
-	private boolean isExitFoundIn(int[][] knowledge) {
+	/*
+	 * If the exit is in a particular view.
+	 */
+	private boolean isExitSeen(int[][] knowledge) {
 		for(int i = 0; i < knowledge.length; i++) {
 			for(int j = 0; j < knowledge[0].length; j++) {
 				if(knowledge[i][j] == Utils.entitiesToShen(Entity.EXIT)) {
@@ -148,6 +191,39 @@ public class G6Player implements Player {
 			}
 		}
 		return false;
+	}
+
+	private int getSolutionStep() {
+		// TODO - continuously update solution with new knowledge.
+		// native approach below is too slow (or moves us away from exit); at
+		// the least, we can avoid recomputing if we've found a 0 solution or
+		// see the entire map.
+		/*
+		if (areExitsFound(left, right)) {
+			solution = solver.solve(right, left);
+			if (solution != null) {
+				return solution[0];
+			}
+		}
+		*/
+		
+		if (solution == null && areExitsFound(left, right)) {
+			solution = solver.solve(left, right);
+			solutionStep = 0;
+			if (solution != null) {
+				if (DEBUG) {
+					System.out.println("solution");
+					for (int i : solution) {
+						System.out.println(Utils.shenToMove(i));
+					}
+				}
+			}
+		}
+		if(solution != null) {
+			return solution[solutionStep++];
+		}
+		
+		return -1;
 	}
 
 }

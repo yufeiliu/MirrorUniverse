@@ -53,10 +53,11 @@ public class Utils {
 	public static Move dxdyToMove(int dx, int dy) {
 		int counter = 0;
 		for (int[] elem : MUMap.aintDToM) {
-			if (elem[0]==dx && elem[1]==dy) return Utils.shenToMove(counter); 
+			if (elem[0]==dx && elem[1]==dy) {
+				return Utils.shenToMove(counter); 
+			}
 			counter++;
 		}
-		
 		return null;
 	}
 	

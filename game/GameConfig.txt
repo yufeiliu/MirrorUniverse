@@ -1,5 +1,11 @@
-1, 30, 3, -1, maps/g6LongMap1.txt
-1, 30, 3, -1, maps/g6LongMap2.txt
+4, 4, 2, -1, maps/lessEasyLeft.txt
+4, 4, 2, -1, maps/lessEasyRight.txt
+
+4, 4, 2, -1, maps/easyLeft.txt
+4, 4, 2, -1, maps/easyRight.txt
+
+40, 40, 3, -1, maps/bigLeft.txt
+40, 40, 3, -1, maps/bigRight.txt
 
 40, 40, 3, -1, maps/bigLeft.txt
 40, 40, 3, -1, maps/bigRight.txt
