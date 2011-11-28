@@ -158,7 +158,11 @@ public class G6Player implements Player {
 			y2 += dy;
 		}
 		
+<<<<<<< HEAD
 		System.out.println(dir);
+=======
+		System.out.println(Utils.shenToMove(dir));
+>>>>>>> 235ff22c1d7e75730cf33876778b158a1d4c4dc8
 		
 		return dir;
 	}
@@ -263,7 +267,7 @@ public class G6Player implements Player {
 			
 			solutionStep = 0;
 			if (solution != null) {
-				if (DEBUG || true) {
+				if (DEBUG) {
 					System.out.println("solution");
 					for (int i : solution) {
 						System.out.println(Utils.shenToMove(i));
