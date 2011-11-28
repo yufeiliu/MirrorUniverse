@@ -116,7 +116,7 @@ public class G6Player implements Player {
 		*/
 	}
 	
-	@Override
+	//@Override
 	public int lookAndMove(int[][] leftView, int[][] rightView) {
 		updateKnowledge(left, x1, y1, leftView);
 		updateKnowledge(right, x2, y2, rightView);
@@ -219,7 +219,7 @@ public class G6Player implements Player {
 				}
 			}
 		}
-		if(solution != null) {
+		if(solution != null && solutionStep < solution.length) {
 			return solution[solutionStep++];
 		}
 		
