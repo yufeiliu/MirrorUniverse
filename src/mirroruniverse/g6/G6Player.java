@@ -97,10 +97,12 @@ public class G6Player implements Player {
 		
 		int dir = 0;
 		
-		System.out.println("=================");
-		Utils.print2DArray(leftView);
-		System.out.println();
-		Utils.print2DArray(rightView);
+		if (DEBUG) {
+			System.out.println("=================");
+			Utils.print2DArray(leftView);
+			System.out.println();
+			Utils.print2DArray(rightView);
+		}
 		
 		List<Pair<Integer, Integer>> possibilities = new ArrayList<Pair<Integer, Integer>>(); 
 		
@@ -127,18 +129,24 @@ public class G6Player implements Player {
 			}
 		}
 		
-		System.out.println("========");
-		System.out.println("x1: " + x1 + " y1: " + y1 + " x2: " + x2 + " y2: " + y2);
+		if (DEBUG) {
+			System.out.println("========");
+			System.out.println("x1: " + x1 + " y1: " + y1 + " x2: " + x2 + " y2: " + y2);
+		}
 		
 		Collections.sort(possibilities);
 		dir = possibilities.get(0).getBack();
-		System.out.println("Squares to be uncovered: " + possibilities.get(0).getFront());
+		if (DEBUG) {
+			System.out.println("Squares to be uncovered: " + possibilities.get(0).getFront());
+		}
 		
 		int[] dirArray = MUMap.aintDToM[dir];
 		int dx = dirArray[0];
 		int dy = dirArray[1];
 		
-		System.out.println("Choose dir: (" + dirArray[0] + ", " + dirArray[1] + ")");
+		if (DEBUG) {
+			System.out.println("Choose dir: (" + dirArray[0] + ", " + dirArray[1] + ")");
+		}
 		
 		if (leftView[leftRelative + dy][leftRelative + dx] == Utils.entitiesToShen(Entity.SPACE)) {
 			x1 += dx;
@@ -247,11 +255,13 @@ public class G6Player implements Player {
 		if (solution == null && areExitsFound()) {
 			solution = solver.solve(left, right);
 			
-			System.out.println("Solution size: " + solution.length);
+			if (DEBUG) {
+				System.out.println("Solution size: " + solution.length);
+			}
 			
 			solutionStep = 0;
 			if (solution != null) {
-				if (DEBUG) {
+				if (DEBUG || true) {
 					System.out.println("solution");
 					for (int i : solution) {
 						System.out.println(Utils.shenToMove(i));
