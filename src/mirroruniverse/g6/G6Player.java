@@ -2,7 +2,9 @@ package mirroruniverse.g6;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import mirroruniverse.g6.Utils.Entity;
 import mirroruniverse.sim.MUMap;
@@ -67,29 +69,12 @@ public class G6Player implements Player {
 	}
 
 	public int explore(int[][] leftView, int[][] rightView) {
-		/*
-		int exit = Utils.entitiesToShen(Entity.EXIT);
-		int dir = 0;
-		int dx, dy;
-		int leftMidY = leftView.length / 2;
-		int leftMidX = leftView[0].length / 2;
-		int rightMidY = rightView.length / 2;
-		int rightMidX = rightView[0].length / 2;
-		// Random, but don't step on exit.
-		do {
-			int[] deltas = { -1, 0, 1 };
-			dx = deltas[(int) (Math.random() * 3)];
-			dy = deltas[(int) (Math.random() * 3)];
-		} while(leftView[leftMidY + dy][leftMidX + dx] == exit ||
-				rightView[rightMidY + dy][rightMidX + dx] == exit);
-		dir = Utils.moveToShen(Utils.dxdyToMove(dx, dy));
-		if (DEBUG) {
-			System.out.println(dir);
-		}
-		return dir;
-		*/
+//		return exploreRandom(leftView, rightView);
 		
 		//If haven't set sight radii yet, set them
+		// TODO why do we have to do this? Can't we just set a flag somewhere
+		// to determine if the radii aren't set? Also, can r1 ever be set
+		// when r2 isn't?
 		if (r1==-1 || r2==-2) {
 			r1 = (leftView.length-1) / 2;
 			r1 = (rightView.length-1) / 2;
@@ -104,10 +89,11 @@ public class G6Player implements Player {
 			Utils.print2DArray(rightView);
 		}
 		
-		List<Pair<Integer, Integer>> possibilities = new ArrayList<Pair<Integer, Integer>>(); 
+		Set<Pair<Integer, Integer>> possibilities =
+				new HashSet<Pair<Integer, Integer>>();
 		
-		int leftRelative = leftView.length / 2;
-		int rightRelative = rightView.length / 2;
+		int leftMid = leftView.length / 2;
+		int rightMid = rightView.length / 2;
 		
 		//TODO: if no direction exists that uncovers squares, go to direction with most/least space
 		//Loop over directions
@@ -120,8 +106,8 @@ public class G6Player implements Player {
 			int newx2 = Math.min(Math.max(x2+dx, 0), MAX_MAP_SIZE - 1);
 			int newy2 = Math.min(Math.max(y2+dy, 0), MAX_MAP_SIZE - 1);
 			
-			if (leftView[leftRelative + dy][leftRelative + dx] == Utils.entitiesToShen(Entity.SPACE) || 
-					rightView[rightRelative + dy][rightRelative + dx] == Utils.entitiesToShen(Entity.SPACE)) {
+			if (leftView[leftMid + dy][leftMid + dx] == Utils.entitiesToShen(Entity.SPACE) || 
+					rightView[rightMid + dy][rightMid + dx] == Utils.entitiesToShen(Entity.SPACE)) {
 				//TODO: remove duplicates
 				possibilities.add(new Pair<Integer, Integer>(
 						squaresUncovered(newx1, newy1, r1, left) + 
@@ -134,10 +120,13 @@ public class G6Player implements Player {
 			System.out.println("x1: " + x1 + " y1: " + y1 + " x2: " + x2 + " y2: " + y2);
 		}
 		
-		Collections.sort(possibilities);
-		dir = possibilities.get(0).getBack();
+		ArrayList<Pair<Integer, Integer>> possibilitiesList =
+				new ArrayList<Pair<Integer, Integer>>(possibilities);
+		Collections.sort(possibilitiesList);
+		dir = possibilitiesList.get(0).getBack();
 		if (DEBUG) {
-			System.out.println("Squares to be uncovered: " + possibilities.get(0).getFront());
+			System.out.println("Squares to be uncovered: " +
+					possibilitiesList.get(0).getFront());
 		}
 		
 		int[] dirArray = MUMap.aintDToM[dir];
@@ -148,19 +137,42 @@ public class G6Player implements Player {
 			System.out.println("Choose dir: (" + dirArray[0] + ", " + dirArray[1] + ")");
 		}
 		
-		if (leftView[leftRelative + dy][leftRelative + dx] ==
+		if (leftView[leftMid + dy][leftMid + dx] ==
 				Utils.entitiesToShen(Entity.SPACE)) {
 			x1 += dy;
 			y1 += dx;
 		}
 		
-		if (rightView[rightRelative + dy][rightRelative + dx] ==
+		if (rightView[rightMid + dy][rightMid + dx] ==
 				Utils.entitiesToShen(Entity.SPACE)) {
 			x2 += dy;
 			y2 += dx;
 		}
 		if (DEBUG) {
 			System.out.println(Utils.shenToMove(dir));
+		}
+		
+		return dir;
+	}
+
+	// Random, but don't step on exit.
+	private int exploreRandom(int[][] leftView, int[][] rightView) {
+		int exit = Utils.entitiesToShen(Entity.EXIT);
+		int dir = 0;
+		int dx, dy;
+		int leftMidY = leftView.length / 2;
+		int leftMidX = leftView[0].length / 2;
+		int rightMidY = rightView.length / 2;
+		int rightMidX = rightView[0].length / 2;
+		do {
+			int[] deltas = { -1, 0, 1 };
+			dx = deltas[(int) (Math.random() * 3)];
+			dy = deltas[(int) (Math.random() * 3)];
+		} while(leftView[leftMidY + dy][leftMidX + dx] == exit ||
+				rightView[rightMidY + dy][rightMidX + dx] == exit);
+		dir = Utils.moveToShen(Utils.dxdyToMove(dx, dy));
+		if (DEBUG) {
+			System.out.println(dir);
 		}
 		return dir;
 	}
@@ -274,6 +286,8 @@ public class G6Player implements Player {
 		// If solutionStep >= solution.length, the solution was invalid
 		if(solution != null  && solutionStep < solution.length) {
 			return solution[solutionStep++];
+		} else if (solution != null && solutionStep >= solution.length) {
+			System.err.println("Invalid solution provided.");
 		}
 		
 		return -1;

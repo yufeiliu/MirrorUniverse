@@ -18,4 +18,18 @@ public class Pair<T extends Comparable<T>, W> implements Comparable<Pair<T, W>> 
 		return -1 * this.front.compareTo(arg0.front);
 	}
 	
+	public int hashCode() {
+		return this.front.hashCode() + this.back.hashCode();
+	}
+	
+	@SuppressWarnings("unchecked")
+	public boolean equals(Object other) {
+		Pair<T, W> otherPair = (Pair<T, W>) other;
+		return front == otherPair.front && back == otherPair.back;
+	}
+	
+	public String toString() {
+		return front + " " + back;
+	}
+	
 }
