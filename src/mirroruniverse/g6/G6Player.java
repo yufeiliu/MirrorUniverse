@@ -1,6 +1,11 @@
 package mirroruniverse.g6;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import mirroruniverse.g6.Utils.Entity;
+import mirroruniverse.sim.MUMap;
 import mirroruniverse.sim.Player;
 
 public class G6Player implements Player {
@@ -18,6 +23,11 @@ public class G6Player implements Player {
 	 * The current location of each player within the 200x200 grid.
 	 */
 	private int x1, x2, y1, y2;
+	
+	/*
+	 * sight radius on the left, and on the right
+	 */
+	private int r1 = -1, r2 = -1;
 	
 	/*
 	 * True if the exists have been found. Used to cache this knowledge
@@ -56,8 +66,8 @@ public class G6Player implements Player {
 		solver = new DFASolver();
 	}
 
-	// TODO - implement 
 	public int explore(int[][] leftView, int[][] rightView) {
+		/*
 		int exit = Utils.entitiesToShen(Entity.EXIT);
 		int dir = 0;
 		int dx, dy;
@@ -77,11 +87,25 @@ public class G6Player implements Player {
 			System.out.println(dir);
 		}
 		return dir;
+		*/
 		
-		/*
+		//If haven't set sight radii yet, set them
+		if (r1==-1 || r2==-2) {
+			r1 = (leftView.length-1) / 2;
+			r1 = (rightView.length-1) / 2;
+		}
+		
 		int dir = 0;
 		
+		System.out.println("=================");
+		Utils.print2DArray(leftView);
+		System.out.println();
+		Utils.print2DArray(rightView);
+		
 		List<Pair<Integer, Integer>> possibilities = new ArrayList<Pair<Integer, Integer>>(); 
+		
+		int leftRelative = leftView.length / 2;
+		int rightRelative = rightView.length / 2;
 		
 		//TODO: if no direction exists that uncovers squares, go to direction with most/least space
 		//Loop over directions
@@ -89,38 +113,51 @@ public class G6Player implements Player {
 			int[] curDir = MUMap.aintDToM[i];
 			int dx = curDir[0];
 			int dy = curDir[1];
-			int newx1 = Math.max(x1+dx, 0);
-			int newy1 = Math.max(y1+dy, 0);
-			int newx2 = Math.max(x2+dx, 0);
-			int newy2 = Math.max(y2+dy, 0);
+			int newx1 = Math.min(Math.max(x1+dx, 0), MAX_MAP_SIZE - 1);
+			int newy1 = Math.min(Math.max(y1+dy, 0), MAX_MAP_SIZE - 1);
+			int newx2 = Math.min(Math.max(x2+dx, 0), MAX_MAP_SIZE - 1);
+			int newy2 = Math.min(Math.max(y2+dy, 0), MAX_MAP_SIZE - 1);
 			
-			if (leftView[newx1][newy1] == Utils.entitiesToShen(Entity.SPACE) && 
-					rightView[newx2][newy2] == Utils.entitiesToShen(Entity.SPACE)) {
+			if (leftView[leftRelative + dy][leftRelative + dx] == Utils.entitiesToShen(Entity.SPACE) || 
+					rightView[rightRelative + dy][rightRelative + dx] == Utils.entitiesToShen(Entity.SPACE)) {
 				//TODO: remove duplicates
 				possibilities.add(new Pair<Integer, Integer>(
 						squaresUncovered(newx1, newy1, r1, left) + 
-						squaresUncovered(newx2, newy2, r2, right)
-						, i));
+						squaresUncovered(newx2, newy2, r2, right), i));
 			}
 		}
 		
+		System.out.println("========");
+		System.out.println("x1: " + x1 + " y1: " + y1 + " x2: " + x2 + " y2: " + y2);
+		
 		Collections.sort(possibilities);
 		dir = possibilities.get(0).getBack();
+		System.out.println("Squares to be uncovered: " + possibilities.get(0).getFront());
 		
 		int[] dirArray = MUMap.aintDToM[dir];
-		x1 += dirArray[0];
-		x2 += dirArray[0];
-		y1 += dirArray[1];
-		y2 += dirArray[1];
+		int dx = dirArray[0];
+		int dy = dirArray[1];
+		
+		System.out.println("Choose dir: (" + dirArray[0] + ", " + dirArray[1] + ")");
+		
+		if (leftView[leftRelative + dy][leftRelative + dx] == Utils.entitiesToShen(Entity.SPACE)) {
+			x1 += dx;
+			y1 += dy;
+		}
+		
+		if (rightView[rightRelative + dy][rightRelative + dx] == Utils.entitiesToShen(Entity.SPACE)) {
+			x2 += dx;
+			y2 += dy;
+		}
+		
 		return dir;
-		*/
 	}
 	
 	@Override
 	public int lookAndMove(int[][] leftView, int[][] rightView) {
 		updateKnowledge(left, x1, y1, leftView);
 		updateKnowledge(right, x2, y2, rightView);
-
+		
 		int dir;
 		
 		dir = getSolutionStep();
@@ -163,14 +200,14 @@ public class G6Player implements Player {
 		
 		for (int i = Math.max(newX - r, 0); i <= Math.min(newX + r, knowledge[0].length-1); i++) {
 			for (int j = Math.max(newY - r, 0); j <= Math.min(newY + r, knowledge.length-1); j++) {
-				counter += (knowledge[j][i] == -1 ? 1 : 0);
+				counter += (knowledge[i][j] == Utils.entitiesToShen(Entity.UNKNOWN) ? 1 : 0);
 			}
 		}
 		
 		return counter;
 	}
 	
-	private boolean areExitsFound(int[][] left, int[][] right) {
+	private boolean areExitsFound() {
 		// Exits can never be "unfound", so just cache our knowledge to avoid
 		// unnecessary computation.
 		if (!exitsFound) {
@@ -207,8 +244,11 @@ public class G6Player implements Player {
 		}
 		*/
 		
-		if (solution == null && areExitsFound(left, right)) {
+		if (solution == null && areExitsFound()) {
 			solution = solver.solve(left, right);
+			
+			System.out.println("Solution size: " + solution.length);
+			
 			solutionStep = 0;
 			if (solution != null) {
 				if (DEBUG) {
