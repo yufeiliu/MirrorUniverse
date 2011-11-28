@@ -9,7 +9,7 @@ public abstract class Solver {
 	
 	public int[] solve(int[][] firstMap, int[][] secondMap) {
 		ArrayList<Move> moves = solveInternal(firstMap, secondMap);
-		return movesToInt(moves);
+		return moves == null ? null : movesToInt(moves);
 	}
 	
 	private int[] movesToInt(ArrayList<Move> solution) {
