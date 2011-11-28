@@ -158,6 +158,8 @@ public class G6Player implements Player {
 			y2 += dy;
 		}
 		
+		System.out.println(dir);
+		
 		return dir;
 	}
 	
@@ -266,10 +268,15 @@ public class G6Player implements Player {
 					for (int i : solution) {
 						System.out.println(Utils.shenToMove(i));
 					}
+					Utils.print2DArray(left);
+					System.out.println("--------------");
+					Utils.print2DArray(right);
+					System.exit(1);
 				}
 			}
+			solution = null;
 		}
-		if(solution != null) {
+		if(solution != null && solutionStep < solution.length) {
 			return solution[solutionStep++];
 		}
 		
