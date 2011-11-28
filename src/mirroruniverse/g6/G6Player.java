@@ -259,7 +259,7 @@ public class G6Player implements Player {
 				}
 			}
 		}
-		if(solution != null && solutionStep < solution.length) {
+		if(solution != null) {
 			return solution[solutionStep++];
 		}
 		
