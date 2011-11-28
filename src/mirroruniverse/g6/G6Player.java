@@ -95,7 +95,9 @@ public class G6Player implements Player {
 		int leftMid = leftView.length / 2;
 		int rightMid = rightView.length / 2;
 		
-		//TODO: if no direction exists that uncovers squares, go to direction with most/least space
+		//TODO: if no direction exists that uncovers squares, go to direction
+		// with most/least space
+		
 		//Loop over directions
 		for (int i = 1; i <= 8; i++) {
 			int[] curDir = MUMap.aintDToM[i];
@@ -108,7 +110,6 @@ public class G6Player implements Player {
 			
 			if (leftView[leftMid + dy][leftMid + dx] == Utils.entitiesToShen(Entity.SPACE) || 
 					rightView[rightMid + dy][rightMid + dx] == Utils.entitiesToShen(Entity.SPACE)) {
-				//TODO: remove duplicates
 				possibilities.add(new Pair<Integer, Integer>(
 						squaresUncovered(newx1, newy1, r1, left) + 
 						squaresUncovered(newx2, newy2, r2, right), i));
