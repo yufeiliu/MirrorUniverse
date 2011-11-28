@@ -10,7 +10,7 @@ import mirroruniverse.sim.Player;
 
 public class G6Player implements Player {
 
-	private static final boolean DEBUG = false;
+	public static final boolean DEBUG = false;
 	
 	private static final int MAX_MAP_SIZE = 100;
 	private static final int INTERNAL_MAP_SIZE = MAX_MAP_SIZE * 2;
@@ -148,21 +148,20 @@ public class G6Player implements Player {
 			System.out.println("Choose dir: (" + dirArray[0] + ", " + dirArray[1] + ")");
 		}
 		
-		if (leftView[leftRelative + dy][leftRelative + dx] == Utils.entitiesToShen(Entity.SPACE)) {
-			x1 += dx;
-			y1 += dy;
+		if (leftView[leftRelative + dy][leftRelative + dx] ==
+				Utils.entitiesToShen(Entity.SPACE)) {
+			x1 += dy;
+			y1 += dx;
 		}
 		
-		if (rightView[rightRelative + dy][rightRelative + dx] == Utils.entitiesToShen(Entity.SPACE)) {
-			x2 += dx;
-			y2 += dy;
+		if (rightView[rightRelative + dy][rightRelative + dx] ==
+				Utils.entitiesToShen(Entity.SPACE)) {
+			x2 += dy;
+			y2 += dx;
 		}
-		
-<<<<<<< HEAD
-		System.out.println(dir);
-=======
-		System.out.println(Utils.shenToMove(dir));
->>>>>>> 235ff22c1d7e75730cf33876778b158a1d4c4dc8
+		if (DEBUG) {
+			System.out.println(Utils.shenToMove(dir));
+		}
 		
 		return dir;
 	}
@@ -171,9 +170,8 @@ public class G6Player implements Player {
 	public int lookAndMove(int[][] leftView, int[][] rightView) {
 		updateKnowledge(left, x1, y1, leftView);
 		updateKnowledge(right, x2, y2, rightView);
-		
-		int dir;
-		
+
+		int dir;		
 		dir = getSolutionStep();
 		if (dir > 0) {
 			return dir;
@@ -259,8 +257,7 @@ public class G6Player implements Player {
 		*/
 		
 		if (solution == null && areExitsFound()) {
-			solution = solver.solve(left, right);
-			
+			solution = solver.solve(right, left);
 			if (DEBUG) {
 				System.out.println("Solution size: " + solution.length);
 			}
@@ -272,15 +269,11 @@ public class G6Player implements Player {
 					for (int i : solution) {
 						System.out.println(Utils.shenToMove(i));
 					}
-					Utils.print2DArray(left);
-					System.out.println("--------------");
-					Utils.print2DArray(right);
-					System.exit(1);
 				}
 			}
-			solution = null;
 		}
-		if(solution != null && solutionStep < solution.length) {
+		// If solutionStep >= solution.length, the solution was invalid
+		if(solution != null  && solutionStep < solution.length) {
 			return solution[solutionStep++];
 		}
 		
