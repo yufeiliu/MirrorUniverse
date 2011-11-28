@@ -266,7 +266,7 @@ public class G6Player implements Player {
 		for (int i = 0; i < view.length; i++) {
 			for (int j = 0; j < view[0].length; j++) {
 				// TODO - I think if this is ever false, there's a bug in the code
-				// and this is false for the identical maps
+				// and this is false for the identical maps	
 				if (leftX + i < knowledge.length && botY + j < knowledge[0].length) {
 					knowledge[leftX + i][botY + j] = view[i][j];
 				}
