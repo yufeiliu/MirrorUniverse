@@ -162,7 +162,6 @@ public class G6Player implements Player {
 		if (DEBUG) {
 			System.out.println(Utils.shenToMove(dir));
 		}
-		
 		return dir;
 	}
 	
