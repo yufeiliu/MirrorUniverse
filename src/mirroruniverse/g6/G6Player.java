@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import mirroruniverse.g6.Utils.Entity;
+import mirroruniverse.g6.Utils.Move;
 import mirroruniverse.sim.MUMap;
 import mirroruniverse.sim.Player;
 
@@ -19,6 +20,8 @@ public class G6Player implements Player {
 	// Stores maps.
 	private int[][] left = new int[INTERNAL_MAP_SIZE][INTERNAL_MAP_SIZE];
 	private int[][] right = new int[INTERNAL_MAP_SIZE][INTERNAL_MAP_SIZE];
+	
+	private ArrayList<Node> nodeGraph = new ArrayList<Node>();
 	
 	/*
 	 * The current location of each player within the 200x200 grid.
@@ -374,4 +377,16 @@ public class G6Player implements Player {
 		return -1;
 	}
 
+	private class Node {
+		public Entity entity;
+		public int x;
+		public int y;
+		public HashSet<Edge> edges;
+	}
+	
+	private class Edge {
+		public Node from;
+		public Node to;
+		public Move move;
+	}
 }
