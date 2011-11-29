@@ -21,7 +21,8 @@ public class G6Player implements Player {
 	private int[][] left = new int[INTERNAL_MAP_SIZE][INTERNAL_MAP_SIZE];
 	private int[][] right = new int[INTERNAL_MAP_SIZE][INTERNAL_MAP_SIZE];
 	
-	private ArrayList<Node> nodeGraph = new ArrayList<Node>();
+	private ArrayList<Node> nodeGraphLeft = new ArrayList<Node>();
+	private ArrayList<Node> nodeGraphRight = new ArrayList<Node>();
 	
 	/*
 	 * The current location of each player within the 200x200 grid.
@@ -75,65 +76,18 @@ public class G6Player implements Player {
 	}
 
 	public int explore(int[][] leftView, int[][] rightView) {
-//		return exploreRandom(leftView, rightView);
-		
 		if (!radiiDiscovered) {
 			r1 = (leftView.length-1) / 2;
 			r2 = (rightView.length-1) / 2;
 		}
 		
+		if (nodeGraphLeft.size() == 0) {
+			
+			
+		}
+		
 		int dir = 0;
 		
-		if (DEBUG) {
-			System.out.println("=================");
-			Utils.print2DArray(leftView);
-			System.out.println();
-			Utils.print2DArray(rightView);
-		}
-		
-		// TODO - Use a set to avoid duplicates. I added this because there was
-		// a TODO to avoid duplicates, but I'm not sure how it's possible to
-		// get duplicates. Change this back to a list if it's not.
-		Set<Pair<Integer, Integer>> possibilities =
-				new HashSet<Pair<Integer, Integer>>();
-		
-		int leftMid = leftView.length / 2;
-		int rightMid = rightView.length / 2;
-		
-		// TODO: if no direction exists that uncovers squares, go to direction
-		// with most/least space
-		
-		// Iterate over directions
-		for (int i = 1; i <= 8; i++) {
-			addPossibleDir(leftView, rightView, possibilities, leftMid,
-					rightMid, i);
-		}
-		
-		if (DEBUG) {
-			System.out.println("x1: " + x1 + " y1: " + y1 + " x2: " + x2 +
-						" y2: " + y2);
-		}
-		
-		ArrayList<Pair<Integer, Integer>> possibilitiesList =
-				new ArrayList<Pair<Integer, Integer>>(possibilities);
-		Collections.sort(possibilitiesList);
-		
-		dir = pickDirFromPossibilities(possibilitiesList);
-		
-		if (DEBUG) {
-			System.out.println("Squares to be uncovered: " +
-					possibilitiesList.get(0).getFront());
-		}
-		
-		int[] dirArray = MUMap.aintDToM[dir];
-		int dx = dirArray[0];
-		int dy = dirArray[1];
-		
-		updateCenters(leftView, rightView, leftMid, rightMid, dx, dy);
-		
-		if (DEBUG) {
-			System.out.println(Utils.shenToMove(dir));
-		}
 		
 		return dir;
 	}
