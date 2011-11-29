@@ -274,6 +274,7 @@ public class G6Player implements Player {
 			}
 		}
 		
+		//TODO: what do we do if the fringe cannot be found?
 		while(firstFringe != null) {
 			for(Deque<Edge> pathStack : paths) {
 				//peek at top of each stack.
