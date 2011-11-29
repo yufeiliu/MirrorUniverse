@@ -1,8 +1,13 @@
 package mirroruniverse.g6;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Deque;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 import mirroruniverse.g6.Utils.Entity;
@@ -251,6 +256,48 @@ public class G6Player implements Player {
 		}
 		
 		return counter;
+	}
+	
+	private List<Edge> getFringe(ArrayList<Node> nodeGraph) {
+		HashSet<Deque<Edge>> paths = new HashSet<Deque<Edge>>();
+		
+		Deque<Edge> firstFringe = null;
+		
+		//add first edges to stacks
+		for(Node node : nodeGraph) {
+			for(Edge edge : node.edges) {
+				if(edge.to.x != edge.from.x && edge.to.y != edge.from.y) {
+					Deque<Edge> pathStack = new ArrayDeque<Edge>();
+					pathStack.add(edge);
+					paths.add(pathStack);
+				}
+			}
+		}
+		
+		while(firstFringe != null) {
+			for(Deque<Edge> pathStack : paths) {
+				//peek at top of each stack.
+				Edge top = pathStack.peek();
+				
+				//check for fringe (fewer than 8 edges)
+				if(top.to.entity == Entity.SPACE && top.to.edges.size() < 8) {
+					//if fringe, return that stack.
+					firstFringe = pathStack;
+				} else {
+					//else, copy stack and push new edges onto tops of each new one
+					for(Edge edge : top.to.edges) {
+						if(edge.to.x != edge.from.x && edge.to.y != edge.from.y) {
+							Deque<Edge> newPathStack = new ArrayDeque<Edge>();
+							newPathStack.addAll(pathStack);
+							newPathStack.add(edge);
+							paths.add(newPathStack);
+						}
+					}
+				}
+			}
+		}
+		
+		return new ArrayList<Edge>(firstFringe);
 	}
 	
 	private boolean areExitsFound() {
