@@ -1,7 +1,6 @@
 package mirroruniverse.g6;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -22,6 +21,7 @@ public class G6Player implements Player {
 	private int[][] left = new int[INTERNAL_MAP_SIZE][INTERNAL_MAP_SIZE];
 	private int[][] right = new int[INTERNAL_MAP_SIZE][INTERNAL_MAP_SIZE];
 	
+	// kept for debugging purposes
 	private int steps;
 	
 	/*
@@ -57,6 +57,8 @@ public class G6Player implements Player {
 	 * a different method if necessary.
 	 */
 	private Solver solver;
+	
+	private boolean didExhaustiveCheck;
 
 	public G6Player() {
 		// Set all points to be unknown.
@@ -469,7 +471,13 @@ public class G6Player implements Player {
 					(solution.getDiff() == 0 || shouldNotRecomputeSolution())) {
 				return solution.getNextStep();
 			}
-			solution = solver.solve(right, left);
+			if (!didExhaustiveCheck && isFullyExplored()) {
+				didExhaustiveCheck = true;
+				solution = solver.solve(right, left, Solver.MAX_DISTANCE);
+			} else {
+				solution = solver.solve(right, left);
+			}
+			
 			if (solution != null) {
 				return solution.getNextStep();
 			}

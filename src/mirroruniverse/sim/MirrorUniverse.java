@@ -112,7 +112,7 @@ public class MirrorUniverse
 			mumMapL.move( intMove );
 			mumMapR.move( intMove );
 			intStep ++;
-			if (intStep > 200) {
+			if (intStep > 10000) {
 				break;
 			}
 		}

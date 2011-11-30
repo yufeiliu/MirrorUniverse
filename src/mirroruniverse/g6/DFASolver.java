@@ -8,10 +8,15 @@ import mirroruniverse.g6.dfa.DFA;
 
 public class DFASolver extends Solver {
 
-	private static final int MAX_DISTANCE = 3; 
+	private static final int DEFAULT_DISTANCE = 3;
 	
 	@Override
 	Solution solve(int[][] firstMap, int[][] secondMap) {
+		return solve(firstMap, secondMap, DEFAULT_DISTANCE);
+	}
+	
+	@Override
+	Solution solve(int[][] firstMap, int[][] secondMap, int distance) {
 		DFA<Entity, Move> firstDFA, secondDFA, firstBack, secondBack;
 		ArrayList<Move> steps = null;
 		int attempts = 0;
@@ -28,7 +33,7 @@ public class DFASolver extends Solver {
 		
 		steps = intersection.findShortestPath();
 
-		while (steps == null && attempts < MAX_DISTANCE) {
+		while (steps == null && attempts < DEFAULT_DISTANCE) {
 			secondBack = secondBack.shiftGoals();
 			steps = DFA.intersect(firstDFA, secondBack).findShortestPath();
 			if (steps == null) {
