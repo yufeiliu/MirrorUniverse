@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Queue;
 
+import mirroruniverse.g6.G6Player;
 import mirroruniverse.g6.Utils;
 import mirroruniverse.g6.Utils.Entity;
 import mirroruniverse.g6.Utils.Move;
@@ -170,9 +171,12 @@ public class DFA<V, T> {
 		stateEnd = System.currentTimeMillis();
 		addIntersectionTransitions(first, other, newStates);
 		transEnd = System.currentTimeMillis();
-		System.out.println("Intersection: " + (stateEnd - start));
-		System.out.println("Transitions: " + (transEnd - stateEnd));
-		System.exit(1);
+		
+		if (G6Player.SID_DEBUG) {
+			System.out.println("Intersection: " + (stateEnd - start));
+			System.out.println("Transitions: " + (transEnd - stateEnd));
+		}
+		
 		return intersection;
 	}
 
@@ -260,14 +264,9 @@ public class DFA<V, T> {
 		DFA<V, T> other = new DFA<V, T>();
 		HashMap<State<V, T>, State<V, T>> copiedStates =
 				new HashMap<State<V, T>, State<V, T>>();
-		
-		boolean foundStart = false;
-		
+
 		for (State<V, T> s : states) {
-			boolean isStart = (s == startState);
-			if (isStart) 
-				foundStart = true;
-			
+			boolean isStart = (s == startState);			
 			State<V, T> newS = new State<V, T>(s.getValue(), false);
 			copiedStates.put(s, newS);
 			if (isStart) {
@@ -275,11 +274,6 @@ public class DFA<V, T> {
 			} else {
 				other.addState(newS);
 			}
-		}
-		
-		if (foundStart == false) {
-			System.out.println(":(");
-			System.exit(1);
 		}
 		
 		for (State<V, T> s : states) {
