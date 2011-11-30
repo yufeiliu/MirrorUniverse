@@ -296,8 +296,6 @@ public final class MUGUI extends JFrame implements ActionListener, ChangeListene
 	
 	private void nextStep( int intMoveTo) 
 	{
-		if ( intStepIndex < aintReplay.length )
-		{
 			manualMove.offerLast(intMoveTo);
 			boolean m1 = boardPanelL.move( intMoveTo );
 			boolean m2 = boardPanelR.move( intMoveTo );
@@ -305,7 +303,6 @@ public final class MUGUI extends JFrame implements ActionListener, ChangeListene
 			System.out.println(whoMovedNow);
 			whoMoved.offerLast(whoMovedNow);
 			intStepIndex ++ ;
-		}
 		if ( boardPanelL.getFinished() ^ boardPanelR.getFinished() )
 		{
 			intDiffScore ++;
