@@ -12,7 +12,7 @@ import mirroruniverse.sim.Player;
 public class G6Player implements Player {
 
 	public static final boolean DEBUG = false;
-	public static final boolean SID_DEBUG = false;
+	public static final boolean SID_DEBUG = true;
 	
 	private static final int MAX_MAP_SIZE = 100;
 	private static final int INTERNAL_MAP_SIZE = MAX_MAP_SIZE * 2;
@@ -38,6 +38,9 @@ public class G6Player implements Player {
 	private boolean exitsFound;
 	private boolean leftExitFound;
 	private boolean rightExitFound;
+	
+	private boolean leftExited;
+	private boolean rightExited;
 	
 	private boolean radiiDiscovered;
 
@@ -151,14 +154,16 @@ public class G6Player implements Player {
 		int dx = curDir[0];
 		int dy = curDir[1];
 		int space = Utils.entitiesToShen(Entity.SPACE);
+		int exit = Utils.entitiesToShen(Entity.EXIT);
 		int newx1 = x1;
 		int newy1 = y1;
 		int newx2 = x2;
 		int newy2 = y2;
-		boolean leftUnblocked =
-				(leftView[leftMid + dy][leftMid + dx] ==  space);
-		boolean rightUnblocked = (rightView[rightMid + dy][rightMid + dx] ==  space);
-//			rightUnblocked = leftUnblocked;
+		int leftEntity = leftView[leftMid + dy][leftMid + dx];
+		int rightEntity = rightView[rightMid + dy][rightMid + dx];
+		
+		boolean leftUnblocked = (leftEntity ==  space);
+		boolean rightUnblocked = (rightEntity ==  space);
 		
 		// Only update newx and newy for unblocked directions
 		if (leftUnblocked) {
@@ -170,32 +175,51 @@ public class G6Player implements Player {
 			newy2 = Math.min(Math.max(y2+dx, 0), INTERNAL_MAP_SIZE - 1);
 		}
 		
-		// Don't make a move that will move neither player. If we don't
-		// perform this check, we could perform a useless move if everything
-		// ties for 0
-		if (leftUnblocked || rightUnblocked) {
-			int toUncover = 0;
-			if (leftUnblocked && !isLeftExitFound()) {
-				toUncover += squaresUncovered(newx1, newy1, r1, left);
-			}
-			if (rightUnblocked && !isRightExitFound()) {
-				toUncover += squaresUncovered(newx2, newy2, r2, right);
-			}
-			possibilities.add(new Pair<Integer, Integer>(toUncover, i));
+		// Don't make a move that will move neither player or a move that will
+		// only move the player who sees his/her exit. If we don't perform this
+		// check, we could perform a useless move if everything ties for 0.
+		
+		if ((!leftUnblocked && !rightUnblocked) ||
+				(!leftUnblocked && isRightExitFound()) ||
+				(isLeftExitFound() && !rightUnblocked)) {
+			return;
 		}
+		
+		// Don't accidentally step on exit
+		if (!isFullyExplored() && (leftEntity == exit || rightEntity == exit)) {
+			return;
+		}
+		
+		int toUncover = 0;
+		if (leftUnblocked && !isLeftExitFound()) {
+			toUncover += squaresUncovered(newx1, newy1, r1, left);
+		}
+		if (rightUnblocked && !isRightExitFound()) {
+			toUncover += squaresUncovered(newx2, newy2, r2, right);
+		}
+		possibilities.add(new Pair<Integer, Integer>(toUncover, i));
 	}
 
 	private void updateCenters(int[][] leftView, int[][] rightView,
 			int leftMid, int rightMid, int dx, int dy) {
-		if (leftView[leftMid + dy][leftMid + dx] ==
-				Utils.entitiesToShen(Entity.SPACE)) {
+		int rightEntity = rightView[rightMid + dy][rightMid + dx];
+		int leftEntity = leftView[leftMid + dy][leftMid + dx];
+		int space = Utils.entitiesToShen(Entity.SPACE);
+		int exit = Utils.entitiesToShen(Entity.EXIT);
+		
+		if (leftEntity == space || leftEntity == exit) {
 			x1 += dy;
 			y1 += dx;
 		}
-		if (rightView[rightMid + dy][rightMid + dx] ==
-				Utils.entitiesToShen(Entity.SPACE)) {
+		if (leftEntity == exit) {
+			leftExited = false;
+		}
+		if (rightEntity == space || rightEntity == exit) {
 			x2 += dy;
 			y2 += dx;
+		} 
+		if (rightEntity == exit) {
+			rightExited = true;
 		}
 	}
 
@@ -236,7 +260,12 @@ public class G6Player implements Player {
 		dir = getSolutionStep();
 //		System.out.println("got sol");
 		if (dir < 0) {
-			dir = explore(leftView, rightView);
+			if (leftExited || rightExited) {
+				dir = getSingleSolutionStep();
+			}
+			if (dir < 0) {
+				dir = explore(leftView, rightView);
+			}
 		}
 
 		
@@ -251,6 +280,21 @@ public class G6Player implements Player {
 		}
 		
 		return dir;
+	}
+
+
+	private int getSingleSolutionStep() {
+		if (solution == null) {
+			if (leftExited) {
+				solution = solver.solve(right);
+			} else if (rightExited) {
+				solution = solver.solve(left);
+			}
+		}
+		if (solution != null) {
+			return solution.getNextStep();
+		}
+		return -1;
 	}
 
 	/*
@@ -353,14 +397,11 @@ public class G6Player implements Player {
 	private int getSolutionStepSingle() {
 		if (solution == null && areExitsFound()) {
 			solution = solver.solve(right, left);
-			if (DEBUG) {
-				System.out.println("Solution size: " + solution.numTotalSteps());
-				System.out.println("Solution diff: " + solution.getDiff());
-			}
-			
 			if (solution != null) {
 				if (DEBUG) {
 					System.out.println(solution);
+					System.out.println("Solution size: " + solution.numTotalSteps());
+					System.out.println("Solution diff: " + solution.getDiff());
 				}
 			}
 		}

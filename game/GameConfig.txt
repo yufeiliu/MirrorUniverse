@@ -1,5 +1,8 @@
-25, 25, 5, 6, 0.4, 5
-25, 25, 5, 7, 0.2, 6
+25, 25, 2, 6, 0.4, 5
+25, 25, 2, 7, 0.2, 6
+
+4, 4, 2, -1, maps/lessEasyLeft.txt
+4, 4, 2, -1, maps/lessEasyRight.txt
 
 7, 6, 2, -1, maps/identical/left.txt
 7, 6, 2, -1, maps/identical/right.txt

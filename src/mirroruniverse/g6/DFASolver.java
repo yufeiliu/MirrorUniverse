@@ -1,7 +1,6 @@
 package mirroruniverse.g6;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import mirroruniverse.g6.Utils.Entity;
 import mirroruniverse.g6.Utils.Move;
@@ -9,12 +8,12 @@ import mirroruniverse.g6.dfa.DFA;
 
 public class DFASolver extends Solver {
 
-	private static final int MAX_DISTANCE = 5; 
+	private static final int MAX_DISTANCE = 3; 
 	
 	@Override
 	Solution solve(int[][] firstMap, int[][] secondMap) {
 		DFA<Entity, Move> firstDFA, secondDFA, firstBack, secondBack;
-		ArrayList<Move> solution = null;
+		ArrayList<Move> steps = null;
 		int attempts = 0;
 		
 		firstDFA = firstBack = new DFA<Entity, Move>(firstMap);
@@ -27,18 +26,24 @@ public class DFASolver extends Solver {
 			return null;
 		}
 		
-		solution = intersection.findShortestPath();
+		steps = intersection.findShortestPath();
 
-		while (solution == null && attempts < MAX_DISTANCE) {
+		while (steps == null && attempts < MAX_DISTANCE) {
 			secondBack = secondBack.shiftGoals();
-			solution = DFA.intersect(firstDFA, secondBack).findShortestPath();
-			if (solution == null) {
+			steps = DFA.intersect(firstDFA, secondBack).findShortestPath();
+			if (steps == null) {
 				firstBack = firstBack.shiftGoals();
-				solution = DFA.intersect(firstBack, secondDFA).findShortestPath();
+				steps = DFA.intersect(firstBack, secondDFA).findShortestPath();
 			}
 			attempts++;
 		}
-		return solution == null ? null : new Solution(solution, attempts);
+		return steps == null ? null : new Solution(steps, attempts);
+	}
+	
+	Solution solve(int[][] firstMap) {
+		DFA<Entity, Move> dfa = new DFA<Entity, Move>(firstMap);
+		ArrayList<Move> steps = dfa.findShortestPath();
+		return steps == null ? null : new Solution(steps, 0);
 	}
 	
 }

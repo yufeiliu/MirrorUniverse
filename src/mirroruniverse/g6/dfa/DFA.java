@@ -225,21 +225,23 @@ public class DFA<V, T> {
 				}
 				// TODO - hash transitions by value. That would make this loop
 				// O(T) instead of O(T^2); T is always 9 for this project
-				for (Transition<Entity, Move> selfTrans :
-							selfState.getTransitions()) {
-					for (Transition<Entity, Move> otherTrans :
-							otherState.getTransitions()) {
-						Move m = selfTrans.getValue();
-						if (otherTrans.getValue() != m) {
-							continue;
-						};
-						String endKey = makeKey(
-								selfTrans.getEnd(), otherTrans.getEnd());
-						State<Entity, Move> dest = newStates.get(endKey);
-						// dest is null if it would have one exit
-						if (dest != null) {
-							source.addTransition(m, dest);
-						}
+				for (int i = 0; i < State.NUM_DIRECTIONS; i++) {
+					Transition<Entity, Move> selfTrans = selfState.getTransition(i);
+					Transition<Entity, Move> otherTrans = otherState.getTransition(i);
+					if (selfTrans == null || otherTrans == null) {
+						continue;
+					}
+					Move m = selfTrans.getValue();
+					if (otherTrans.getValue() != m) {
+						System.err.println("Oopps");
+						continue;
+					};
+					String endKey = makeKey(
+							selfTrans.getEnd(), otherTrans.getEnd());
+					State<Entity, Move> dest = newStates.get(endKey);
+					// dest is null if it would have one exit
+					if (dest != null) {
+						source.addTransition(m, dest);
 					}
 				}
 			}
