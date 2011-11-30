@@ -1,30 +1,32 @@
 package mirroruniverse.g6.dfa;
 
-public class Transition<V, T> {
+import mirroruniverse.g6.Utils.Move;
+
+public class Transition {
 	
-	private State<V, T> end;
-	private T value;
-	private State<V, T> start;
+	private State end;
+	private Move value;
+	private State start;
 	private String id;
 	
-	private static int idCounter = 0;
+	private static short idCounter = 0;
 	
-	public Transition(T value, State<V, T> start, State<V, T> end) {
+	public Transition(Move value, State start, State end) {
 		this.end = end;
 		this.start = start;
 		this.value = value;
 		this.id = String.valueOf(idCounter++);
 	}
 	
-	public T getValue() {
+	public Move getValue() {
 		return value;
 	}
 	
-	public State<V, T> getStart() {
+	public State getStart() {
 		return start;
 	}
 
-	public State<V, T> getEnd() {
+	public State getEnd() {
 		return end;
 	}
 	
@@ -35,4 +37,5 @@ public class Transition<V, T> {
 	public String toString() {
 		return "Go " + value + " from (" + start + ") to (" + end + ")\n";
 	}
+	
 }

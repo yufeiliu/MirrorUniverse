@@ -11,118 +11,124 @@ import mirroruniverse.g6.Utils;
 import mirroruniverse.g6.Utils.Entity;
 import mirroruniverse.g6.Utils.Move;
 
-public class DFA<V, T> {
+public class DFA {
 	
-	ArrayList<State<V, T>> goalStates;
-	ArrayList<State<V, T>> states;
-	State<V, T> startState;
+	ArrayList<State> goalStates;
+	ArrayList<State> states;
+	State startState;
 
+	
+	public DFA() {
+		goalStates = new ArrayList<State>();
+		states = new ArrayList<State>();
+	}
+	
 	public DFA(int[][] map) {
 		this();
-		HashMap<String, State<Entity, Move>> allStates =
-				new HashMap<String, State<Entity, Move>>(); 
+		HashMap<String, State> allStates = new HashMap<String, State>(); 
 		int xCap = map.length;
 		int yCap = map[0].length;
 		
 		addStates(map, allStates, xCap, yCap);
 
-		for (int x = 0; x < xCap; x++) {
-			for (int y = 0; y < yCap; y++) {
-				if (allStates.containsKey(makeKey(x, y))) {
-					State<Entity, Move> node = allStates.get(makeKey(x, y));
-					addTransitions(map, allStates, x, y, node);
-				}
-			}
+		for (String k : allStates.keySet()) {
+			State node = allStates.get(k);
+			byte[] xy = recoverKey(k);
+			addTransitions(map, allStates, xy[0], xy[1], node);
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	private void addStates(int[][] map,
-			HashMap<String, State<Entity, Move>> allStates, int xCap, int yCap) {
-		for (int x = 0; x < xCap; x++) {
-			for (int y = 0; y < yCap; y++) {
-				if (map[x][y] == Utils.entitiesToShen(Entity.OBSTACLE))
+			HashMap<String, State> allStates, int xCap, int yCap) {
+		for (short x = 0; x < xCap; x++) {
+			for (short y = 0; y < yCap; y++) {
+				if (map[x][y] == Utils.entitiesToShen(Entity.OBSTACLE)) {
 					continue;
+				}
 				
 				Entity entity = Utils.shenToEntities(map[x][y]);
 				boolean isStart = (entity == Entity.PLAYER);
 				boolean isGoal = (entity == Entity.EXIT);
-				boolean isKnown = (entity != Entity.UNKNOWN);
-				if (isKnown) {
-					State<Entity, Move> node = new State<Entity, Move>(entity, isGoal);
-					allStates.put(makeKey(x, y), node);
-					if (isStart) {
-						startState = (State<V, T>) node;
-					}
-					if (node.isGoal()) {
-						goalStates.add((State<V, T>) node);
-					}
-					states.add((State<V, T>) node);
+				boolean isUnknown = (entity == Entity.UNKNOWN);
+				
+				if (isUnknown) {
+					continue;
+				}
+
+				State node = new State(entity, isGoal);
+				allStates.put(makeKey(x, y), node);
+				
+				if (isStart) {
+					addStartState(node);
+				} else {
+					addState(node);
 				}
 			}
 		}
 	}
 
-	private void addTransitions(int[][] map,
-			HashMap<String, State<Entity, Move>> allStates,
-			int x, int y, State<Entity, Move> node) {
-		for (int dx = -1; dx <= 1; dx++) {
-			for (int dy = -1; dy <= 1; dy++) {
+	private void addTransitions(int[][] map, HashMap<String, State> allStates,
+			short x, short y, State node) {
+		for (byte dx = -1; dx <= 1; dx++) {
+			for (byte dy = -1; dy <= 1; dy++) {
 				if (dx == 0 && dy == 0) {
 					continue;
 				}
-				String key = makeKey(x+dy, y+dx);
-				if (!allStates.containsKey(key)) {
-					node.addTransition(Utils.dxdyToMove(dx, dy), node);
-				} else {
-					State<Entity, Move> neighbor = allStates.get(key);
-					node.addTransition(Utils.dxdyToMove(dx, dy), neighbor);
-				}
+				String key = makeKey(x + dy, y + dx);
+				State end = allStates.containsKey(key) ? allStates.get(key) : node;
+				node.addTransition(Utils.dxdyToMove(dx, dy), end);
 			}
 		}
 	}
 	
+	// Make this an int instead of a short to avoid forcing casting into a short.
 	private String makeKey(int x, int y) {
 		return x + "," + y;
 	}
 
-	public DFA() {
-		goalStates = new ArrayList<State<V, T>>();
-		states = new ArrayList<State<V, T>>();
+
+	private byte[] recoverKey(String k) {
+		String[] split = k.split(",");
+		byte[] xy = new byte[2];
+		xy[0] = Byte.parseByte(split[0]);
+		xy[1] = Byte.parseByte(split[1]);
+		return xy;
 	}
 	
-	public State<V, T> addStartState(State<V, T> s) {
+	public void addStartState(State s) {
 		startState = s;
 		addState(s);
-		return s;
 	}
 	
-	public State<V, T> addState(State<V, T> s) {
+	public void addState(State s) {
 		if (s.isGoal()) {
 			goalStates.add(s);
 		}
 		states.add(s);
-		return s;
 	}
 	
-	public ArrayList<T> findShortestPath() {
-		HashMap<State<V, T>, Transition<V, T>> used =
-				new HashMap<State<V, T>, Transition<V, T>>();
-		Queue<State<V, T>> q = new LinkedList<State<V, T>>();
+	public ArrayList<Move> findShortestPath() {
+		HashMap<State, Transition> used = new HashMap<State, Transition>();
+		Queue<State> q = new LinkedList<State>();
+		
+		// This indicates that no transition points to the startState.
 		used.put(startState, null);
+		
 		q.add(startState);
-		State<V, T> currentState;
 		while(!q.isEmpty()) {
-			currentState = q.poll();
+			State currentState = q.poll();
 			if (currentState.isGoal()) {
 				return recoverPath(currentState, used);
 			}
-			for (Transition<V, T> t : currentState.getTransitions()) {				
-				// self-transitions should not be part of shortest path
-				if(t.getStart().equals(t.getEnd())) {
+			for (Transition t : currentState.getTransitions()) {
+				// This happens after an intersection, where the transition
+				// would go to a state with one exit.
+				if (t == null) {
 					continue;
 				}
-				State<V, T> nextState = t.getEnd();
+				// We never want to repeat states in our shortest path. This
+				// includes avoiding self-transitions.
+				State nextState = t.getEnd();
 				if (!used.containsKey(nextState)) {
 					used.put(nextState, t);
 					q.add(nextState);
@@ -132,21 +138,26 @@ public class DFA<V, T> {
 		return null;
 	}
 	
-	protected ArrayList<T> recoverPath(State<V, T> currentState,
-			HashMap<State<V, T>, Transition<V, T>> used) {
-		ArrayList<T> path = new ArrayList<T>();
-		ArrayList<Transition<V, T>> transPath = new ArrayList<Transition<V, T>>();
+	protected ArrayList<Move> recoverPath(State currentState,
+			HashMap<State, Transition> used) {
+		ArrayList<Move> path = new ArrayList<Move>();
+		ArrayList<Transition> transPath; 
+		if (G6Player.SID_DEBUG) {
+			transPath = new ArrayList<Transition>();
+		}
 		
-		Transition<V, T> trans = used.get(currentState);
+		Transition trans = used.get(currentState);
 		while (trans != null) {
 			path.add(trans.getValue());
 			currentState = trans.getStart();
-			transPath.add(trans);
+			if (G6Player.SID_DEBUG) {
+				transPath.add(trans);
+			}
 			trans = used.get(currentState);
 		}
 		Collections.reverse(path);
-		Collections.reverse(transPath);
 		if (G6Player.SID_DEBUG) {
+			Collections.reverse(transPath);
 			System.out.println(transPath);
 		}
 		return path;
@@ -164,24 +175,29 @@ public class DFA<V, T> {
 	 * The result is a DFA that accepts the intersection of the two original
 	 * DFA.
 	 */
-	public static DFA<Entity, Move> intersect(
-			DFA<Entity, Move> first, DFA<Entity, Move> other) {
-		DFA<Entity, Move> intersection = new DFA<Entity, Move>();
-		HashMap<String, State<Entity, Move>> newStates =
-				new HashMap<String, State<Entity, Move>>();
+	public static DFA intersect(DFA first, DFA other) {
+		DFA intersection = new DFA();
+		HashMap<String, State> newStates = new HashMap<String, State>();
 		
-		long start = System.currentTimeMillis();
-		long stateEnd;
-		long transEnd;
+		long startTime, stateEndTime, transEndTime;
+		
+		if (G6Player.SID_DEBUG) {
+			 startTime = System.currentTimeMillis();
+		}
 		
 		addIntersectionStates(first, other, intersection, newStates);
-		stateEnd = System.currentTimeMillis();
+		if (G6Player.DEBUG) {
+			stateEndTime = System.currentTimeMillis();
+		}
+		
 		addIntersectionTransitions(first, other, newStates);
-		transEnd = System.currentTimeMillis();
+		if (G6Player.DEBUG) {
+			transEndTime = System.currentTimeMillis();
+		}
 		
 		if (G6Player.DEBUG) {
-			System.out.println("Intersection: " + (stateEnd - start));
-			System.out.println("Transitions: " + (transEnd - stateEnd));
+			System.out.println("Intersection: " + (stateEndTime - startTime));
+			System.out.println("Transitions: " + (transEndTime - stateEndTime));
 		}
 		
 		if (G6Player.SID_DEBUG) {
@@ -191,26 +207,28 @@ public class DFA<V, T> {
 		return intersection;
 	}
 
-	private static void addIntersectionStates(DFA<Entity, Move> first,
-			DFA<Entity, Move> other, DFA<Entity, Move> intersection,
-			HashMap<String, State<Entity, Move>> newStates) {
-		for (State<Entity, Move> selfState : first.states) {
-			for (State<Entity, Move> otherState : other.states) {
+	private static void addIntersectionStates(DFA first, DFA other,
+			DFA intersection, HashMap<String, State> newStates) {
+		for (State selfState : first.states) {
+			for (State otherState : other.states) {
 				// Don't accidentally step on an exit - these states cannot
 				// be part of our solution
-				// TODO - handle cases where these aren't real exits
+				
+				// TODO - handle cases where these aren't real exits; need
+				// states to have an isExit field. Currently, we might miss
+				// non-perfect solutions.
 				if ((selfState.isGoal() && !otherState.isGoal() &&
 						selfState != first.startState) ||
 							(!selfState.isGoal() && otherState.isGoal() &&
 							otherState != other.startState)) {
 					continue;
 				}
+				
 				String key = makeKey(selfState, otherState);
-				// This value 
-				Entity e = selfState.getValue();
-				State<Entity, Move> s = new State<Entity, Move>(
-						e,
-						selfState.isGoal() && otherState.isGoal(), key);
+				State s = new State(
+						/* Entity isn't meaningful. */ null,
+						selfState.isGoal() && otherState.isGoal(),
+						key);
 				newStates.put(key, s);
 				
 				// Add the state to the DFA
@@ -223,64 +241,50 @@ public class DFA<V, T> {
 		}
 	}
 
-	private static void addIntersectionTransitions(DFA<Entity, Move> first,
-			DFA<Entity, Move> other,
-			HashMap<String, State<Entity, Move>> newStates) {
-		for (State<Entity, Move> selfState : first.states) {
-			for (State<Entity, Move> otherState : other.states) {
+	private static void addIntersectionTransitions(DFA first, DFA other,
+			HashMap<String, State> newStates) {
+		for (State selfState : first.states) {
+			Transition[] selfTransArray = selfState.getTransList();
+			for (State otherState : other.states) {
 				String startKey = makeKey(selfState, otherState);
-				State<Entity, Move> source = newStates.get(startKey);
+				State source = newStates.get(startKey);
 				// null if it's an exit for one of them
 				if (source == null) {
 					continue;
 				}
-				// TODO - hash transitions by value. That would make this loop
-				// O(T) instead of O(T^2); T is always 9 for this project
+				Transition[] otherTransArray = otherState.getTransList();
 				for (int i = 0; i < State.NUM_DIRECTIONS; i++) {
-					Transition<Entity, Move> selfTrans = selfState.getTransition(i);
-					Transition<Entity, Move> otherTrans = otherState.getTransition(i);
-					if (selfTrans == null || otherTrans == null) {
-						continue;
-					}
-					Move m = selfTrans.getValue();
-					if (otherTrans.getValue() != m) {
-						System.err.println("Oopps");
-						continue;
-					};
-					String endKey = makeKey(
-							selfTrans.getEnd(), otherTrans.getEnd());
-					State<Entity, Move> dest = newStates.get(endKey);
+					Transition selfTrans = selfTransArray[i]; 
+					Transition otherTrans = otherTransArray[i]; 
+					String endKey = makeKey(selfTrans.getEnd(), otherTrans.getEnd());
+					State dest = newStates.get(endKey);
 					// dest is null if it would have one exit
 					if (dest != null) {
-						source.addTransition(m, dest);
+						// trans value is the same for both transitions.
+						source.addTransition(selfTrans.getValue(), dest);
 					}
 				}
 			}
 		}
 	}
 
-	private static String makeKey(State<Entity, Move> selfState,
-			State<Entity, Move> otherState) {
+	private static String makeKey(State selfState, State otherState) {
 		String key = selfState.getValue() + selfState.getId() + "; " +
 				otherState.getValue() + otherState.getId();
 		return key;
 	}
 	
-	public boolean hasNonEmptyLanguage() {
-		return !goalStates.isEmpty();
-	}
-	
 	/*
 	 * Returns a list of DFAs with the goals shifted one back.
 	 */
-	public DFA<V, T> shiftGoals() {
-		DFA<V, T> other = new DFA<V, T>();
-		HashMap<State<V, T>, State<V, T>> copiedStates =
-				new HashMap<State<V, T>, State<V, T>>();
+	public DFA shiftGoals() {
+		DFA other = new DFA();
+		HashMap<State, State> copiedStates = new HashMap<State, State>();
 
-		for (State<V, T> s : states) {
-			boolean isStart = (s == startState);			
-			State<V, T> newS = new State<V, T>(s.getValue(), false);
+		// Copy states. Nothing is set a goal state.
+		for (State s : states) {
+			boolean isStart = (s == startState);
+			State newS = new State(s.getValue(), false);
 			copiedStates.put(s, newS);
 			if (isStart) {
 				other.addStartState(newS);
@@ -289,12 +293,13 @@ public class DFA<V, T> {
 			}
 		}
 		
-		for (State<V, T> s : states) {
-			State<V, T> newS = copiedStates.get(s);
-			for (Transition<V, T> t : s.getTransitions()) {
-				State<V, T> dest = copiedStates.get(t.getEnd());
+		// Copy transitions and make appropriate states goal states.
+		for (State s : states) {
+			State newS = copiedStates.get(s);
+			for (Transition t : s.getTransitions()) {
+				State dest = copiedStates.get(t.getEnd());
 				newS.addTransition(t.getValue(), dest);
-				// can probably add !s.isGoal() for efficiency
+				// TODO: we really want to check !s.isExit, not s.isGoal
 				if (!s.isGoal() && t.getEnd().isGoal() && !newS.isGoal()) {
 					newS.setGoal(true);
 					other.goalStates.add(newS);
@@ -309,20 +314,20 @@ public class DFA<V, T> {
 		s += "=====START STATE=====\n";
 		s += startState + "\n";
 		s += "\n=====GOAL STATES=====\n";
-		for (State<V, T> state : goalStates) {
+		for (State state : goalStates) {
 			s += state + "\n";
 		}
 		s += "\n=====ALL STATES=====\n";
-		for (State<V, T> state : states) {
+		for (State state : states) {
 			s += state + "\n";
-			for (Transition<V, T> t : state.getTransitions()) {
+			for (Transition t : state.getTransitions()) {
 				s += "\t" + t;
 			}
 		}
 		return s;
 	}
 	
-	public State<V, T> getStartState() {
+	public State getStartState() {
 		return startState;
 	}
 

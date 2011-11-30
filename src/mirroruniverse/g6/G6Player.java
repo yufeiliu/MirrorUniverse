@@ -292,7 +292,7 @@ public class G6Player implements Player {
 	
 	//@Override
 	public int lookAndMove(int[][] leftView, int[][] rightView) {
-		int ret;
+		int ret = -1;
 		try {
 			ret = doLookAndMove(leftView, rightView);
 		} catch (Exception e) {
@@ -511,7 +511,8 @@ public class G6Player implements Player {
 			}
 			if (!didExhaustiveCheck && isFullyExplored()) {
 				didExhaustiveCheck = true;
-				solution = solver.solve(right, left, Solver.MAX_DISTANCE);
+				solution = solver.solve(right, left, Solver.MAX_CUTOFF_TIME,
+						Solver.MAX_DISTANCE, Solver.MAX_DISTANCE);
 			} else {
 				if (SID_DEBUG) {
 					System.out.println(";;;;;");

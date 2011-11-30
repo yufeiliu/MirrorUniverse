@@ -1,53 +1,46 @@
 package mirroruniverse.g6.dfa;
 
-import java.util.ArrayList;
-
 import mirroruniverse.g6.Utils;
+import mirroruniverse.g6.Utils.Entity;
 import mirroruniverse.g6.Utils.Move;
 
-public class State<V, T> {
-	
-	private V value;
-	private ArrayList<Transition<V, T>> transitions;
+public class State {
+
+	private Transition[] transList;
+
+	private Entity value;
 	private boolean goal;
 	private String id;
+		
+	public final static byte NUM_DIRECTIONS = 8;
+	private static short idCounter = 0; 
 	
-	private Transition<V, T>[] transList;
-	public final static int NUM_DIRECTIONS = 8;
-	
-	private static int idCounter = 0; 
-	
-	public State(V value) {
+	public State(Entity value) {
 		this(value, false);
 	}
 	
-	public State(V value, boolean goal) {
+	public State(Entity value, boolean goal) {
 		this(value, goal, String.valueOf(idCounter++));
 	}
 	
-	@SuppressWarnings("unchecked")
-	public State(V value, boolean goal, String id) {
+	public State(Entity value, boolean goal, String id) {
 		this.value = value;
 		this.goal = goal;
 		this.id = id;
-		this.transitions = new ArrayList<Transition<V, T>>();
 		this.transList = new Transition[NUM_DIRECTIONS];
 	}
 
-	public void addTransition(Transition<V, T> trans) {
-		@SuppressWarnings("unchecked")
-		Transition<V, Move> typedTrans = (Transition<V, Move>) trans;
-		int index = Utils.moveToShen(typedTrans.getValue()) - 1;
+	public void addTransition(Transition trans) {
+		int index = Utils.moveToShen(trans.getValue()) - 1;
 		transList[index] = trans;
-		transitions.add(trans);
 	}
 	
-	public void addTransition(T value, State<V, T> end) {
-		addTransition(new Transition<V, T>(value, this, end));
+	public void addTransition(Move value, State end) {
+		addTransition(new Transition(value, this, end));
 	}
 	
 	// NOTE - this value is not meaningful for intersected DFAs
-	public V getValue() {
+	public Entity getValue() {
 		return value;
 	}
 	
@@ -59,8 +52,8 @@ public class State<V, T> {
 		return this.id;
 	}
 
-	public ArrayList<Transition<V, T>> getTransitions() {
-		return transitions;
+	public Transition[] getTransitions() {
+		return transList;
 	}
 	
 	public String toString() {
@@ -71,12 +64,13 @@ public class State<V, T> {
 		this.goal = goal;
 	}
 	
-	public Transition<V, T> getTransition(int i) {
-		return transList[i];
+	// Can have null elements.
+	public Transition[] getTransList() {
+		return transList;
 	}
 	
-	public Transition<V, T>[] getTransList() {
-		return transList;
+	public int hashCode() {
+		return id.hashCode();
 	}
 	
 }
