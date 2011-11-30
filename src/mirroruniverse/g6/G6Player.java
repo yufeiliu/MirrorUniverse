@@ -2,6 +2,7 @@ package mirroruniverse.g6;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -23,6 +24,9 @@ public class G6Player implements Player {
 	
 	private ArrayList<Node> nodeGraphLeft = new ArrayList<Node>();
 	private ArrayList<Node> nodeGraphRight = new ArrayList<Node>();
+	
+	private Node currentLocationLeft;
+	private Node currentLocationRight;
 	
 	/*
 	 * The current location of each player within the 200x200 grid.
@@ -75,6 +79,51 @@ public class G6Player implements Player {
 		solver = new DFASolver();
 	}
 
+	/**
+	 * @return node that represents current location
+	 */
+	private Node initializeGraph(ArrayList<Node> g, int[][] v, int r) {
+		
+		int iMax = v.length - 1;
+		int jMax = v[0].length;
+		
+		HashMap<String, Node> cache = new HashMap<String, Node>();
+		
+		for (int i = 0; i < v.length; i++) {
+			for (int j = 0; j < v[0].length; j++) {
+				
+				Node n;
+				if (!cache.containsKey(makeKey(i,j))) {
+					n = new Node();
+					n.entity = Utils.shenToEntities(v[i][j]);
+					//TODO set x, y on entity
+					
+					g.add(n);
+					cache.put(makeKey(i,j), n);
+				} else {
+					n = cache.get(makeKey(i,j));
+				}
+				
+				for (int d = 1; d <= 8; d++) {
+					int di = MUMap.aintDToM[d][0];
+					int dj = MUMap.aintDToM[d][1];
+					
+					if (i + di <= iMax && i + di >= 0 &&
+							j + dj <= jMax && j + dj >= 0) {
+						
+					}
+				}
+			}
+		}
+		
+		
+		return null;
+	}
+	
+	private String makeKey(int i, int j) {
+		return i+","+j;
+	}
+	
 	public int explore(int[][] leftView, int[][] rightView) {
 		if (!radiiDiscovered) {
 			r1 = (leftView.length-1) / 2;
@@ -82,72 +131,18 @@ public class G6Player implements Player {
 		}
 		
 		if (nodeGraphLeft.size() == 0) {
+			currentLocationLeft = initializeGraph(nodeGraphLeft, leftView, r1);
 			
-			
+		}
+		
+		if (nodeGraphRight.size() == 0) {
+			currentLocationRight = initializeGraph(nodeGraphRight, rightView, r2);
 		}
 		
 		int dir = 0;
 		
 		
 		return dir;
-	}
-
-	private int pickDirFromPossibilities(
-			ArrayList<Pair<Integer, Integer>> possibilitiesList) {
-		int dir;
-		// Choose randomly among dirs of equal score. This avoids infinite
-		// loops.
-		ArrayList<Integer> goodDirs = new ArrayList<Integer>();
-		int maxScore = -1;
-		for (Pair<Integer, Integer> p : possibilitiesList) {
-			if (maxScore <= p.getFront()) {
-				maxScore = p.getFront();
-				goodDirs.add(p.getBack());
-			}
-		}
-		dir = goodDirs.get((int) (Math.random() * goodDirs.size()));
-		return dir;
-	}
-
-	private void addPossibleDir(int[][] leftView, int[][] rightView,
-			Set<Pair<Integer, Integer>> possibilities, int leftMid,
-			int rightMid, int i) {
-		int[] curDir = MUMap.aintDToM[i];
-		int dx = curDir[0];
-		int dy = curDir[1];
-		int space = Utils.entitiesToShen(Entity.SPACE);
-		int newx1 = x1;
-		int newy1 = y1;
-		int newx2 = x2;
-		int newy2 = y2;
-		boolean leftUnblocked =
-				(leftView[leftMid + dy][leftMid + dx] ==  space);
-		boolean rightUnblocked = (rightView[rightMid + dy][rightMid + dx] ==  space);
-//			rightUnblocked = leftUnblocked;
-		
-		// Only update newx and newy for unblocked directions
-		if (leftUnblocked) {
-			newx1 = Math.min(Math.max(x1+dy, 0), INTERNAL_MAP_SIZE - 1);
-			newy1 = Math.min(Math.max(y1+dx, 0), INTERNAL_MAP_SIZE - 1);
-		}
-		if (rightUnblocked) {
-			newx2 = Math.min(Math.max(x2+dy, 0), INTERNAL_MAP_SIZE - 1);
-			newy2 = Math.min(Math.max(y2+dx, 0), INTERNAL_MAP_SIZE - 1);
-		}
-		
-		// Don't make a move that will move neither player. If we don't
-		// perform this check, we could perform a useless move if everything
-		// ties for 0
-		if (leftUnblocked || rightUnblocked) {
-			int toUncover = 0;
-			if (leftUnblocked && !isLeftExitFound()) {
-				toUncover += squaresUncovered(newx1, newy1, r1, left);
-			}
-			if (rightUnblocked && !isRightExitFound()) {
-				toUncover += squaresUncovered(newx2, newy2, r2, right);
-			}
-			possibilities.add(new Pair<Integer, Integer>(toUncover, i));
-		}
 	}
 
 	private void updateCenters(int[][] leftView, int[][] rightView,
