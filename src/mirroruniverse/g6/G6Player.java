@@ -2,6 +2,7 @@ package mirroruniverse.g6;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
@@ -162,9 +163,18 @@ public class G6Player implements Player {
 		currentLocationLeft = updateGraph(cacheLeft, leftView, x1, y1, r1);
 		currentLocationRight = updateGraph(cacheRight, rightView, x2, y2, r2);
 		
-		int dir = 0;
+		if (exploreGoal.size()==0) {
+			//We always do it by left, then by right
+			// TODO: optimize for both
+			exploreGoal = getFringe(cacheLeft.values());
+			if (exploreGoal == null) {
+				exploreGoal = getFringe(cacheRight.values());
+			}
+		}
+		Edge edge = exploreGoal.remove(0);
+		int dir = Utils.moveToShen(edge.move);
 		
-		//TODO adjust x1, y1, x2, y2
+		updateCenters(leftView, rightView, leftView.length/2, rightView.length/2, MUMap.aintDToM[dir][0], MUMap.aintDToM[dir][1]);
 		
 		return dir;
 	}
@@ -251,7 +261,8 @@ public class G6Player implements Player {
 		}
 	}
 	
-	private ArrayList<Edge> getFringe(ArrayList<Node> nodeGraph) {
+	//TODO make it return null if no fringe is found
+	private ArrayList<Edge> getFringe(Collection<Node> nodeGraph) {
 		HashSet<Deque<Edge>> paths = new HashSet<Deque<Edge>>();
 		
 		Deque<Edge> firstFringe = null;
@@ -268,7 +279,7 @@ public class G6Player implements Player {
 		}
 		
 		//TODO: what do we do if the fringe cannot be found?
-		while(firstFringe != null) {
+		while (firstFringe != null) {
 			for(Deque<Edge> pathStack : paths) {
 				//peek at top of each stack.
 				Edge top = pathStack.peek();
@@ -291,8 +302,8 @@ public class G6Player implements Player {
 			}
 		}
 		
-		ArrayList<Edge> edgeList = new ArrayList<Edge>(firstFringe);
 		
+		ArrayList<Edge> edgeList = new ArrayList<Edge>(firstFringe);
 		return edgeList;
 	}
 	
