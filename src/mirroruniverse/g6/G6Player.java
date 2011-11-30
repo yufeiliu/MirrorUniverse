@@ -263,7 +263,7 @@ public class G6Player implements Player {
 	
 	//TODO make it return null if no fringe is found
 	private ArrayList<Edge> getFringe(Collection<Node> nodeGraph) {
-		HashSet<Deque<Edge>> paths = new HashSet<Deque<Edge>>();
+		ArrayList<Deque<Edge>> paths = new ArrayList<Deque<Edge>>();
 		
 		Deque<Edge> firstFringe = null;
 		
@@ -279,23 +279,34 @@ public class G6Player implements Player {
 		}
 		
 		//TODO: what do we do if the fringe cannot be found?
-		while (firstFringe != null) {
-			for(Deque<Edge> pathStack : paths) {
+		search: while (firstFringe == null) {
+			for(int i = 0; i < paths.size(); i++) {
+				Deque<Edge> pathStack = paths.get(i);
+				//System.out.println("\nstart path");
+				//for(Edge e : pathStack)
+				//	System.out.println(e.from.x+" "+e.from.y+" "+e.from.entity+" : "+e.to.x+" "+e.to.y+" "+e.to.entity);
+				//System.out.println("end path");
 				//peek at top of each stack.
 				Edge top = pathStack.peek();
 				
 				//check for fringe (fewer than 8 edges)
 				if(top.to.entity == Entity.SPACE && top.to.edges.size() < 8) {
 					//if fringe, return that stack.
+					//System.out.println("fringe found.");
 					firstFringe = pathStack;
+					break search;
 				} else {
 					//else, copy stack and push new edges onto tops of each new one
-					for(Edge edge : top.to.edges) {
-						if(edge.to.x != edge.from.x && edge.to.y != edge.from.y) {
-							Deque<Edge> newPathStack = new ArrayDeque<Edge>();
-							newPathStack.addAll(pathStack);
-							newPathStack.add(edge);
-							paths.add(newPathStack);
+					paths.remove(i);
+					if(top.to.entity != Entity.OBSTACLE) {
+						//System.out.println(top.to.x+" "+top.to.y+" "+top.to.entity);
+						for(Edge edge : top.to.edges) {
+							if(edge.to.x != edge.from.x && edge.to.y != edge.from.y) {
+								Deque<Edge> newPathStack = new ArrayDeque<Edge>();
+								newPathStack.addAll(pathStack);
+								newPathStack.add(edge);
+								paths.add(newPathStack);
+							}
 						}
 					}
 				}
