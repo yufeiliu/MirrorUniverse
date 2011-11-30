@@ -32,7 +32,17 @@ public class Solution {
 	}
 	
 	public int getNextStep() {
-		return steps[currentStep++];
+		if (G6Player.SID_DEBUG) {
+			System.out.println(this);
+		}
+		if (currentStep >= steps.length) {
+			if (currentStep == steps.length) {
+				System.err.println("Invalid solution found.");
+			}
+			return -1;
+		} else {
+			return steps[currentStep++];
+		}
 	}
 	
 	public int numTotalSteps() {
@@ -40,14 +50,18 @@ public class Solution {
 	}
 
 
-	public void printSteps() {
-		if (G6Player.DEBUG) {
-			for (int i : steps) {
-				System.out.print("Solution: ");
-				System.out.print(Utils.shenToMove(i) + "\t");
-				System.out.println("");
+	public String toString() {
+		String s = "";
+		s += "Solution (" + diff + "): ";
+		for (int i = 0; i < steps.length; i++) {
+			s += Utils.shenToMove(steps[i]);
+			if (i == currentStep) {
+				s += "*";
 			}
+			s += "\t";
 		}
+		s += "";
+		return s;
 	}
 
 }

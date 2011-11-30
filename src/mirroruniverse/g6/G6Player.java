@@ -12,6 +12,7 @@ import mirroruniverse.sim.Player;
 public class G6Player implements Player {
 
 	public static final boolean DEBUG = false;
+	public static final boolean SID_DEBUG = true;
 	
 	private static final int MAX_MAP_SIZE = 100;
 	private static final int INTERNAL_MAP_SIZE = MAX_MAP_SIZE * 2;
@@ -65,15 +66,21 @@ public class G6Player implements Player {
 		x1 = x2 = y1 = y2 = INTERNAL_MAP_SIZE / 2 - 1;
 		solver = new DFASolver();
 	}
+	
+
+	private boolean shouldRecomputeSolution() {
+		// TODO (Yufei or Hans) implement
+		// add something to recompute if we're about to step on an exit, etc.
+		return isFullyExplored();
+	}
+	
+	private boolean isFullyExplored() {
+		// TODO (Yufei or Hans) implement
+		return false;
+	}
 
 	public int explore(int[][] leftView, int[][] rightView) {
 //		return exploreRandom(leftView, rightView);
-		
-		if (!radiiDiscovered) {
-			r1 = (leftView.length-1) / 2;
-			r2 = (rightView.length-1) / 2;
-		}
-		
 		int dir = 0;
 		
 		if (DEBUG) {
@@ -89,16 +96,12 @@ public class G6Player implements Player {
 		Set<Pair<Integer, Integer>> possibilities =
 				new HashSet<Pair<Integer, Integer>>();
 		
-		int leftMid = leftView.length / 2;
-		int rightMid = rightView.length / 2;
-		
 		// TODO: if no direction exists that uncovers squares, go to direction
 		// with most/least space
 		
 		// Iterate over directions
 		for (int i = 1; i <= 8; i++) {
-			addPossibleDir(leftView, rightView, possibilities, leftMid,
-					rightMid, i);
+			addPossibleDir(leftView, rightView, possibilities, r1, r2, i);
 		}
 		
 		if (DEBUG) {
@@ -116,19 +119,12 @@ public class G6Player implements Player {
 			System.out.println("Squares to be uncovered: " +
 					possibilitiesList.get(0).getFront());
 		}
-		
-		int[] dirArray = MUMap.aintDToM[dir];
-		int dx = dirArray[0];
-		int dy = dirArray[1];
-		
-		updateCenters(leftView, rightView, leftMid, rightMid, dx, dy);
-		
+
 		if (DEBUG) {
 			System.out.println(Utils.shenToMove(dir));
 		}
 
 		return dir;
-		
 	}
 
 	private int pickDirFromPossibilities(
@@ -227,17 +223,33 @@ public class G6Player implements Player {
 	
 	//@Override
 	public int lookAndMove(int[][] leftView, int[][] rightView) {
+		if (!radiiDiscovered) {
+			r1 = (leftView.length-1) / 2;
+			r2 = (rightView.length-1) / 2;
+		}
+		
 		updateKnowledge(left, x1, y1, leftView);
 		updateKnowledge(right, x2, y2, rightView);
 
 		int dir;
-		System.out.println("getting sol");
+//		System.out.println("getting sol");
 		dir = getSolutionStep();
-		System.out.println("got sol");
-		if (dir > 0) {
-			return dir;
+//		System.out.println("got sol");
+		if (dir < 0) {
+			dir = explore(leftView, rightView);
 		}
-		dir = explore(leftView, rightView);
+
+		
+		int[] dirArray = MUMap.aintDToM[dir];
+		int dx = dirArray[0];
+		int dy = dirArray[1];
+		
+		updateCenters(leftView, rightView, r1, r2, dx, dy);
+
+		if (SID_DEBUG) {
+			System.out.println(Utils.shenToMove(dir));
+		}
+		
 		return dir;
 	}
 
@@ -265,6 +277,7 @@ public class G6Player implements Player {
 			for (int j = 0; j < view[0].length; j++) {
 				// TODO - I think if this is ever false, there's a bug in the code
 				// and this is false for the identical maps	
+				// TODO - this sometimes has a negative or otherwise invalid index
 				if (leftX + i < knowledge.length && botY + j < knowledge[0].length) {
 					knowledge[leftX + i][botY + j] = view[i][j];
 				}
@@ -347,7 +360,7 @@ public class G6Player implements Player {
 			
 			if (solution != null) {
 				if (DEBUG) {
-					solution.printSteps();
+					System.out.println(solution);
 				}
 			}
 		}
@@ -360,7 +373,8 @@ public class G6Player implements Player {
 
 	private int getSolutionStepExpensive() {
 		if (areExitsFound()) {
-			if (solution != null && solution.getDiff() == 0) {
+			if (solution != null &&
+					(solution.getDiff() == 0 || shouldRecomputeSolution())) {
 				return solution.getNextStep();
 			}
 			solution = solver.solve(right, left);
