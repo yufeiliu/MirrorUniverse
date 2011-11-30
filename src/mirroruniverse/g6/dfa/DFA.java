@@ -161,9 +161,18 @@ public class DFA<V, T> {
 		DFA<Entity, Move> intersection = new DFA<Entity, Move>();
 		HashMap<String, State<Entity, Move>> newStates =
 				new HashMap<String, State<Entity, Move>>();
+		
+		long start = System.currentTimeMillis();
+		long stateEnd;
+		long transEnd;
+		
 		addIntersectionStates(first, other, intersection, newStates);
+		stateEnd = System.currentTimeMillis();
 		addIntersectionTransitions(first, other, newStates);
-//		System.out.println(intersection);
+		transEnd = System.currentTimeMillis();
+		System.out.println("Intersection: " + (stateEnd - start));
+		System.out.println("Transitions: " + (transEnd - stateEnd));
+		System.exit(1);
 		return intersection;
 	}
 
@@ -190,8 +199,7 @@ public class DFA<V, T> {
 				newStates.put(key, s);
 				
 				// Add the state to the DFA
-				if (selfState == first.startState &&
-						otherState == other.startState) {
+				if (selfState == first.startState && otherState == other.startState) {
 					intersection.addStartState(s);
 				} else {
 					intersection.addState(s);
@@ -211,6 +219,8 @@ public class DFA<V, T> {
 				if (source == null) {
 					continue;
 				}
+				// TODO - hash transitions by value. That would make this loop
+				// O(T) instead of O(T^2); T is always 9 for this project
 				for (Transition<Entity, Move> selfTrans :
 							selfState.getTransitions()) {
 					for (Transition<Entity, Move> otherTrans :
