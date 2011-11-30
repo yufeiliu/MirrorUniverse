@@ -20,24 +20,15 @@ public class DFASolver extends Solver {
 		firstDFA = firstBack = new DFA<Entity, Move>(firstMap);
 		secondDFA = secondBack = new DFA<Entity, Move>(secondMap);
 		
-		if (DFA.intersect(firstDFA, secondDFA).getStartState() == null) {
+		DFA<Entity, Move> intersection = DFA.intersect(firstDFA, secondDFA);
+		
+		if (intersection.getStartState() == null) {
 			System.err.println("DFA failed.");
-			if (G6Player.SID_DEBUG) {
-				System.out.println(Arrays.deepToString(firstMap));
-				System.out.println(firstDFA);
-				System.out.println(";;;;;");
-				System.out.println(Arrays.deepToString(secondMap));
-				System.out.println(secondDFA);
-				System.out.println(";;;;;");
-				System.out.println(firstDFA.getStartState());
-				System.out.println(secondDFA.getStartState());
-				System.out.println(DFA.intersect(firstDFA, secondDFA).getStartState());
-				System.exit(1);
-			}
 			return null;
 		}
 		
-		solution = DFA.intersect(firstDFA, secondDFA).findShortestPath();
+		solution = intersection.findShortestPath();
+
 		while (solution == null && attempts < MAX_DISTANCE) {
 			secondBack = secondBack.shiftGoals();
 			solution = DFA.intersect(firstDFA, secondBack).findShortestPath();
