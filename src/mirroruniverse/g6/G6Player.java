@@ -1,9 +1,13 @@
 package mirroruniverse.g6;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 import mirroruniverse.g6.Utils.Entity;
@@ -21,9 +25,6 @@ public class G6Player implements Player {
 	// Stores maps.
 	private int[][] left = new int[INTERNAL_MAP_SIZE][INTERNAL_MAP_SIZE];
 	private int[][] right = new int[INTERNAL_MAP_SIZE][INTERNAL_MAP_SIZE];
-	
-	private ArrayList<Node> nodeGraphLeft = new ArrayList<Node>();
-	private ArrayList<Node> nodeGraphRight = new ArrayList<Node>();
 	
 	private Node currentLocationLeft;
 	private Node currentLocationRight;
@@ -46,8 +47,13 @@ public class G6Player implements Player {
 	private boolean leftExitFound;
 	private boolean rightExitFound;
 	
-	private boolean radiiDiscovered;
+	private boolean radiiDiscovered = false;
 
+	private HashMap<String, Node> cacheLeft = new HashMap<String, Node>();
+	private HashMap<String, Node> cacheRight = new HashMap<String, Node>();
+	
+	private ArrayList<Edge> exploreGoal = new ArrayList<Edge>();
+	
 	/*
 	 * Array of moves for the solution. null if unsolved.
 	 */
@@ -82,42 +88,64 @@ public class G6Player implements Player {
 	/**
 	 * @return node that represents current location
 	 */
-	private Node initializeGraph(ArrayList<Node> g, int[][] v, int r) {
+	private Node updateGraph(HashMap<String, Node> cache, int[][] v, int x, int y, int r) {
 		
+		//TODO lazy eval these
 		int iMax = v.length - 1;
-		int jMax = v[0].length;
+		int jMax = v[0].length - 1;
+		int iMedian = v.length/2;
+		int jMedian = v[0].length/2;
 		
-		HashMap<String, Node> cache = new HashMap<String, Node>();
+		Node cur = null;
 		
 		for (int i = 0; i < v.length; i++) {
 			for (int j = 0; j < v[0].length; j++) {
 				
-				Node n;
-				if (!cache.containsKey(makeKey(i,j))) {
-					n = new Node();
-					n.entity = Utils.shenToEntities(v[i][j]);
-					//TODO set x, y on entity
-					
-					g.add(n);
-					cache.put(makeKey(i,j), n);
-				} else {
-					n = cache.get(makeKey(i,j));
+				int curX = x1 + (i-iMedian);
+				int curY = y1 + (j-jMedian);
+				
+				if (cache.containsKey(makeKey(curX, curY))) {
+					continue;
 				}
 				
+				Node n = getFromCache(cache, v[i][j], curX, curY);
+					
 				for (int d = 1; d <= 8; d++) {
 					int di = MUMap.aintDToM[d][0];
 					int dj = MUMap.aintDToM[d][1];
 					
 					if (i + di <= iMax && i + di >= 0 &&
 							j + dj <= jMax && j + dj >= 0) {
-						
+						Node neighbor = getFromCache(cache, v[i+di][j+dj], curX + di, curY + dj);
+						Edge edge = new Edge();
+						edge.from = n;
+						edge.to = neighbor;
+						edge.move = Utils.shenToMove(d);
+						n.edges.add(edge);
 					}
+				}
+				
+				if (i==iMedian && j==jMedian) {
+					cur = n;
 				}
 			}
 		}
 		
 		
-		return null;
+		return cur;
+	}
+	
+	private Node getFromCache(HashMap<String, Node> cache, int val, int x, int y) {
+		if (!cache.containsKey(makeKey(x,y))) {
+			Node n = new Node();
+			n.entity = Utils.shenToEntities(val);
+			n.x = x;
+			n.y = y;
+			cache.put(makeKey(x,y), n);
+			return n;
+		} else {
+			return cache.get(makeKey(x,y));
+		}
 	}
 	
 	private String makeKey(int i, int j) {
@@ -126,21 +154,17 @@ public class G6Player implements Player {
 	
 	public int explore(int[][] leftView, int[][] rightView) {
 		if (!radiiDiscovered) {
+			radiiDiscovered = true;
 			r1 = (leftView.length-1) / 2;
 			r2 = (rightView.length-1) / 2;
 		}
 		
-		if (nodeGraphLeft.size() == 0) {
-			currentLocationLeft = initializeGraph(nodeGraphLeft, leftView, r1);
-			
-		}
-		
-		if (nodeGraphRight.size() == 0) {
-			currentLocationRight = initializeGraph(nodeGraphRight, rightView, r2);
-		}
+		currentLocationLeft = updateGraph(cacheLeft, leftView, x1, y1, r1);
+		currentLocationRight = updateGraph(cacheRight, rightView, x2, y2, r2);
 		
 		int dir = 0;
 		
+		//TODO adjust x1, y1, x2, y2
 		
 		return dir;
 	}
@@ -185,9 +209,10 @@ public class G6Player implements Player {
 	public int lookAndMove(int[][] leftView, int[][] rightView) {
 		updateKnowledge(left, x1, y1, leftView);
 		updateKnowledge(right, x2, y2, rightView);
-
+		
 		int dir;		
 		dir = getSolutionStep();
+		
 		if (dir > 0) {
 			return dir;
 		}
@@ -226,26 +251,49 @@ public class G6Player implements Player {
 		}
 	}
 	
-	private int squaresUncovered(int newX, int newY, int r, int[][] knowledge) {
-		int counter = 0;
-		for (int i = Math.max(newX - r, 0); i <= Math.min(newX + r, knowledge[0].length-1); i++) {
-			for (int j = Math.max(newY - r, 0); j <= Math.min(newY + r, knowledge.length-1); j++) {
-				if (DEBUG) {
-					System.out.println(i + ", " + j + "\t" +
-							Utils.shenToEntities(knowledge[i][j]));
-				}
-				if (knowledge[i][j] == Utils.entitiesToShen(Entity.UNKNOWN)) {
-					counter++;
+	private ArrayList<Edge> getFringe(ArrayList<Node> nodeGraph) {
+		HashSet<Deque<Edge>> paths = new HashSet<Deque<Edge>>();
+		
+		Deque<Edge> firstFringe = null;
+		
+		//add first edges to stacks
+		for(Node node : nodeGraph) {
+			for(Edge edge : node.edges) {
+				if(edge.to.x != edge.from.x && edge.to.y != edge.from.y) {
+					Deque<Edge> pathStack = new ArrayDeque<Edge>();
+					pathStack.add(edge);
+					paths.add(pathStack);
 				}
 			}
 		}
 		
-		if (DEBUG) {
-			System.out.println(r);
-			System.out.println(counter);
+		//TODO: what do we do if the fringe cannot be found?
+		while(firstFringe != null) {
+			for(Deque<Edge> pathStack : paths) {
+				//peek at top of each stack.
+				Edge top = pathStack.peek();
+				
+				//check for fringe (fewer than 8 edges)
+				if(top.to.entity == Entity.SPACE && top.to.edges.size() < 8) {
+					//if fringe, return that stack.
+					firstFringe = pathStack;
+				} else {
+					//else, copy stack and push new edges onto tops of each new one
+					for(Edge edge : top.to.edges) {
+						if(edge.to.x != edge.from.x && edge.to.y != edge.from.y) {
+							Deque<Edge> newPathStack = new ArrayDeque<Edge>();
+							newPathStack.addAll(pathStack);
+							newPathStack.add(edge);
+							paths.add(newPathStack);
+						}
+					}
+				}
+			}
 		}
 		
-		return counter;
+		ArrayList<Edge> edgeList = new ArrayList<Edge>(firstFringe);
+		
+		return edgeList;
 	}
 	
 	private boolean areExitsFound() {
@@ -330,7 +378,11 @@ public class G6Player implements Player {
 		public Entity entity;
 		public int x;
 		public int y;
-		public HashSet<Edge> edges;
+		public HashSet<Edge> edges = new HashSet<Edge>();
+		
+		public String toString() {
+			return entity.toString();
+		}
 	}
 	
 	private class Edge {
