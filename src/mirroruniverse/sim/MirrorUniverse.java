@@ -91,13 +91,18 @@ public class MirrorUniverse
 			}
 		}
 		
+		int cutOff = 100;
 		int intStep = 0;
 		while ( !mumMapL.getMapOver() || !mumMapR.getMapOver() )
 		{
 			int[][] aintViewL = mumMapL.getView();
 			int[][] aintViewR = mumMapR.getView();
+			cutOff--;
+			if (cutOff < 0) break;
+			
 			int intMove = plrCurrent.lookAndMove( aintViewL, aintViewR );
 			try {
+				System.out.println( intStep + ":::::" );
 				if ( intStep != 0 )
 				{
 					bfrReplay.write( ", " );
@@ -111,12 +116,21 @@ public class MirrorUniverse
 			mumMapL.move( intMove );
 			mumMapR.move( intMove );
 			intStep ++;
+			if (intStep > 10000) {
+				break;
+			}
 		}
 		int intStepL = mumMapL.getStep();
 		int intStepR = mumMapR.getStep();
 		int intStepMax = intStepL > intStepR ? intStepL : intStepR;
 		int intStepMin = intStepL > intStepR ? intStepR : intStepL;
 		int intStepDiff = intStepMax - intStepMin;
+		
+		
+		System.out.println("==============");
+		System.out.println("Diff: " + intStepDiff); 
+		System.out.println("Steps: " + intStepMax);
+		
 		if ( intStepMax != intStep )
 			System.out.println( "Step inconsistent" );
 		
