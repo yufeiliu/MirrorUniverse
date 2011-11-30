@@ -195,7 +195,8 @@ public class G6Player implements Player {
 	public int lookAndMove(int[][] leftView, int[][] rightView) {
 		updateKnowledge(left, x1, y1, leftView);
 		updateKnowledge(right, x2, y2, rightView);
-
+		
+		
 		int dir;		
 		dir = getSolutionStep();
 		if (dir > 0) {
@@ -258,7 +259,7 @@ public class G6Player implements Player {
 		return counter;
 	}
 	
-	private List<Edge> getFringe(ArrayList<Node> nodeGraph) {
+	private ArrayList<Edge> getFringe(ArrayList<Node> nodeGraph) {
 		HashSet<Deque<Edge>> paths = new HashSet<Deque<Edge>>();
 		
 		Deque<Edge> firstFringe = null;
@@ -298,7 +299,9 @@ public class G6Player implements Player {
 			}
 		}
 		
-		return new ArrayList<Edge>(firstFringe);
+		ArrayList<Edge> edgeList = new ArrayList<Edge>(firstFringe);
+		
+		return edgeList;
 	}
 	
 	private boolean areExitsFound() {
