@@ -17,6 +17,7 @@ public class G6Player implements Player {
 	
 	private static final int MAX_MAP_SIZE = 100;
 	private static final int INTERNAL_MAP_SIZE = MAX_MAP_SIZE * 2;
+	private static final double NUM_MOVES = 8;
 	
 	// Stores maps.
 	private int[][] left = new int[INTERNAL_MAP_SIZE][INTERNAL_MAP_SIZE];
@@ -291,7 +292,22 @@ public class G6Player implements Player {
 	
 	//@Override
 	public int lookAndMove(int[][] leftView, int[][] rightView) {
-		
+		int ret;
+		try {
+			ret = doLookAndMove(leftView, rightView);
+		} catch (Exception e) {
+			e.printStackTrace();
+			if (DEBUG || SID_DEBUG) {
+				System.exit(1);
+			} else {
+				ret = (int) (Math.random() * NUM_MOVES) + 1;
+			}
+		}
+		return ret;
+	}
+
+
+	private int doLookAndMove(int[][] leftView, int[][] rightView) {
 		if (SID_DEBUG) {
 			if (hasExit(leftView)) {
 				System.out.println(Arrays.deepToString(leftView));
@@ -497,10 +513,12 @@ public class G6Player implements Player {
 				didExhaustiveCheck = true;
 				solution = solver.solve(right, left, Solver.MAX_DISTANCE);
 			} else {
-				System.out.println(";;;;;");
-				System.out.println(Arrays.deepToString(right));
-				System.out.println("------");
-				System.out.println(Arrays.deepToString(left));
+				if (SID_DEBUG) {
+					System.out.println(";;;;;");
+					System.out.println(Arrays.deepToString(right));
+					System.out.println("------");
+					System.out.println(Arrays.deepToString(left));
+				}
 				solution = solver.solve(right, left);
 			}
 			
