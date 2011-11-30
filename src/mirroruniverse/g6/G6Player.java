@@ -1,6 +1,7 @@
 package mirroruniverse.g6;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -20,6 +21,8 @@ public class G6Player implements Player {
 	// Stores maps.
 	private int[][] left = new int[INTERNAL_MAP_SIZE][INTERNAL_MAP_SIZE];
 	private int[][] right = new int[INTERNAL_MAP_SIZE][INTERNAL_MAP_SIZE];
+	
+	private int steps;
 	
 	/*
 	 * The current location of each player within the 200x200 grid.
@@ -292,9 +295,9 @@ public class G6Player implements Player {
 		updateKnowledge(right, x2, y2, rightView);
 
 		int dir;
-//		System.out.println("getting sol");
+
 		dir = getSolutionStep();
-//		System.out.println("got sol");
+
 		if (dir < 0) {
 			if (leftExited || rightExited || isFullyExplored()) {
 				dir = getSingleSolutionStep();
@@ -315,6 +318,7 @@ public class G6Player implements Player {
 			System.out.println(Utils.shenToMove(dir));
 		}
 		
+		steps++;
 		return dir;
 	}
 
