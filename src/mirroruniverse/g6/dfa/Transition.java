@@ -9,7 +9,7 @@ public class Transition {
 	private State start;
 	private String id;
 	
-	private static int idCounter = 0;
+	private static short idCounter = 0;
 	
 	public Transition(Move value, State start, State end) {
 		this.end = end;
@@ -37,4 +37,5 @@ public class Transition {
 	public String toString() {
 		return "Go " + value + " from (" + start + ") to (" + end + ")\n";
 	}
+	
 }

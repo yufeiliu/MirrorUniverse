@@ -292,7 +292,7 @@ public class G6Player implements Player {
 	
 	//@Override
 	public int lookAndMove(int[][] leftView, int[][] rightView) {
-		int ret;
+		int ret = -1;
 		try {
 			ret = doLookAndMove(leftView, rightView);
 		} catch (Exception e) {

@@ -1,7 +1,6 @@
 20, 20, 2, 6, 0.4, 5
 20, 20, 2, 7, 0.2, 6
 
-
 4, 4, 2, -1, maps/lessEasyLeft.txt
 4, 4, 2, -1, maps/lessEasyRight.txt
 

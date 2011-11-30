@@ -1,22 +1,19 @@
 package mirroruniverse.g6.dfa;
 
-import java.util.ArrayList;
-
 import mirroruniverse.g6.Utils;
 import mirroruniverse.g6.Utils.Entity;
 import mirroruniverse.g6.Utils.Move;
 
 public class State {
-	
+
+	private Transition[] transList;
+
 	private Entity value;
-	private ArrayList<Transition> transitions;
 	private boolean goal;
 	private String id;
-	
-	private Transition[] transList;
-	public final static int NUM_DIRECTIONS = 8;
-	
-	private static int idCounter = 0; 
+		
+	public final static byte NUM_DIRECTIONS = 8;
+	private static short idCounter = 0; 
 	
 	public State(Entity value) {
 		this(value, false);
@@ -30,14 +27,12 @@ public class State {
 		this.value = value;
 		this.goal = goal;
 		this.id = id;
-		this.transitions = new ArrayList<Transition>();
 		this.transList = new Transition[NUM_DIRECTIONS];
 	}
 
 	public void addTransition(Transition trans) {
 		int index = Utils.moveToShen(trans.getValue()) - 1;
 		transList[index] = trans;
-		transitions.add(trans);
 	}
 	
 	public void addTransition(Move value, State end) {
@@ -57,8 +52,8 @@ public class State {
 		return this.id;
 	}
 
-	public ArrayList<Transition> getTransitions() {
-		return transitions;
+	public Transition[] getTransitions() {
+		return transList;
 	}
 	
 	public String toString() {
@@ -69,12 +64,13 @@ public class State {
 		this.goal = goal;
 	}
 	
-	public Transition getTransition(int i) {
-		return transList[i];
-	}
-	
+	// Can have null elements.
 	public Transition[] getTransList() {
 		return transList;
+	}
+	
+	public int hashCode() {
+		return id.hashCode();
 	}
 	
 }
