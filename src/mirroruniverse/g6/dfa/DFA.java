@@ -135,13 +135,20 @@ public class DFA<V, T> {
 	protected ArrayList<T> recoverPath(State<V, T> currentState,
 			HashMap<State<V, T>, Transition<V, T>> used) {
 		ArrayList<T> path = new ArrayList<T>();
+		ArrayList<Transition<V, T>> transPath = new ArrayList<Transition<V, T>>();
+		
 		Transition<V, T> trans = used.get(currentState);
 		while (trans != null) {
 			path.add(trans.getValue());
 			currentState = trans.getStart();
+			transPath.add(trans);
 			trans = used.get(currentState);
 		}
 		Collections.reverse(path);
+		Collections.reverse(transPath);
+		if (G6Player.SID_DEBUG) {
+			System.out.println(transPath);
+		}
 		return path;
 	}
 
@@ -172,9 +179,13 @@ public class DFA<V, T> {
 		addIntersectionTransitions(first, other, newStates);
 		transEnd = System.currentTimeMillis();
 		
-		if (G6Player.SID_DEBUG) {
+		if (G6Player.DEBUG) {
 			System.out.println("Intersection: " + (stateEnd - start));
 			System.out.println("Transitions: " + (transEnd - stateEnd));
+		}
+		
+		if (G6Player.SID_DEBUG) {
+			System.out.println(other);
 		}
 		
 		return intersection;

@@ -1,3 +1,4 @@
+
 package mirroruniverse.g6;
 
 import java.util.ArrayList;
@@ -41,7 +42,7 @@ public class Solution {
 			// We solve one map and then the other. After we've solved one map
 			// and before we solve the other, there's an extra step.
 			if (currentStep == steps.length) {
-				System.err.println("Invalid solution found.");
+//				System.err.println("Invalid solution found.");
 			}
 			return -1;
 		} else {

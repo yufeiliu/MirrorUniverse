@@ -1,6 +1,7 @@
 package mirroruniverse.g6;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -12,7 +13,7 @@ import mirroruniverse.sim.Player;
 public class G6Player implements Player {
 
 	public static final boolean DEBUG = false;
-	public static final boolean SID_DEBUG = true;
+	public static final boolean SID_DEBUG = false;
 	
 	private static final int MAX_MAP_SIZE = 100;
 	private static final int INTERNAL_MAP_SIZE = MAX_MAP_SIZE * 2;
@@ -157,6 +158,8 @@ public class G6Player implements Player {
 				new ArrayList<Pair<Integer, Integer>>(possibilities);
 		Collections.sort(possibilitiesList);
 		
+		// TODO - if everything ties for 0 (nothing unexplored nearby)
+		// go to nearest unexplored square ("frontier")?
 		dir = pickDirFromPossibilities(possibilitiesList);
 		
 		if (DEBUG) {
@@ -288,6 +291,14 @@ public class G6Player implements Player {
 	
 	//@Override
 	public int lookAndMove(int[][] leftView, int[][] rightView) {
+		
+		if (SID_DEBUG) {
+			if (hasExit(leftView)) {
+				System.out.println(Arrays.deepToString(leftView));
+				System.out.println("/////");
+			}
+		}
+		
 		if (!radiiDiscovered) {
 			r1 = (leftView.length-1) / 2;
 			r2 = (rightView.length-1) / 2;
@@ -309,7 +320,6 @@ public class G6Player implements Player {
 			}
 		}
 
-		
 		int[] dirArray = MUMap.aintDToM[dir];
 		int dx = dirArray[0];
 		int dy = dirArray[1];
@@ -322,6 +332,18 @@ public class G6Player implements Player {
 		
 		steps++;
 		return dir;
+	}
+
+
+	private boolean hasExit(int[][] leftView) {
+		for (int i[] : leftView) {
+			for (int j : i) {
+				if (j == Utils.entitiesToShen(Entity.EXIT)) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 
@@ -475,6 +497,10 @@ public class G6Player implements Player {
 				didExhaustiveCheck = true;
 				solution = solver.solve(right, left, Solver.MAX_DISTANCE);
 			} else {
+				System.out.println(";;;;;");
+				System.out.println(Arrays.deepToString(right));
+				System.out.println("------");
+				System.out.println(Arrays.deepToString(left));
 				solution = solver.solve(right, left);
 			}
 			
