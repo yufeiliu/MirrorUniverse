@@ -33,6 +33,9 @@ public class G6Player implements Player {
 	// kept for debugging purposes
 	private int steps;
 	
+	
+	private int REMOVE_THIS = 120;
+	
 	/*
 	 * The current location of each player within the 200x200 grid.
 	 */
@@ -210,10 +213,18 @@ public class G6Player implements Player {
 			r2 = (rightView.length-1) / 2;
 		}
 		
+		REMOVE_THIS--;
+		if (REMOVE_THIS<=0) {
+			int dir = exploreRandom(leftView, rightView);
+			updateCentersAndExitStatus(leftView, rightView, leftView.length/2, rightView.length/2, MUMap.aintDToM[dir][0], MUMap.aintDToM[dir][1]);
+			return dir;
+		}
+		
+		
 		currentLocationLeft = updateGraph(cacheLeft, leftView, x1, y1, r1);
 		currentLocationRight = updateGraph(cacheRight, rightView, x2, y2, r2);
 		
-		if (exploreGoal.size()==0) {
+		if (exploreGoal == null || exploreGoal.size()==0) {
 			//We always do it by left, then by right
 			// TODO: optimize for both
 			exploreGoal = getFringe(cacheLeft.values());
@@ -221,8 +232,19 @@ public class G6Player implements Player {
 				exploreGoal = getFringe(cacheRight.values());
 			}
 		}
+		
+		int dir;
+		
+		//TODO uh oh, getFringe failed, use random
+		if (exploreGoal==null) {
+			dir = exploreRandom(leftView, rightView);
+			updateCentersAndExitStatus(leftView, rightView, leftView.length/2, rightView.length/2, MUMap.aintDToM[dir][0], MUMap.aintDToM[dir][1]);
+			return dir;
+		}
+		
+		//System.out.println(exploreGoal);
 		Edge edge = exploreGoal.remove(0);
-		int dir = Utils.moveToShen(edge.move);
+		dir = Utils.moveToShen(edge.move);
 		
 		//TODO quickfix, revert later
 		int prevX1 = x1, prevX2 = x2, prevY1 = y1, prevY2 = y2;
@@ -265,16 +287,16 @@ public class G6Player implements Player {
 		int exit = Utils.entitiesToShen(Entity.EXIT);
 		int dir = 0;
 		int dx, dy;
-		int leftMidY = leftView.length / 2;
-		int leftMidX = leftView[0].length / 2;
-		int rightMidY = rightView.length / 2;
-		int rightMidX = rightView[0].length / 2;
+		int leftMidX = leftView.length / 2;
+		int leftMidY = leftView[0].length / 2;
+		int rightMidX = rightView.length / 2;
+		int rightMidY = rightView[0].length / 2;
 		do {
 			int[] deltas = { -1, 0, 1 };
 			dx = deltas[(int) (Math.random() * 3)];
 			dy = deltas[(int) (Math.random() * 3)];
-		} while(leftView[leftMidY + dy][leftMidX + dx] == exit ||
-				rightView[rightMidY + dy][rightMidX + dx] == exit);
+		} while(leftView[leftMidX + dx][leftMidY + dy] == exit ||
+				rightView[rightMidX + dx][rightMidX + dy] == exit);
 		dir = Utils.moveToShen(Utils.dxdyToMove(dx, dy));
 		if (DEBUG) {
 			System.out.println(dir);
@@ -292,24 +314,30 @@ public class G6Player implements Player {
 		updateKnowledge(left, x1, y1, leftView);
 		updateKnowledge(right, x2, y2, rightView);
 		
-		int dir;		
+		int dir;
+
 		dir = getSolutionStep();
-		
-		if (dir > 0) {
-			return dir;
+
+		if (dir < 0) {
+			if (leftExited || rightExited || isFullyExplored()) {
+				dir = getSingleSolutionStep();
+			}
+			if (dir < 0) {
+				dir = explore(leftView, rightView);
+			}
 		}
 
-		
+
 		int[] dirArray = MUMap.aintDToM[dir];
 		int dx = dirArray[0];
 		int dy = dirArray[1];
-		
+
 		updateCentersAndExitStatus(leftView, rightView, r1, r2, dx, dy);
 
 		if (SID_DEBUG) {
 			System.out.println(Utils.shenToMove(dir));
 		}
-		
+
 		steps++;
 		return dir;
 	}
@@ -365,7 +393,7 @@ public class G6Player implements Player {
 				// TODO - I think if this is ever false, there's a bug in the code
 				// and this is false for the identical maps	
 				// TODO - this sometimes has a negative or otherwise invalid index
-				if (leftX + i < knowledge.length && botY + j < knowledge[0].length) {
+				if (leftX + i < knowledge.length && leftX + i>=0 && botY + j < knowledge[0].length && botY + j >=0) {
 					knowledge[leftX + i][botY + j] = view[i][j];
 				}
 			}
@@ -398,13 +426,13 @@ public class G6Player implements Player {
 				//System.out.println("\nstart path");
 				//for(Edge e : pathStack)
 				//	System.out.println(e.from.x+" "+e.from.y+" "+e.from.entity+" : "+e.to.x+" "+e.to.y+" "+e.to.entity);
-				//System.out.println("end path");
+				///.println("end path");
 				//peek at top of each stack.
 				Edge top = pathStack.peek();
 				
 				visited.add(top);
-				if(Math.abs(visited.size() - oldSize) < 2) {
-					System.out.println("delta 0");
+				if(Math.abs(visited.size() - oldSize) < 1) {
+					//System.out.println("delta 0");
 					return null;
 				}
 				oldSize = visited.size();
@@ -414,6 +442,7 @@ public class G6Player implements Player {
 					//if fringe, return that stack.
 					//System.out.println("fringe found.");
 					firstFringe = pathStack;
+					System.out.println("Target: " + top.to.x + ", " + top.to.y);
 					break search;
 				} else {
 					//else, copy stack and push new edges onto tops of each new one

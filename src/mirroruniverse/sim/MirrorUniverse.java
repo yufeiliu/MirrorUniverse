@@ -91,7 +91,9 @@ public class MirrorUniverse
 			}
 		}
 		
-		int cutOff = 100;
+		//TODO remove this
+		int cutOff = 10000;
+		
 		int intStep = 0;
 		while ( !mumMapL.getMapOver() || !mumMapR.getMapOver() )
 		{
@@ -102,7 +104,7 @@ public class MirrorUniverse
 			
 			int intMove = plrCurrent.lookAndMove( aintViewL, aintViewR );
 			try {
-				System.out.println( intStep + ":::::" );
+				//System.out.println( intStep + ":::::" );
 				if ( intStep != 0 )
 				{
 					bfrReplay.write( ", " );
