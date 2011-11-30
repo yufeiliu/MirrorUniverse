@@ -40,8 +40,8 @@ public class DFASolver extends Solver {
 		return steps == null ? null : new Solution(steps, attempts);
 	}
 	
-	Solution solve(int[][] firstMap) {
-		DFA<Entity, Move> dfa = new DFA<Entity, Move>(firstMap);
+	Solution solve(int[][] map) {
+		DFA<Entity, Move> dfa = new DFA<Entity, Move>(map);
 		ArrayList<Move> steps = dfa.findShortestPath();
 		return steps == null ? null : new Solution(steps, 0);
 	}

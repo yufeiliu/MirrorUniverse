@@ -74,12 +74,48 @@ public class G6Player implements Player {
 	private boolean shouldRecomputeSolution() {
 		// TODO (Yufei or Hans) implement
 		// add something to recompute if we're about to step on an exit, etc.
-		return isFullyExplored();
+		return true || isFullyExplored();
 	}
 	
 	private boolean isFullyExplored() {
-		// TODO (Yufei or Hans) implement
-		return false;
+		return isLeftFullyExplored() && isRightFullyExplored();
+	}
+	
+	private boolean isRightFullyExplored() {
+		return leftExitFound && isFullyExplored(left);
+	}
+
+	private boolean isLeftFullyExplored() {
+		return rightExitFound && isFullyExplored(right);
+	}
+
+
+	// TODO - test this for correctness
+	private boolean isFullyExplored(int[][] map) {
+		for (int i = 0; i < INTERNAL_MAP_SIZE; i++) {
+			for (int j = 0; j < INTERNAL_MAP_SIZE; j++) {
+				if (map[i][j] == Utils.entitiesToShen(Entity.UNKNOWN)) {
+					// Check if a neighbor is 0
+					for (int dy = -1; dy <= 1; dy++) {
+						int newI = i + dy;
+						if (newI >= INTERNAL_MAP_SIZE || newI < 0) {
+							continue;
+						}
+						for (int dx = -1; dx <= 1; dx++) {
+							int newJ = j + dx;
+							if (newJ >= INTERNAL_MAP_SIZE || newJ < 0) {
+								continue;
+							}
+							if (map[newI][newJ] ==
+									Utils.entitiesToShen(Entity.SPACE)) {
+								return false;
+							}
+						}
+					}
+				}
+			}
+		}
+		return true;
 	}
 
 	public int explore(int[][] leftView, int[][] rightView) {
@@ -186,7 +222,7 @@ public class G6Player implements Player {
 		}
 		
 		// Don't accidentally step on exit
-		if (!isFullyExplored() && (leftEntity == exit || rightEntity == exit)) {
+		if ((leftEntity == exit || rightEntity == exit) && !isFullyExplored()) {
 			return;
 		}
 		
