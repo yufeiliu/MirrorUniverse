@@ -71,10 +71,10 @@ public class G6Player implements Player {
 	}
 	
 
-	private boolean shouldRecomputeSolution() {
+	private boolean shouldNotRecomputeSolution() {
 		// TODO (Yufei or Hans) implement
 		// add something to recompute if we're about to step on an exit, etc.
-		return true || isFullyExplored();
+		return false && isFullyExplored();
 	}
 	
 	private boolean isFullyExplored() {
@@ -462,7 +462,7 @@ public class G6Player implements Player {
 	private int getSolutionStepExpensive() {
 		if (areExitsFound()) {
 			if (solution != null &&
-					(solution.getDiff() == 0 || shouldRecomputeSolution())) {
+					(solution.getDiff() == 0 || shouldNotRecomputeSolution())) {
 				return solution.getNextStep();
 			}
 			solution = solver.solve(right, left);
