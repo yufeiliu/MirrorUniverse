@@ -236,7 +236,7 @@ public class G6Player implements Player {
 		possibilities.add(new Pair<Integer, Integer>(toUncover, i));
 	}
 
-	private void updateCenters(int[][] leftView, int[][] rightView,
+	private void updateCentersAndExitStatus(int[][] leftView, int[][] rightView,
 			int leftMid, int rightMid, int dx, int dy) {
 		int rightEntity = rightView[rightMid + dy][rightMid + dx];
 		int leftEntity = leftView[leftMid + dy][leftMid + dx];
@@ -248,7 +248,7 @@ public class G6Player implements Player {
 			y1 += dx;
 		}
 		if (leftEntity == exit) {
-			leftExited = false;
+			leftExited = true;
 		}
 		if (rightEntity == space || rightEntity == exit) {
 			x2 += dy;
@@ -296,7 +296,7 @@ public class G6Player implements Player {
 		dir = getSolutionStep();
 //		System.out.println("got sol");
 		if (dir < 0) {
-			if (leftExited || rightExited) {
+			if (leftExited || rightExited || isFullyExplored()) {
 				dir = getSingleSolutionStep();
 			}
 			if (dir < 0) {
@@ -309,7 +309,7 @@ public class G6Player implements Player {
 		int dx = dirArray[0];
 		int dy = dirArray[1];
 		
-		updateCenters(leftView, rightView, r1, r2, dx, dy);
+		updateCentersAndExitStatus(leftView, rightView, r1, r2, dx, dy);
 
 		if (SID_DEBUG) {
 			System.out.println(Utils.shenToMove(dir));
@@ -320,11 +320,22 @@ public class G6Player implements Player {
 
 
 	private int getSingleSolutionStep() {
-		if (solution == null) {
+		// if there's no solution or old solution is completed
+		if (solution == null || solution.isCompleted()) {
 			if (leftExited) {
 				solution = solver.solve(right);
-			} else if (rightExited) {
+			} else if (rightExited ){
 				solution = solver.solve(left);
+			} else {
+				// If we just need to solve one because
+				// we've explored everything and haven't found a good solution.
+				Solution leftSolution = solver.solve(right);
+				Solution rightSolution = solver.solve(left);
+				if (leftSolution.numTotalSteps() <= rightSolution.numTotalSteps()) {
+					solution = leftSolution;
+				} else {
+					solution = rightSolution;
+				}
 			}
 		}
 		if (solution != null) {

@@ -36,6 +36,10 @@ public class Solution {
 			System.out.println(this);
 		}
 		if (currentStep >= steps.length) {
+			// This can occur in a valid case. Consider the case in which the
+			// map is fully explored and the best solution is of a huge size.
+			// We solve one map and then the other. After we've solved one map
+			// and before we solve the other, there's an extra step.
 			if (currentStep == steps.length) {
 				System.err.println("Invalid solution found.");
 			}
@@ -49,6 +53,9 @@ public class Solution {
 		return steps.length;
 	}
 
+	public boolean isCompleted() {
+		return steps.length == currentStep;
+	}
 
 	public String toString() {
 		String s = "";
