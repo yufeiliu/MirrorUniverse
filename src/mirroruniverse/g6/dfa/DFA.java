@@ -174,8 +174,11 @@ public class DFA<V, T> {
 			for (State<Entity, Move> otherState : other.states) {
 				// Don't accidentally step on an exit - these states cannot
 				// be part of our solution
-				if ((selfState.isGoal() && !otherState.isGoal()) ||
-						(!selfState.isGoal() && otherState.isGoal())) {
+				// TODO - handle cases where these aren't real exits
+				if ((selfState.isGoal() && !otherState.isGoal() &&
+						selfState != first.startState) ||
+							(!selfState.isGoal() && otherState.isGoal() &&
+							otherState != other.startState)) {
 					continue;
 				}
 				String key = makeKey(selfState, otherState);

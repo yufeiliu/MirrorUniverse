@@ -43,18 +43,13 @@ public class G6Player implements Player {
 	/*
 	 * Array of moves for the solution. null if unsolved.
 	 */
-	private int[] solution;
+	private Solution solution;
 	
 	/*
 	 * Solver used to provide the solution. Can be swapped out to use
 	 * a different method if necessary.
 	 */
 	private Solver solver;
-	
-	/*
-	 * Step of the solution which the player currently is on.
-	 */
-	private int solutionStep;
 
 	public G6Player() {
 		// Set all points to be unknown.
@@ -131,8 +126,9 @@ public class G6Player implements Player {
 		if (DEBUG) {
 			System.out.println(Utils.shenToMove(dir));
 		}
-		
+
 		return dir;
+		
 	}
 
 	private int pickDirFromPossibilities(
@@ -234,8 +230,10 @@ public class G6Player implements Player {
 		updateKnowledge(left, x1, y1, leftView);
 		updateKnowledge(right, x2, y2, rightView);
 
-		int dir;		
+		int dir;
+		System.out.println("getting sol");
 		dir = getSolutionStep();
+		System.out.println("got sol");
 		if (dir > 0) {
 			return dir;
 		}
@@ -334,43 +332,42 @@ public class G6Player implements Player {
 	}
 
 	private int getSolutionStep() {
-		// TODO - continuously update solution with new knowledge.
-		// native approach below is too slow (or moves us away from exit); at
-		// the least, we can avoid recomputing if we've found a 0 solution or
-		// see the entire map.
-		/*
-		if (areExitsFound(left, right)) {
-			solution = solver.solve(right, left);
-			if (solution != null) {
-				return solution[0];
-			}
-		}
-		*/
+		return getSolutionStepExpensive();
 		
+//		return getSolutionStepSingle();
+	}
+
+	private int getSolutionStepSingle() {
 		if (solution == null && areExitsFound()) {
 			solution = solver.solve(right, left);
 			if (DEBUG) {
-				System.out.println("Solution size: " + solution.length);
+				System.out.println("Solution size: " + solution.numTotalSteps());
+				System.out.println("Solution diff: " + solution.getDiff());
 			}
 			
-			solutionStep = 0;
 			if (solution != null) {
 				if (DEBUG) {
-					System.out.println("Solution: ");
-					for (int i : solution) {
-						System.out.print(Utils.shenToMove(i) + "\t");
-					}
-					System.out.println("");
+					solution.printSteps();
 				}
 			}
 		}
 		// If solutionStep >= solution.length, the solution was invalid
-		if(solution != null  && solutionStep < solution.length) {
-			return solution[solutionStep++];
-		} else if (solution != null && solutionStep >= solution.length) {
-			System.err.println("Invalid solution provided.");
+		if(solution != null) {
+			return solution.getNextStep();
 		}
-		
+		return -1;
+	}
+
+	private int getSolutionStepExpensive() {
+		if (areExitsFound()) {
+			if (solution != null && solution.getDiff() == 0) {
+				return solution.getNextStep();
+			}
+			solution = solver.solve(right, left);
+			if (solution != null) {
+				return solution.getNextStep();
+			}
+		}
 		return -1;
 	}
 
