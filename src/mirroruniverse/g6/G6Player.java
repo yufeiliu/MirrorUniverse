@@ -128,7 +128,7 @@ public class G6Player implements Player {
 		
 		updateCenters(leftView, rightView, leftMid, rightMid, dx, dy);
 		
-		if (DEBUG) {
+		if (DEBUG || true) {
 			System.out.println(Utils.shenToMove(dir));
 		}
 		
