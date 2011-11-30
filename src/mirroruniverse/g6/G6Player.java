@@ -264,6 +264,8 @@ public class G6Player implements Player {
 	//TODO make it return null if no fringe is found
 	private ArrayList<Edge> getFringe(Collection<Node> nodeGraph) {
 		ArrayList<Deque<Edge>> paths = new ArrayList<Deque<Edge>>();
+		HashSet<Edge> visited = new HashSet<Edge>();
+		int oldSize = 0;
 		
 		Deque<Edge> firstFringe = null;
 		
@@ -289,6 +291,13 @@ public class G6Player implements Player {
 				//peek at top of each stack.
 				Edge top = pathStack.peek();
 				
+				visited.add(top);
+				if(Math.abs(visited.size() - oldSize) < 2) {
+					System.out.println("delta 0");
+					return null;
+				}
+				oldSize = visited.size();
+				
 				//check for fringe (fewer than 8 edges)
 				if(top.to.entity == Entity.SPACE && top.to.edges.size() < 8) {
 					//if fringe, return that stack.
@@ -301,22 +310,13 @@ public class G6Player implements Player {
 					if(top.to.entity != Entity.OBSTACLE) {
 						//System.out.println(top.to.x+" "+top.to.y+" "+top.to.entity);
 						for(Edge edge : top.to.edges) {
-							if(edge.to.x != edge.from.x && edge.to.y != edge.from.y) {
+							if(edge.to.entity != Entity.OBSTACLE && edge.to.x != edge.from.x && edge.to.y != edge.from.y) {
 								Deque<Edge> newPathStack = new ArrayDeque<Edge>();
 								newPathStack.addAll(pathStack);
 								newPathStack.add(edge);
 								paths.add(newPathStack);
 							}
 						}
-					} else {
-						//TODO: how can we reliably detect the leaves of our graph?
-						//checking for 3 or more obstacles is unreliable.
-						int obstacles = 0;
-						for(Edge e : top.from.edges)
-							if(e.to.entity == Entity.OBSTACLE)
-								obstacles++;
-						if(obstacles >= 3)
-							return null;
 					}
 				}
 			}
