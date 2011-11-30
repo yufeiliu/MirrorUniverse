@@ -231,9 +231,9 @@ public final class MUBoardPanel extends JPanel implements MouseMotionListener {
 	private void updateFog(int[] aintLocation) 
 	{
 		int intSightRadius = mumMap.getSightRadius();
-		for ( int i = aintLocation[ 0 ] - intSightRadius + 1; i < aintLocation[ 0 ] + intSightRadius; i ++ )
+		for ( int i = aintLocation[ 0 ] - intSightRadius; i <= aintLocation[ 0 ] + intSightRadius; i ++ )
 		{
-			for ( int j = aintLocation[ 1 ] - intSightRadius + 1; j < aintLocation[ 1 ] + intSightRadius; j ++ )
+			for ( int j = aintLocation[ 1 ] - intSightRadius; j <= aintLocation[ 1 ] + intSightRadius; j ++ )
 			{
 				if ( i >= 0 && j >= 0 && i < intXLength && j < intYLength )
 				{

@@ -121,7 +121,7 @@ public class MUMap
 				intExitX = rdmGen.nextInt( intXLength );
 				intExitY = rdmGen.nextInt( intYLength );
 			}
-			aintMap[ intExitY ][ intExitX ] = -1;
+			aintMap[ intExitY ][ intExitX ] = 2;
 			while ( !inMap( intPositionX, intPositionY ) || aintMap[ intPositionY ][intPositionX ] != 0 )
 			{
 				intPositionX = rdmGen.nextInt( intXLength );
@@ -131,7 +131,6 @@ public class MUMap
 		else
 		{
 			this.strMapPath = strMapPath;
-			aintMap = new int[ intYLength ][ intXLength ];
 			generateAppointedMap( strMapPath );
 		}
 		
@@ -153,17 +152,23 @@ public class MUMap
 			alMap.add( scnMap.nextLine() );
 			intLineCount ++;
 		}
-		if ( intLineCount != intYLength )
-		{
-			System.out.println( "Inconsistent map height" );
-		}
+//		if ( intLineCount != intYLength )
+//		{
+//			System.out.println( "Inconsistent map height" );
+//		}
+		intYLength = intLineCount;
 		for ( int j = 0; j < intYLength; j ++ )
 		{
 			String strMapRow = alMap.get( j ).trim();
 			String[] astrMapRow = strMapRow.split( " " );
-			if ( astrMapRow.length != intXLength )
+//			if ( astrMapRow.length != intXLength )
+//			{
+//				System.out.println( "Inconsistent map breadth" );
+//			}
+			if ( j == 0 )
 			{
-				System.out.println( "Inconsistent map breadth" );
+				intXLength = astrMapRow.length;
+				aintMap = new int[ intYLength ][ intXLength ];
 			}
 			for ( int i = 0; i < intXLength; i ++ )
 			{
