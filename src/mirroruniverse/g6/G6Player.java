@@ -308,14 +308,21 @@ public class G6Player implements Player {
 								paths.add(newPathStack);
 							}
 						}
+					} else {
+						//TODO: how can we reliably detect the leaves of our graph?
+						//checking for 3 or more obstacles is unreliable.
+						int obstacles = 0;
+						for(Edge e : top.from.edges)
+							if(e.to.entity == Entity.OBSTACLE)
+								obstacles++;
+						if(obstacles >= 3)
+							return null;
 					}
 				}
 			}
 		}
 		
-		
-		ArrayList<Edge> edgeList = new ArrayList<Edge>(firstFringe);
-		return edgeList;
+		return new ArrayList<Edge>(firstFringe);
 	}
 	
 	private boolean areExitsFound() {
