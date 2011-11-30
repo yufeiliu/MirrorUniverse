@@ -174,7 +174,14 @@ public class G6Player implements Player {
 		Edge edge = exploreGoal.remove(0);
 		int dir = Utils.moveToShen(edge.move);
 		
+		//TODO quickfix, revert later
+		int prevX1 = x1, prevX2 = x2, prevY1 = y1, prevY2 = y2;
 		updateCenters(leftView, rightView, leftView.length/2, rightView.length/2, MUMap.aintDToM[dir][0], MUMap.aintDToM[dir][1]);
+		if (x1==prevX1 && prevX2 == x2 && prevY1 == y1 && prevY2 == y2) {
+			dir = exploreRandom(leftView, rightView);
+			updateCenters(leftView, rightView, leftView.length/2, rightView.length/2, MUMap.aintDToM[dir][0], MUMap.aintDToM[dir][1]);
+			exploreGoal = new ArrayList<Edge>();
+		}
 		
 		return dir;
 	}
