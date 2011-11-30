@@ -7,18 +7,23 @@ import mirroruniverse.g6.dfa.DFA;
 
 public class DFASolver extends Solver {
 
-	private static final int DEFAULT_DISTANCE = 3;
+	private static final int DEFAULT_MIN_ATTEMPTS = 0;
+	private static final int DEFAULT_MAX_ATTEMPTS = 100;
+	private static final long DEFAULT_CUTOFF_TIME = 1000;
 	
 	@Override
 	Solution solve(int[][] firstMap, int[][] secondMap) {
-		return solve(firstMap, secondMap, DEFAULT_DISTANCE);
+		return solve(firstMap, secondMap, DEFAULT_CUTOFF_TIME,
+				DEFAULT_MIN_ATTEMPTS, DEFAULT_MAX_ATTEMPTS);
 	}
 	
 	@Override
-	Solution solve(int[][] firstMap, int[][] secondMap, int distance) {
+	Solution solve(int[][] firstMap, int[][] secondMap, long cutoffTime,
+			int minAttempts, int maxAttempts) {
 		DFA firstDFA, secondDFA, firstBack, secondBack;
 		ArrayList<Move> steps = null;
-		int attempts = 0;
+		int attempts = 1;
+		long startTime = System.currentTimeMillis();
 		
 		firstDFA = firstBack = new DFA(firstMap);
 		secondDFA = secondBack = new DFA(secondMap);
@@ -32,7 +37,9 @@ public class DFASolver extends Solver {
 		
 		steps = intersection.findShortestPath();
 
-		while (steps == null && attempts < DEFAULT_DISTANCE) {
+		while (steps == null && attempts < maxAttempts &&
+				(System.currentTimeMillis() - startTime < cutoffTime
+						&& attempts >= minAttempts)) {
 			secondBack = secondBack.shiftGoals();
 			steps = DFA.intersect(firstDFA, secondBack).findShortestPath();
 			if (steps == null) {
@@ -41,7 +48,7 @@ public class DFASolver extends Solver {
 			}
 			attempts++;
 		}
-		return steps == null ? null : new Solution(steps, attempts);
+		return steps == null ? null : new Solution(steps, attempts - 1);
 	}
 	
 	Solution solve(int[][] map) {
