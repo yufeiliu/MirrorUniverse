@@ -1,6 +1,7 @@
 package mirroruniverse.g6;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import mirroruniverse.g6.Utils.Entity;
 import mirroruniverse.g6.Utils.Move;
@@ -21,17 +22,18 @@ public class DFASolver extends Solver {
 		
 		if (DFA.intersect(firstDFA, secondDFA).getStartState() == null) {
 			System.err.println("DFA failed.");
-			System.out.println(firstMap);
-			System.out.println(firstDFA);
-			System.out.println(";;;;;");
-			System.out.println(secondMap);
-			System.out.println(secondDFA);
-			System.out.println(";;;;;");
-			System.out.println(firstDFA.getStartState());
-			System.out.println(secondDFA.getStartState());
-			System.out.println(DFA.intersect(firstDFA, secondDFA).getStartState());
-			System.exit(1);
-			
+			if (G6Player.SID_DEBUG) {
+				System.out.println(Arrays.toString(firstMap));
+				System.out.println(firstDFA);
+				System.out.println(";;;;;");
+				System.out.println(Arrays.toString(secondMap));
+				System.out.println(secondDFA);
+				System.out.println(";;;;;");
+				System.out.println(firstDFA.getStartState());
+				System.out.println(secondDFA.getStartState());
+				System.out.println(DFA.intersect(firstDFA, secondDFA).getStartState());
+				System.exit(1);
+			}
 			return null;
 		}
 		
