@@ -54,4 +54,8 @@ public class State<V, T> {
 		return this.id + " " + this.goal + " " + this.value;
 	}
 	
+	public void setGoal(boolean goal) {
+		this.goal = goal;
+	}
+	
 }

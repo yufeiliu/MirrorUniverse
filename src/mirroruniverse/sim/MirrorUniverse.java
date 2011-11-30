@@ -117,6 +117,9 @@ public class MirrorUniverse
 		int intStepMax = intStepL > intStepR ? intStepL : intStepR;
 		int intStepMin = intStepL > intStepR ? intStepR : intStepL;
 		int intStepDiff = intStepMax - intStepMin;
+		System.out.println("===============");
+		System.out.println("Diff: " + intStepDiff);
+		System.out.println("Steps: " + intStepMax);
 		if ( intStepMax != intStep )
 			System.out.println( "Step inconsistent" );
 		
