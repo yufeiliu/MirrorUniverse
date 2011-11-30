@@ -12,6 +12,7 @@ import mirroruniverse.sim.Player;
 public class G6Player implements Player {
 
 	public static final boolean DEBUG = false;
+	public static final boolean SID_DEBUG = false;
 	
 	private static final int MAX_MAP_SIZE = 100;
 	private static final int INTERNAL_MAP_SIZE = MAX_MAP_SIZE * 2;
@@ -43,18 +44,13 @@ public class G6Player implements Player {
 	/*
 	 * Array of moves for the solution. null if unsolved.
 	 */
-	private int[] solution;
+	private Solution solution;
 	
 	/*
 	 * Solver used to provide the solution. Can be swapped out to use
 	 * a different method if necessary.
 	 */
 	private Solver solver;
-	
-	/*
-	 * Step of the solution which the player currently is on.
-	 */
-	private int solutionStep;
 
 	public G6Player() {
 		// Set all points to be unknown.
@@ -70,15 +66,21 @@ public class G6Player implements Player {
 		x1 = x2 = y1 = y2 = INTERNAL_MAP_SIZE / 2 - 1;
 		solver = new DFASolver();
 	}
+	
+
+	private boolean shouldRecomputeSolution() {
+		// TODO (Yufei or Hans) implement
+		// add something to recompute if we're about to step on an exit, etc.
+		return isFullyExplored();
+	}
+	
+	private boolean isFullyExplored() {
+		// TODO (Yufei or Hans) implement
+		return false;
+	}
 
 	public int explore(int[][] leftView, int[][] rightView) {
 //		return exploreRandom(leftView, rightView);
-		
-		if (!radiiDiscovered) {
-			r1 = (leftView.length-1) / 2;
-			r2 = (rightView.length-1) / 2;
-		}
-		
 		int dir = 0;
 		
 		if (DEBUG) {
@@ -94,16 +96,12 @@ public class G6Player implements Player {
 		Set<Pair<Integer, Integer>> possibilities =
 				new HashSet<Pair<Integer, Integer>>();
 		
-		int leftMid = leftView.length / 2;
-		int rightMid = rightView.length / 2;
-		
 		// TODO: if no direction exists that uncovers squares, go to direction
 		// with most/least space
 		
 		// Iterate over directions
 		for (int i = 1; i <= 8; i++) {
-			addPossibleDir(leftView, rightView, possibilities, leftMid,
-					rightMid, i);
+			addPossibleDir(leftView, rightView, possibilities, r1, r2, i);
 		}
 		
 		if (DEBUG) {
@@ -121,17 +119,11 @@ public class G6Player implements Player {
 			System.out.println("Squares to be uncovered: " +
 					possibilitiesList.get(0).getFront());
 		}
-		
-		int[] dirArray = MUMap.aintDToM[dir];
-		int dx = dirArray[0];
-		int dy = dirArray[1];
-		
-		updateCenters(leftView, rightView, leftMid, rightMid, dx, dy);
-		
-		if (DEBUG || true) {
+
+		if (DEBUG) {
 			System.out.println(Utils.shenToMove(dir));
 		}
-		
+
 		return dir;
 	}
 
@@ -231,15 +223,33 @@ public class G6Player implements Player {
 	
 	//@Override
 	public int lookAndMove(int[][] leftView, int[][] rightView) {
+		if (!radiiDiscovered) {
+			r1 = (leftView.length-1) / 2;
+			r2 = (rightView.length-1) / 2;
+		}
+		
 		updateKnowledge(left, x1, y1, leftView);
 		updateKnowledge(right, x2, y2, rightView);
 
-		int dir;		
+		int dir;
+//		System.out.println("getting sol");
 		dir = getSolutionStep();
-		if (dir > 0) {
-			return dir;
+//		System.out.println("got sol");
+		if (dir < 0) {
+			dir = explore(leftView, rightView);
 		}
-		dir = explore(leftView, rightView);
+
+		
+		int[] dirArray = MUMap.aintDToM[dir];
+		int dx = dirArray[0];
+		int dy = dirArray[1];
+		
+		updateCenters(leftView, rightView, r1, r2, dx, dy);
+
+		if (SID_DEBUG) {
+			System.out.println(Utils.shenToMove(dir));
+		}
+		
 		return dir;
 	}
 
@@ -267,6 +277,7 @@ public class G6Player implements Player {
 			for (int j = 0; j < view[0].length; j++) {
 				// TODO - I think if this is ever false, there's a bug in the code
 				// and this is false for the identical maps	
+				// TODO - this sometimes has a negative or otherwise invalid index
 				if (leftX + i < knowledge.length && botY + j < knowledge[0].length) {
 					knowledge[leftX + i][botY + j] = view[i][j];
 				}
@@ -334,43 +345,43 @@ public class G6Player implements Player {
 	}
 
 	private int getSolutionStep() {
-		// TODO - continuously update solution with new knowledge.
-		// native approach below is too slow (or moves us away from exit); at
-		// the least, we can avoid recomputing if we've found a 0 solution or
-		// see the entire map.
-		/*
-		if (areExitsFound(left, right)) {
-			solution = solver.solve(right, left);
-			if (solution != null) {
-				return solution[0];
-			}
-		}
-		*/
+		return getSolutionStepExpensive();
 		
+//		return getSolutionStepSingle();
+	}
+
+	private int getSolutionStepSingle() {
 		if (solution == null && areExitsFound()) {
 			solution = solver.solve(right, left);
 			if (DEBUG) {
-				System.out.println("Solution size: " + solution.length);
+				System.out.println("Solution size: " + solution.numTotalSteps());
+				System.out.println("Solution diff: " + solution.getDiff());
 			}
 			
-			solutionStep = 0;
 			if (solution != null) {
 				if (DEBUG) {
-					System.out.println("Solution: ");
-					for (int i : solution) {
-						System.out.print(Utils.shenToMove(i) + "\t");
-					}
-					System.out.println("");
+					System.out.println(solution);
 				}
 			}
 		}
 		// If solutionStep >= solution.length, the solution was invalid
-		if(solution != null  && solutionStep < solution.length) {
-			return solution[solutionStep++];
-		} else if (solution != null && solutionStep >= solution.length) {
-			System.err.println("Invalid solution provided.");
+		if(solution != null) {
+			return solution.getNextStep();
 		}
-		
+		return -1;
+	}
+
+	private int getSolutionStepExpensive() {
+		if (areExitsFound()) {
+			if (solution != null &&
+					(solution.getDiff() == 0 || shouldRecomputeSolution())) {
+				return solution.getNextStep();
+			}
+			solution = solver.solve(right, left);
+			if (solution != null) {
+				return solution.getNextStep();
+			}
+		}
 		return -1;
 	}
 

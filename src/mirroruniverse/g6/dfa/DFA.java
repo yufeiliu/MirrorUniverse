@@ -163,6 +163,7 @@ public class DFA<V, T> {
 				new HashMap<String, State<Entity, Move>>();
 		addIntersectionStates(first, other, intersection, newStates);
 		addIntersectionTransitions(first, other, newStates);
+//		System.out.println(intersection);
 		return intersection;
 	}
 
@@ -173,8 +174,11 @@ public class DFA<V, T> {
 			for (State<Entity, Move> otherState : other.states) {
 				// Don't accidentally step on an exit - these states cannot
 				// be part of our solution
-				if ((selfState.isGoal() && !otherState.isGoal()) ||
-						(!selfState.isGoal() && otherState.isGoal())) {
+				// TODO - handle cases where these aren't real exits
+				if ((selfState.isGoal() && !otherState.isGoal() &&
+						selfState != first.startState) ||
+							(!selfState.isGoal() && otherState.isGoal() &&
+							otherState != other.startState)) {
 					continue;
 				}
 				String key = makeKey(selfState, otherState);
@@ -242,9 +246,45 @@ public class DFA<V, T> {
 	/*
 	 * Returns a list of DFAs with the goals shifted one back.
 	 */
-	public ArrayList<DFA<V, T>> shiftGoals() {
-		// TODO
-		return null;
+	public DFA<V, T> shiftGoals() {
+		DFA<V, T> other = new DFA<V, T>();
+		HashMap<State<V, T>, State<V, T>> copiedStates =
+				new HashMap<State<V, T>, State<V, T>>();
+		
+		boolean foundStart = false;
+		
+		for (State<V, T> s : states) {
+			boolean isStart = (s == startState);
+			if (isStart) 
+				foundStart = true;
+			
+			State<V, T> newS = new State<V, T>(s.getValue(), false);
+			copiedStates.put(s, newS);
+			if (isStart) {
+				other.addStartState(newS);
+			} else {
+				other.addState(newS);
+			}
+		}
+		
+		if (foundStart == false) {
+			System.out.println(":(");
+			System.exit(1);
+		}
+		
+		for (State<V, T> s : states) {
+			State<V, T> newS = copiedStates.get(s);
+			for (Transition<V, T> t : s.getTransitions()) {
+				State<V, T> dest = copiedStates.get(t.getEnd());
+				newS.addTransition(t.getValue(), dest);
+				// can probably add !s.isGoal() for efficiency
+				if (!s.isGoal() && t.getEnd().isGoal() && !newS.isGoal()) {
+					newS.setGoal(true);
+					other.goalStates.add(newS);
+				}
+			}
+		}
+		return other;
 	}
 	
 	public String toString() {
@@ -263,6 +303,10 @@ public class DFA<V, T> {
 			}
 		}
 		return s;
+	}
+	
+	public State<V, T> getStartState() {
+		return startState;
 	}
 
 }
