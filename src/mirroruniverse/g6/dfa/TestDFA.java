@@ -1,15 +1,17 @@
 package mirroruniverse.g6.dfa;
 
-import static org.junit.Assert.*;
-
-import org.junit.Before;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
 import mirroruniverse.g6.Utils.Entity;
 import mirroruniverse.g6.Utils.Move;
+
+import org.junit.Before;
+import org.junit.Test;
 
 public class TestDFA {
 
@@ -101,17 +103,16 @@ public class TestDFA {
 	 */
 	@Test
 	public void testRecoverPath() {
-		startState.addTransition(new Transition(Move.N,
+		// Use E since that's indexed as 0 by Shen
+		startState.addTransition(new Transition(Move.E,
 				startState, endState));
-		
 		HashMap<State, Transition> used = 
 				new HashMap<State, Transition>();
-		used.put(endState, startState.getTransitions().get(0));
-		
+		used.put(endState, startState.getTransitions()[0]);
 		ArrayList<Move> path = dfa.recoverPath(endState, used);
 		assertNotNull(path);
 		assertEquals(1, path.size());
-		assertEquals(path.get(0), Move.N);
+		assertEquals(Move.E, path.get(0));
 	}
 	
 	@Test

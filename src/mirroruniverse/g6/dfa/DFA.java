@@ -145,7 +145,6 @@ public class DFA {
 		if (G6Player.SID_DEBUG) {
 			transPath = new ArrayList<Transition>();
 		}
-		
 		Transition trans = used.get(currentState);
 		while (trans != null) {
 			path.add(trans.getValue());
@@ -255,7 +254,12 @@ public class DFA {
 				Transition[] otherTransArray = otherState.getTransList();
 				for (int i = 0; i < State.NUM_DIRECTIONS; i++) {
 					Transition selfTrans = selfTransArray[i]; 
-					Transition otherTrans = otherTransArray[i]; 
+					Transition otherTrans = otherTransArray[i];
+					
+					// Just for tests.
+					if (selfTrans == null || otherTrans == null)
+						continue;
+					
 					String endKey = makeKey(selfTrans.getEnd(), otherTrans.getEnd());
 					State dest = newStates.get(endKey);
 					// dest is null if it would have one exit
