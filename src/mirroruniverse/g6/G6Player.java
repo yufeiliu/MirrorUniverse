@@ -112,7 +112,7 @@ public class G6Player implements Player {
 	}
 
 
-	// TODO - test this for correctness
+	// TODO - test this for correctness, cache
 	private boolean isFullyExplored(int[][] map) {
 		for (int i = 0; i < INTERNAL_MAP_SIZE; i++) {
 			for (int j = 0; j < INTERNAL_MAP_SIZE; j++) {
