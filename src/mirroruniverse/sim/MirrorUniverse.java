@@ -122,7 +122,7 @@ public class MirrorUniverse
 		
 		System.out.println("==============");
 		System.out.println("Diff: " + intStepDiff); 
-		System.out.println("Max: " + intStepMax);
+		System.out.println("Steps: " + intStepMax);
 		
 		if ( intStepMax != intStep )
 			System.out.println( "Step inconsistent" );
