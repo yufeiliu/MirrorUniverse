@@ -193,9 +193,9 @@ public class G6Player implements Player {
 				dir = pickDirFromPossibilities(possibilitiesList);
 				
 				if (dir == -1) {
-					return (int) (Math.random() * 8) + 1;
-//					return doExplore(leftView, rightView, leftSightRadius + 1,
-//							rightSightRadius + 1);
+					return possibilitiesList
+							.get((int) (Math.random() * possibilitiesList.size()))
+							.getBack();
 				}
 				
 				if (DEBUG) {
@@ -223,7 +223,12 @@ public class G6Player implements Player {
 			}
 		}
 		
-		if (goodDirs.size() == 0 || maxScore == 0) {
+		if (goodDirs.size() == 0) {
+			System.err.println("No good directions.");
+			return (int) (Math.random() * 8) + 1;
+		}
+		
+		if (maxScore == 0) {
 			return -1;
 		}
 		
