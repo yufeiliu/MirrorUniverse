@@ -3,12 +3,12 @@ package mirroruniverse.g6;
 
 public abstract class Solver {
 	
-	public static final int MAX_DISTANCE = 100;
-	public static final int MAX_CUTOFF_TIME = 20 * 1000;
+	public static final int MAX_DISTANCE = 20;
+	public static final int MAX_CUTOFF_TIME = 60 * 1000;
 	
-	protected static final int DEFAULT_MIN_ATTEMPTS = 0;
-	protected static final int DEFAULT_MAX_ATTEMPTS = 10;
-	protected static final long DEFAULT_CUTOFF_TIME = 10 * 1000;
+	public static final int DEFAULT_MIN_DISTANCE = 0;
+	public static final int DEFAULT_MAX_DISTANCE = 3;
+	public static final long DEFAULT_CUTOFF_TIME = 10 * 1000;
 	
 	abstract Solution solve(int[][] firstMap, int[][] secondMap);
 	

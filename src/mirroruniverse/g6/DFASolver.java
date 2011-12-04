@@ -10,7 +10,7 @@ public class DFASolver extends Solver {
 	@Override
 	Solution solve(int[][] firstMap, int[][] secondMap) {
 		return solve(firstMap, secondMap, DEFAULT_CUTOFF_TIME,
-				DEFAULT_MIN_ATTEMPTS, DEFAULT_MAX_ATTEMPTS);
+				DEFAULT_MIN_DISTANCE, DEFAULT_MAX_DISTANCE);
 	}
 	
 	

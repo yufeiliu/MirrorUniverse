@@ -548,7 +548,7 @@ public class G6Player implements Player {
 			if (!didExhaustiveCheck && isFullyExplored()) {
 				didExhaustiveCheck = true;
 				solution = solver.solve(right, left, Solver.MAX_CUTOFF_TIME,
-						Solver.MAX_DISTANCE, Solver.MAX_DISTANCE);
+						Solver.DEFAULT_MIN_DISTANCE, Solver.MAX_DISTANCE);
 			} else {
 				if (SID_DEBUG) {
 					System.out.println(";;;;;");
