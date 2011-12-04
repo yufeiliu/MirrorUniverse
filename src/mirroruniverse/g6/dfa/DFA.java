@@ -47,31 +47,37 @@ public class DFA {
 			int xCap, int yCap) {
 		for (short x = 0; x < xCap; x++) {
 			for (short y = 0; y < yCap; y++) {
-				
-				Entity entity = Utils.shenToEntities(map[x][y]);
-				boolean isStart = (entity == Entity.PLAYER);
-				boolean isGoal = (entity == Entity.EXIT);
-				boolean isUnknown = (entity == Entity.UNKNOWN);
-				boolean isBlocked = (entity == Entity.OBSTACLE);
-				
-				if (isBlocked) {
-					blockedStates.add(makeKey(x, y));
-					continue;
-				}
-				
-				if (isUnknown) {
-					continue;
-				}
-
-				State node = new State(entity, isGoal);
-				allStates.put(makeKey(x, y), node);
-				
-				if (isStart) {
-					addStartState(node);
-				} else {
-					addState(node);
-				}
+				addStateFromEntity(map, allStates, blockedStates,
+						x, y);
 			}
+		}
+	}
+
+	private void addStateFromEntity(int[][] map,
+			HashMap<String, State> allStates, HashSet<String> blockedStates,
+			short x, short y) {
+		Entity entity = Utils.shenToEntities(map[x][y]);
+		boolean isStart = (entity == Entity.PLAYER);
+		boolean isGoal = (entity == Entity.EXIT);
+		boolean isUnknown = (entity == Entity.UNKNOWN);
+		boolean isBlocked = (entity == Entity.OBSTACLE);
+		
+		if (isBlocked) {
+			blockedStates.add(makeKey(x, y));
+			return;
+		}
+		
+		if (isUnknown) {
+			return;
+		}
+
+		State node = new State(entity, isGoal);
+		allStates.put(makeKey(x, y), node);
+		
+		if (isStart) {
+			addStartState(node);
+		} else {
+			addState(node);
 		}
 	}
 
