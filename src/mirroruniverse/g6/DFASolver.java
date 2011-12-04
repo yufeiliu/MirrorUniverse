@@ -6,10 +6,6 @@ import mirroruniverse.g6.Utils.Move;
 import mirroruniverse.g6.dfa.DFA;
 
 public class DFASolver extends Solver {
-
-	private static final int DEFAULT_MIN_ATTEMPTS = 0;
-	private static final int DEFAULT_MAX_ATTEMPTS = 100;
-	private static final long DEFAULT_CUTOFF_TIME = 1000;
 	
 	@Override
 	Solution solve(int[][] firstMap, int[][] secondMap) {
@@ -17,9 +13,17 @@ public class DFASolver extends Solver {
 				DEFAULT_MIN_ATTEMPTS, DEFAULT_MAX_ATTEMPTS);
 	}
 	
+	
+	// TODO: can this fail if we step back before the start state? This might
+	// mean that we generate a DFA with no exit state.
 	@Override
 	Solution solve(int[][] firstMap, int[][] secondMap, long cutoffTime,
 			int minAttempts, int maxAttempts) {
+		
+		if (G6Player.SID_DEBUG) {
+			System.out.println("Solving");
+		}
+		
 		DFA firstDFA, secondDFA, firstBack, secondBack;
 		ArrayList<Move> steps = null;
 		int attempts = 1;
@@ -36,16 +40,24 @@ public class DFASolver extends Solver {
 		}
 		
 		steps = intersection.findShortestPath();
-
+		// This will try until we've found a solution, or have hit our time
+		// limit or max number of attempts. We can guarantee to try some min
+		// number of attempts before we stop because of time.
 		while (steps == null && attempts < maxAttempts &&
 				(System.currentTimeMillis() - startTime < cutoffTime
-						&& attempts >= minAttempts)) {
+						|| attempts < minAttempts)) {
+			
+			if (G6Player.SID_DEBUG) {
+				System.out.println("Attempt " + attempts);
+			}
+			
 			secondBack = secondBack.shiftGoals();
 			steps = DFA.intersect(firstDFA, secondBack).findShortestPath();
 			if (steps == null) {
 				firstBack = firstBack.shiftGoals();
 				steps = DFA.intersect(firstBack, secondDFA).findShortestPath();
 			}
+			
 			attempts++;
 		}
 		return steps == null ? null : new Solution(steps, attempts - 1);

@@ -45,6 +45,7 @@ public class DFA {
 	private void addStates(int[][] map,
 			HashMap<String, State> allStates, HashSet<String> blockedStates,
 			int xCap, int yCap) {
+		
 		for (short x = 0; x < xCap; x++) {
 			for (short y = 0; y < yCap; y++) {
 				addStateFromEntity(map, allStates, blockedStates,
@@ -318,6 +319,9 @@ public class DFA {
 		for (State s : states) {
 			State newS = copiedStates.get(s);
 			for (Transition t : s.getTransitions()) {
+				if (t == null) {
+					continue;
+				}
 				State dest = copiedStates.get(t.getEnd());
 				newS.addTransition(t.getValue(), dest);
 				// TODO: we really want to check !s.isExit, not s.isGoal

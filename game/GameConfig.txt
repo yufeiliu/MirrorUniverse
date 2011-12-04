@@ -1,8 +1,11 @@
-35, 35, 2, 6, 0.4, 5
-35, 35, 2, 7, 0.2, 6
-
 1, 30, 2, -1, maps/g2maps/PipeMaze_A_51_12.txt
 1, 30, 2, -1, maps/g2maps/PipeMaze_B_51_12.txt
+
+35, 35, 10, 6, 0.4, 5
+35, 35, 10, 7, 0.2, 6
+
+1, 30, 30, -1, maps/Board1_L.txt
+1, 30, 30, -1, maps/Board1_R.txt
 
 1, 30, 2, -1, maps/g2maps/PipeMaze_A_51_12.txt
 1, 30, 2, -1, maps/g2maps/PipeMaze_B_51_12.txt

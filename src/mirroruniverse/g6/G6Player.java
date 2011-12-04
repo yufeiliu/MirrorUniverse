@@ -13,7 +13,8 @@ import mirroruniverse.sim.Player;
 public class G6Player implements Player {
 
 	public static final boolean DEBUG = false;
-	public static final boolean SID_DEBUG = false;
+	public static final boolean SID_DEBUG = true;
+	private static final boolean CRASH_ON_ERROR = true;
 	
 	private static final int MAX_MAP_SIZE = 100;
 	private static final int INTERNAL_MAP_SIZE = MAX_MAP_SIZE * 2;
@@ -61,6 +62,7 @@ public class G6Player implements Player {
 	private Solver solver;
 	
 	private boolean didExhaustiveCheck;
+	private boolean computedSolutionWhenFullyExplored;
 
 	public G6Player() {
 		// Set all points to be unknown.
@@ -79,7 +81,13 @@ public class G6Player implements Player {
 	
 
 	private boolean shouldRecomputeSolution() {
+		if (computedSolutionWhenFullyExplored) {
+			return false;
+		}
 		if (solution == null) {
+			if (isFullyExplored()) {
+				computedSolutionWhenFullyExplored = true;
+			}
 			return true;
 		}
 		// This means we don't recompute a good solution if we see a better
@@ -89,8 +97,10 @@ public class G6Player implements Player {
 			return false;
 		}
 		if (isFullyExplored()) {
+			computedSolutionWhenFullyExplored = true;
 			return true;
 		}
+		
 		// TODO - implement
 		// currently always recomputes unless we have a perfect solution
 		return true;
@@ -138,58 +148,70 @@ public class G6Player implements Player {
 	}
 
 	public int explore(int[][] leftView, int[][] rightView) {
-//		return exploreRandom(leftView, rightView);
-		int dir = 0;
-		
-		if (DEBUG) {
-			System.out.println("=================");
-			Utils.print2DArray(leftView);
-			System.out.println();
-			Utils.print2DArray(rightView);
-		}
-		
-		// TODO - Use a set to avoid duplicates. I added this because there was
-		// a TODO to avoid duplicates, but I'm not sure how it's possible to
-		// get duplicates. Change this back to a list if it's not.
-		Set<Pair<Integer, Integer>> possibilities =
-				new HashSet<Pair<Integer, Integer>>();
-		
-		// TODO: if no direction exists that uncovers squares, go to direction
-		// with most/least space
-		
-		// Iterate over directions
-		for (int i = 1; i <= 8; i++) {
-			addPossibleDir(leftView, rightView, possibilities, r1, r2, i);
-		}
-		
-		if (DEBUG) {
-			System.out.println("x1: " + x1 + " y1: " + y1 + " x2: " + x2 +
-						" y2: " + y2);
-		}
-		
-		ArrayList<Pair<Integer, Integer>> possibilitiesList =
-				new ArrayList<Pair<Integer, Integer>>(possibilities);
-		Collections.sort(possibilitiesList);
-		
-		// TODO - if everything ties for 0 (nothing unexplored nearby)
-		// go to nearest unexplored square ("frontier")?
-		dir = pickDirFromPossibilities(possibilitiesList);
-		
-		if (DEBUG) {
-			System.out.println("Squares to be uncovered: " +
-					possibilitiesList.get(0).getFront());
-		}
+		return doExplore(leftView, rightView, r1, r2);
+	}
 
-		if (DEBUG) {
-			System.out.println(Utils.shenToMove(dir));
-		}
 
-		return dir;
+	private int doExplore(int[][] leftView, int[][] rightView,
+			int leftSightRadius, int rightSightRadius) {
+		//		return exploreRandom(leftView, rightView);
+				int dir = 0;
+				
+				if (DEBUG) {
+					System.out.println("=================");
+					Utils.print2DArray(leftView);
+					System.out.println();
+					Utils.print2DArray(rightView);
+				}
+				
+				// TODO - Use a set to avoid duplicates. I added this because there was
+				// a TODO to avoid duplicates, but I'm not sure how it's possible to
+				// get duplicates. Change this back to a list if it's not.
+				Set<Pair<Integer, Integer>> possibilities =
+						new HashSet<Pair<Integer, Integer>>();
+				
+				// TODO: if no direction exists that uncovers squares, go to direction
+				// with most/least space
+				
+				// Iterate over directions
+				for (int i = 1; i <= 8; i++) {
+					addPossibleDir(leftView, rightView, possibilities, r1, r2,
+							leftSightRadius, rightSightRadius, i);
+				}
+				
+				if (DEBUG) {
+					System.out.println("x1: " + x1 + " y1: " + y1 + " x2: " + x2 +
+								" y2: " + y2);
+				}
+				
+				ArrayList<Pair<Integer, Integer>> possibilitiesList =
+						new ArrayList<Pair<Integer, Integer>>(possibilities);
+				Collections.sort(possibilitiesList);
+				
+				// TODO - if everything ties for 0 (nothing unexplored nearby)
+				// go to nearest unexplored square ("frontier")?
+				dir = pickDirFromPossibilities(possibilitiesList);
+				
+				if (dir == -1) {
+					return (int) (Math.random() * 8) + 1;
+//					return doExplore(leftView, rightView, leftSightRadius + 1,
+//							rightSightRadius + 1);
+				}
+				
+				if (DEBUG) {
+					System.out.println("Squares to be uncovered: " +
+							possibilitiesList.get(0).getFront());
+				}
+		
+				if (DEBUG) {
+					System.out.println(Utils.shenToMove(dir));
+				}
+				
+				return dir;
 	}
 
 	private int pickDirFromPossibilities(
 			ArrayList<Pair<Integer, Integer>> possibilitiesList) {
-		int dir;
 		// Choose randomly among dirs of equal score. This avoids infinite
 		// loops.
 		ArrayList<Integer> goodDirs = new ArrayList<Integer>();
@@ -201,16 +223,16 @@ public class G6Player implements Player {
 			}
 		}
 		
-		if (goodDirs.size() == 0) {
-			return (int) (Math.random() * goodDirs.size() * 8) + 1;
+		if (goodDirs.size() == 0 || maxScore == 0) {
+			return -1;
 		}
-		dir = goodDirs.get((int) (Math.random() * goodDirs.size()));
-		return dir;
+		
+		return goodDirs.get((int) (Math.random() * goodDirs.size()));
 	}
 
 	private void addPossibleDir(int[][] leftView, int[][] rightView,
 			Set<Pair<Integer, Integer>> possibilities, int leftMid,
-			int rightMid, int i) {
+			int rightMid, int leftSightRadius, int rightSightRadius, int i) {
 		int[] curDir = MUMap.aintDToM[i];
 		int dx = curDir[0];
 		int dy = curDir[1];
@@ -253,10 +275,10 @@ public class G6Player implements Player {
 		
 		int toUncover = 0;
 		if (leftUnblocked && !isLeftExitFound()) {
-			toUncover += squaresUncovered(newx1, newy1, r1, left);
+			toUncover += squaresUncovered(newx1, newy1, leftSightRadius, left);
 		}
 		if (rightUnblocked && !isRightExitFound()) {
-			toUncover += squaresUncovered(newx2, newy2, r2, right);
+			toUncover += squaresUncovered(newx2, newy2, rightSightRadius, right);
 		}
 		possibilities.add(new Pair<Integer, Integer>(toUncover, i));
 	}
@@ -313,7 +335,7 @@ public class G6Player implements Player {
 			ret = doLookAndMove(leftView, rightView);
 		} catch (Exception e) {
 			e.printStackTrace();
-			if (DEBUG || SID_DEBUG) {
+			if (CRASH_ON_ERROR) {
 				System.exit(1);
 			} else {
 				ret = (int) (Math.random() * NUM_MOVES) + 1;
