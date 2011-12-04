@@ -13,7 +13,7 @@ import mirroruniverse.sim.Player;
 public class G6Player implements Player {
 
 	public static final boolean DEBUG = false;
-	public static final boolean SID_DEBUG = false;
+	public static final boolean SID_DEBUG = true;
 	
 	private static final int MAX_MAP_SIZE = 100;
 	private static final int INTERNAL_MAP_SIZE = MAX_MAP_SIZE * 2;
@@ -188,6 +188,10 @@ public class G6Player implements Player {
 				goodDirs.add(p.getBack());
 			}
 		}
+		
+		if (goodDirs.size() == 0) {
+			return (int) (Math.random() * goodDirs.size() * 8) + 1;
+		}
 		dir = goodDirs.get((int) (Math.random() * goodDirs.size()));
 		return dir;
 	}
@@ -307,14 +311,7 @@ public class G6Player implements Player {
 	}
 
 
-	private int doLookAndMove(int[][] leftView, int[][] rightView) {
-		if (SID_DEBUG) {
-			if (hasExit(leftView)) {
-				System.out.println(Arrays.deepToString(leftView));
-				System.out.println("/////");
-			}
-		}
-		
+	private int doLookAndMove(int[][] leftView, int[][] rightView) {		
 		if (!radiiDiscovered) {
 			r1 = (leftView.length-1) / 2;
 			r2 = (rightView.length-1) / 2;
