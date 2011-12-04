@@ -33,7 +33,7 @@ public class DFA {
 
 		for (String k : allStates.keySet()) {
 			State node = allStates.get(k);
-			byte[] xy = recoverKey(k);
+			short[] xy = recoverKey(k);
 			addTransitions(map, allStates, xy[0], xy[1], node);
 		}
 	}
@@ -87,11 +87,11 @@ public class DFA {
 	}
 
 
-	private byte[] recoverKey(String k) {
+	private short[] recoverKey(String k) {
 		String[] split = k.split(",");
-		byte[] xy = new byte[2];
-		xy[0] = Byte.parseByte(split[0]);
-		xy[1] = Byte.parseByte(split[1]);
+		short[] xy = new short[2];
+		xy[0] = Short.parseShort(split[0]);
+		xy[1] = Short.parseShort(split[1]);
 		return xy;
 	}
 	
