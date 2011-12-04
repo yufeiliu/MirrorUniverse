@@ -14,9 +14,10 @@ import mirroruniverse.g6.Utils.Move;
 
 public class DFA {
 	
-	ArrayList<State> goalStates;
-	ArrayList<State> states;
-	State startState;
+	private ArrayList<State> goalStates;
+	private ArrayList<State> states;
+	private State startState;
+	private static final int MAX_STATES = 20 * 20;
 
 	
 	public DFA() {
@@ -24,10 +25,13 @@ public class DFA {
 		states = new ArrayList<State>();
 	}
 	
-	public DFA(int[][] map) {
+	public DFA(int[][] originalMap) {
 		this();
 		HashMap<String, State> allStates = new HashMap<String, State>();
 		HashSet<String> blockedStates = new HashSet<String>();
+		
+		int[][] map = Utils.capMap(originalMap, MAX_STATES);
+		
 		int xCap = map.length;
 		int yCap = map[0].length;
 		

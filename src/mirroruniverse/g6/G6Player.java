@@ -13,7 +13,7 @@ import mirroruniverse.sim.Player;
 public class G6Player implements Player {
 
 	public static final boolean DEBUG = false;
-	public static final boolean SID_DEBUG = true;
+	public static final boolean SID_DEBUG = false;
 	private static final boolean CRASH_ON_ERROR = true;
 	
 	private static final int MAX_MAP_SIZE = 100;

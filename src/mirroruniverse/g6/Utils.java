@@ -109,4 +109,24 @@ public class Utils {
 			System.out.println();
 		}
 	}
+	
+	/*
+	 * Given a map, returns a new map that has at most maxEntities players +
+	 * exits + spaces + obstacles. It should not affect the number of players
+	 * and exits. In other words, it replaces up some spaces and obstacles with
+	 * unknowns.
+	 * 
+	 *  It should try to include the most relevant squares, so that the DFA
+	 *  solution will be as accurate as possible.
+	 */
+	public static int[][] capMap(int[][] map, int maxEntities) {
+		int[][] newMap = new int[map.length][map[0].length];
+		for (int i = 0; i < map.length; i++) {
+			for (int j = 0; j < map.length; j++) {
+				newMap[i][j] = map[i][j];
+			}
+		}
+		return newMap;
+	}
+	
 }
