@@ -78,10 +78,22 @@ public class G6Player implements Player {
 	}
 	
 
-	private boolean shouldNotRecomputeSolution() {
-		// TODO (Yufei or Hans) implement
-		// add something to recompute if we're about to step on an exit, etc.
-		return false && isFullyExplored();
+	private boolean shouldRecomputeSolution() {
+		if (solution == null) {
+			return true;
+		}
+		// This means we don't recompute a good solution if we see a better
+		// path as we explore. We should probably recompute every few steps
+		// if the search space is small
+		if (solution.getDiff() == 0) {
+			return false;
+		}
+		if (isFullyExplored()) {
+			return true;
+		}
+		// TODO - implement
+		// currently always recomputes unless we have a perfect solution
+		return true;
 	}
 	
 	private boolean isFullyExplored() {
@@ -503,8 +515,7 @@ public class G6Player implements Player {
 
 	private int getSolutionStepExpensive() {
 		if (areExitsFound()) {
-			if (solution != null &&
-					(solution.getDiff() == 0 || shouldNotRecomputeSolution())) {
+			if (!shouldRecomputeSolution()) {
 				return solution.getNextStep();
 			}
 			if (!didExhaustiveCheck && isFullyExplored()) {
