@@ -13,7 +13,7 @@ import mirroruniverse.sim.Player;
 public class G6Player implements Player {
 
 	public static final boolean DEBUG = false;
-	public static final boolean SID_DEBUG = true;
+	public static final boolean SID_DEBUG = false;
 	
 	private static final int MAX_MAP_SIZE = 100;
 	private static final int INTERNAL_MAP_SIZE = MAX_MAP_SIZE * 2;
@@ -407,11 +407,12 @@ public class G6Player implements Player {
 		
 		for (int i = 0; i < view.length; i++) {
 			for (int j = 0; j < view[0].length; j++) {
-				// TODO - I think if this is ever false, there's a bug in the code
-				// and this is false for the identical maps	
-				// TODO - this sometimes has a negative or otherwise invalid index
-				if (leftX + i < knowledge.length && botY + j < knowledge[0].length) {
-					knowledge[leftX + i][botY + j] = view[i][j];
+				int newY = leftX + i;
+				int newX = botY + j;
+				
+				if (newY >= 0 && newX >= 0 && newY < knowledge.length &&
+						newX < knowledge[0].length) {
+					knowledge[newY][newX] = view[i][j];
 				}
 			}
 		}

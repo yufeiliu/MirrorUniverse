@@ -3,6 +3,7 @@ package mirroruniverse.g6.dfa;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -25,31 +26,38 @@ public class DFA {
 	
 	public DFA(int[][] map) {
 		this();
-		HashMap<String, State> allStates = new HashMap<String, State>(); 
+		HashMap<String, State> allStates = new HashMap<String, State>();
+		HashSet<String> blockedStates = new HashSet<String>();
 		int xCap = map.length;
 		int yCap = map[0].length;
 		
-		addStates(map, allStates, xCap, yCap);
+		addStates(map, allStates, blockedStates, xCap, yCap);
 
 		for (String k : allStates.keySet()) {
 			State node = allStates.get(k);
 			short[] xy = recoverKey(k);
-			addTransitions(map, allStates, xy[0], xy[1], node);
+			if (node != null) {
+				addTransitions(map, allStates, blockedStates, xy[0], xy[1], node);
+			}
 		}
 	}
 
 	private void addStates(int[][] map,
-			HashMap<String, State> allStates, int xCap, int yCap) {
+			HashMap<String, State> allStates, HashSet<String> blockedStates,
+			int xCap, int yCap) {
 		for (short x = 0; x < xCap; x++) {
 			for (short y = 0; y < yCap; y++) {
-				if (map[x][y] == Utils.entitiesToShen(Entity.OBSTACLE)) {
-					continue;
-				}
 				
 				Entity entity = Utils.shenToEntities(map[x][y]);
 				boolean isStart = (entity == Entity.PLAYER);
 				boolean isGoal = (entity == Entity.EXIT);
 				boolean isUnknown = (entity == Entity.UNKNOWN);
+				boolean isBlocked = (entity == Entity.OBSTACLE);
+				
+				if (isBlocked) {
+					blockedStates.add(makeKey(x, y));
+					continue;
+				}
 				
 				if (isUnknown) {
 					continue;
@@ -68,15 +76,22 @@ public class DFA {
 	}
 
 	private void addTransitions(int[][] map, HashMap<String, State> allStates,
-			short x, short y, State node) {
+			HashSet<String> blockedStates, short x, short y, State node) {
 		for (byte dx = -1; dx <= 1; dx++) {
 			for (byte dy = -1; dy <= 1; dy++) {
 				if (dx == 0 && dy == 0) {
 					continue;
 				}
+				
 				String key = makeKey(x + dy, y + dx);
-				State end = allStates.containsKey(key) ? allStates.get(key) : node;
-				node.addTransition(Utils.dxdyToMove(dx, dy), end);
+				Move move = Utils.dxdyToMove(dx, dy);
+				State end = allStates.get(key);
+				if (end != null) {
+					node.addTransition(move, end);
+				} else if (blockedStates.contains(key)) {
+					node.addTransition(move, node);
+				}
+				
 			}
 		}
 	}
@@ -197,10 +212,6 @@ public class DFA {
 		if (G6Player.DEBUG) {
 			System.out.println("Intersection: " + (stateEndTime - startTime));
 			System.out.println("Transitions: " + (transEndTime - stateEndTime));
-		}
-		
-		if (G6Player.SID_DEBUG) {
-			System.out.println(other);
 		}
 		
 		return intersection;
