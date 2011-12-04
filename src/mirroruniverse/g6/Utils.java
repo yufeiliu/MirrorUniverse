@@ -118,6 +118,8 @@ public class Utils {
 	 * 
 	 *  It should try to include the most relevant squares, so that the DFA
 	 *  solution will be as accurate as possible.
+	 *  
+	 *  NOTE: DO NOT MUTATE THE ORIGINAL MAP.
 	 */
 	public static int[][] capMap(int[][] map, int maxEntities) {
 		int[][] newMap = new int[map.length][map[0].length];
