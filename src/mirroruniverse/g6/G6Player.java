@@ -57,7 +57,11 @@ public class G6Player implements Player {
 	private boolean leftExited;
 	private boolean rightExited;
 	
+	private int leftUnknown;
+	private int rightUnknown;
+	
 	private boolean radiiDiscovered = false;
+	private boolean closeToExit = false;
 
 	private HashMap<String, Node> cacheLeft = new HashMap<String, Node>();
 	private HashMap<String, Node> cacheRight = new HashMap<String, Node>();
@@ -90,13 +94,49 @@ public class G6Player implements Player {
 		// to account for 0 based indexing.
 		x1 = x2 = y1 = y2 = INTERNAL_MAP_SIZE / 2 - 1;
 		solver = new DFASolver();
+		leftUnknown = left.length * left[0].length;
+		rightUnknown = right.length * right[0].length;
 	}
 	
 
-	private boolean shouldNotRecomputeSolution() {
-		// TODO (Yufei or Hans) implement
-		// add something to recompute if we're about to step on an exit, etc.
-		return false && isFullyExplored();
+	private boolean shouldNotRecomputeSolution() {		
+		// recompute only if a certain number of squares have been uncovered
+		// or if a player moves such that the exit is now in their sight radius.
+		
+		int newLeftUnknown = numSquaresUnknown(left);
+		int newRightUnknown = numSquaresUnknown(right);
+		boolean enoughUncovered = leftUnknown - newLeftUnknown > 5 || rightUnknown > newRightUnknown;
+		leftUnknown = newLeftUnknown;
+		rightUnknown = newRightUnknown;
+		
+		boolean closeEnough = (isExitInSight(left, x1, y1, r1)) || (isExitInSight(right, x2, y2, r2));
+		boolean movedCloseEnough = !closeToExit && closeEnough;
+		closeToExit = closeEnough;
+		
+		return !movedCloseEnough && !enoughUncovered && isFullyExplored();
+	}
+	
+	private int numSquaresUnknown(int[][] knowledge) {
+		int count = 0;
+		for(int i = 0; i < knowledge.length; i++) {
+			for(int j = 0; j < knowledge[0].length; j++) {
+				if(knowledge[j][i] == Utils.entitiesToShen(Entity.UNKNOWN)) {
+					count++;
+				}
+			}
+		}
+		return count;
+	}
+	
+	private boolean isExitInSight(int[][] knowledge, int x, int y, int r) {
+		for(int i = x - r; i < x + r + 1; i++) {
+			for(int j = y - r; j < y + r + 1; j++) {
+				if(knowledge[j][i] == Utils.entitiesToShen(Entity.EXIT)) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 	
 	private boolean isFullyExplored() {
