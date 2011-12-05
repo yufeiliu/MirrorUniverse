@@ -124,11 +124,29 @@ public class Utils {
 	public static int[][] capMap(int[][] map, int maxEntities) {
 		int[][] newMap = new int[map.length][map[0].length];
 		for (int i = 0; i < map.length; i++) {
-			for (int j = 0; j < map.length; j++) {
-				newMap[i][j] = map[i][j];
+			for (int j = 0; j < map[0].length; j++) {
+				if(countNeighbors(map, i, j, Entity.OBSTACLE) >= 7) {
+					newMap[i][j] = entitiesToShen(Entity.UNKNOWN);
+				} else if(countNeighbors(map, i, j, Entity.SPACE) == 8) {
+					newMap[i][j] = entitiesToShen(Entity.UNKNOWN);
+				} else {
+					newMap[i][j] = map[i][j];
+				}
 			}
 		}
 		return newMap;
+	}
+	
+	private static int countNeighbors(int[][] map, int a, int b, Entity ent) {
+		int count = 0;
+		for(int i = (a > 0) ? a - 1 : 0; i < ((a < map.length - 1) ? a + 1 : map.length); i++) {
+			for(int j = (b > 0) ? b - 1 : 0; j < ((b < map[0].length - 1) ? b + 1 : map[0].length); j++) {
+				if(map[i][j] == entitiesToShen(ent)) {
+					count++;
+				}
+			}
+		}
+		return count;
 	}
 	
 }
