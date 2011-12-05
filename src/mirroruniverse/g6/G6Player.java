@@ -18,7 +18,7 @@ import mirroruniverse.sim.Player;
 
 public class G6Player implements Player {
 
-	public static final boolean DEBUG = true;
+	public static final boolean DEBUG = false;
 	public static final boolean SID_DEBUG = false;
 	private static final boolean CRASH_ON_ERROR = true;
 	
@@ -205,7 +205,9 @@ public class G6Player implements Player {
 				int curY = y1 + (j-jMedian);
 				
 				Node n = getFromCache(cache, v[i][j], curX, curY);
-				if (n.entity == Entity.OBSTACLE || n.entity == Entity.EXIT) continue;
+				if (Utils.shenToEntities(v[i][j]) == Entity.OBSTACLE || Utils.shenToEntities(v[i][j]) == Entity.EXIT) {
+					continue;
+				}
 				
 				for (int d = 1; d <= 8; d++) {
 					int dj = MUMap.aintDToM[d][0];
