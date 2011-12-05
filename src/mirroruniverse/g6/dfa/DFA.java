@@ -204,7 +204,7 @@ public class DFA {
 		DFA intersection = new DFA();
 		HashMap<String, State> newStates = new HashMap<String, State>();
 		
-		long startTime, stateEndTime, transEndTime;
+		long startTime = 0, stateEndTime, transEndTime;
 		
 		if (G6Player.SID_DEBUG) {
 			 startTime = System.currentTimeMillis();

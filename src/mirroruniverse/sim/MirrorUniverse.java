@@ -91,14 +91,20 @@ public class MirrorUniverse
 			}
 		}
 		
+		//TODO remove this
+		int cutOff = 10000;
+		
 		int intStep = 0;
 		while ( !mumMapL.getMapOver() || !mumMapR.getMapOver() )
 		{
 			int[][] aintViewL = mumMapL.getView();
 			int[][] aintViewR = mumMapR.getView();
+			cutOff--;
+			if (cutOff < 0) break;
+			
 			int intMove = plrCurrent.lookAndMove( aintViewL, aintViewR );
 			try {
-				System.out.println( intStep + ":::::" );
+				//System.out.println( intStep + ":::::" );
 				if ( intStep != 0 )
 				{
 					bfrReplay.write( ", " );

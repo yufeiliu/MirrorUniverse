@@ -1,2 +1,2 @@
-4, 4, 2, -1, maps/easyLeft.txt
-4, 4, 2, -1, maps/easyRight.txt
+40, 40, 2, 5, 0.1, 1
+40, 40, 2, 7, 0.1, 1
