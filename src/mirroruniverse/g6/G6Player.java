@@ -336,6 +336,10 @@ public class G6Player implements Player {
 				twitching.get(1)==twitching.get(3) && Utils.reverseMove(twitching.get(0)) == twitching.get(1));
 	}
 	
+	/*
+	 * TODO: this is buggy, x and y are not converted correctly, I'm running into weird collisions
+	 *       in rightCache
+	 */
 	private void updateCentersAndExitStatus(int[][] leftView, int[][] rightView,
 			int leftMid, int rightMid, int dx, int dy) {
 		int rightEntity = rightView[rightMid + dy][rightMid + dx];
@@ -371,7 +375,6 @@ public class G6Player implements Player {
 		int leftMidX = leftView.length / 2;
 		int leftMidY = leftView[0].length / 2;
 		int rightMidX = rightView.length / 2;
-		int rightMidY = rightView[0].length / 2;
 		do {
 			int[] deltas = { -1, 0, 1 };
 			dx = deltas[(int) (Math.random() * 3)];
