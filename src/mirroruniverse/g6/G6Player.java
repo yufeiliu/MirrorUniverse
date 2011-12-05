@@ -3,12 +3,11 @@ package mirroruniverse.g6;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.List;
+import java.util.Queue;
 import java.util.Set;
 
 import mirroruniverse.g6.Utils.Entity;
@@ -19,7 +18,7 @@ import mirroruniverse.sim.Player;
 public class G6Player implements Player {
 
 	public static final boolean DEBUG = false;
-	public static final boolean SID_DEBUG = true;
+	public static final boolean SID_DEBUG = false;
 	
 	private static final int MAX_MAP_SIZE = 100;
 	private static final int INTERNAL_MAP_SIZE = MAX_MAP_SIZE * 2;
@@ -32,9 +31,6 @@ public class G6Player implements Player {
 	private Node currentLocationRight;
 	// kept for debugging purposes
 	private int steps;
-	
-	
-	private int REMOVE_THIS = 120;
 	
 	/*
 	 * The current location of each player within the 200x200 grid.
@@ -62,7 +58,10 @@ public class G6Player implements Player {
 	private HashMap<String, Node> cacheLeft = new HashMap<String, Node>();
 	private HashMap<String, Node> cacheRight = new HashMap<String, Node>();
 	
-	private ArrayList<Edge> exploreGoal = new ArrayList<Edge>();
+	private LinkedList<Edge> exploreGoal = new LinkedList<Edge>();
+	
+	
+	private ArrayList<Move> twitching = new ArrayList<Move>();
 	
 	/*
 	 * Array of moves for the solution. null if unsolved.
@@ -153,30 +152,39 @@ public class G6Player implements Player {
 		
 		Node cur = null;
 		
+		if (DEBUG) System.out.println("===================== " + x + "," + y);
+		if (DEBUG) Utils.print2DArray(v);
+		
 		for (int i = 0; i < v.length; i++) {
 			for (int j = 0; j < v[0].length; j++) {
 				
 				int curX = x1 + (i-iMedian);
 				int curY = y1 + (j-jMedian);
 				
-				if (cache.containsKey(makeKey(curX, curY))) {
-					continue;
-				}
-				
 				Node n = getFromCache(cache, v[i][j], curX, curY);
-					
+				if (n.entity == Entity.OBSTACLE || n.entity == Entity.EXIT) continue;
+				
 				for (int d = 1; d <= 8; d++) {
-					int di = MUMap.aintDToM[d][0];
-					int dj = MUMap.aintDToM[d][1];
+					int dj = MUMap.aintDToM[d][0];
+					int di = MUMap.aintDToM[d][1];
 					
 					if (i + di <= iMax && i + di >= 0 &&
-							j + dj <= jMax && j + dj >= 0) {
-						Node neighbor = getFromCache(cache, v[i+di][j+dj], curX + di, curY + dj);
-						Edge edge = new Edge();
-						edge.from = n;
-						edge.to = neighbor;
-						edge.move = Utils.shenToMove(d);
-						n.edges.add(edge);
+							j + dj <= jMax && j + dj >= 0 && curX + di >= 0 && curY + dj >= 0) {
+						int neighborVal = v[i+di][j+dj];
+						if (Utils.shenToEntities(neighborVal) == Entity.SPACE || Utils.shenToEntities(neighborVal) == Entity.EXIT) {
+							Node neighbor = getFromCache(cache, v[i+di][j+dj], curX + di, curY + dj);
+							Edge edge = new Edge();
+							edge.from = n;
+							edge.to = neighbor;
+							edge.move = Utils.shenToMove(d);
+							n.edges.add(edge);
+						} else if (Utils.shenToEntities(neighborVal) == Entity.OBSTACLE) {
+							Edge edge = new Edge();
+							edge.from = n;
+							edge.to = n;
+							edge.move = Utils.shenToMove(d);
+							n.edges.add(edge);
+						}
 					}
 				}
 				
@@ -185,7 +193,7 @@ public class G6Player implements Player {
 				}
 			}
 		}
-		
+		if (DEBUG) System.out.println("cur location: " + cur);
 		return cur;
 	}
 	
@@ -196,8 +204,10 @@ public class G6Player implements Player {
 			n.x = x;
 			n.y = y;
 			cache.put(makeKey(x,y), n);
+			if (DEBUG) System.out.println("added node to cache: " + makeKey(x,y) + ": " + n);
 			return n;
 		} else {
+			//System.out.println("didn't add, already exist");
 			return cache.get(makeKey(x,y));
 		}
 	}
@@ -213,12 +223,14 @@ public class G6Player implements Player {
 			r2 = (rightView.length-1) / 2;
 		}
 		
+		/*
 		REMOVE_THIS--;
 		if (REMOVE_THIS<=0) {
 			int dir = exploreRandom(leftView, rightView);
 			updateCentersAndExitStatus(leftView, rightView, leftView.length/2, rightView.length/2, MUMap.aintDToM[dir][0], MUMap.aintDToM[dir][1]);
 			return dir;
 		}
+		*/
 		
 		
 		currentLocationLeft = updateGraph(cacheLeft, leftView, x1, y1, r1);
@@ -227,44 +239,69 @@ public class G6Player implements Player {
 		if (exploreGoal == null || exploreGoal.size()==0) {
 			//We always do it by left, then by right
 			// TODO: optimize for both
-			exploreGoal = getFringe(cacheLeft.values());
+			exploreGoal = getFringe(true);
 			if (exploreGoal == null) {
-				exploreGoal = getFringe(cacheRight.values());
+				exploreGoal = getFringe(false);
 			}
+			
+			if (DEBUG) System.out.println("Goal path generated");
+			if (DEBUG) System.out.println(exploreGoal);
 		}
 		
 		int dir;
 		
 		//TODO uh oh, getFringe failed, use random
-		if (exploreGoal==null) {
+		if (exploreGoal==null || exploreGoal.size()==0) {
+			dir = exploreRandom(leftView, rightView);
+			updateCentersAndExitStatus(leftView, rightView, leftView.length/2, rightView.length/2, MUMap.aintDToM[dir][0], MUMap.aintDToM[dir][1]);
+			return dir;
+		}
+		//System.out.println(exploreGoal);
+		Edge edge = exploreGoal.remove(0);
+		dir = Utils.moveToShen(edge.move);
+		
+		if (isTwitching(dir)) {
+			if (DEBUG) System.out.println("***twitching, random walk!");
+			exploreGoal = null;
 			dir = exploreRandom(leftView, rightView);
 			updateCentersAndExitStatus(leftView, rightView, leftView.length/2, rightView.length/2, MUMap.aintDToM[dir][0], MUMap.aintDToM[dir][1]);
 			return dir;
 		}
 		
-		//System.out.println(exploreGoal);
-		Edge edge = exploreGoal.remove(0);
-		dir = Utils.moveToShen(edge.move);
+		int oldX1 = x1, oldY1 = y1, oldX2 = x2, oldY2 = y2;
 		
-		//TODO quickfix, revert later
-		int prevX1 = x1, prevX2 = x2, prevY1 = y1, prevY2 = y2;
 		updateCentersAndExitStatus(leftView, rightView, leftView.length/2, rightView.length/2, MUMap.aintDToM[dir][0], MUMap.aintDToM[dir][1]);
-		if (x1==prevX1 && prevX2 == x2 && prevY1 == y1 && prevY2 == y2) {
+		
+		if (oldX1==x1 && oldY1 == y1 && oldX2 == x2 && oldY2 == y2) {
+			if (DEBUG) System.out.println("***got stuck, random walk!");
+			exploreGoal = null;
 			dir = exploreRandom(leftView, rightView);
 			updateCentersAndExitStatus(leftView, rightView, leftView.length/2, rightView.length/2, MUMap.aintDToM[dir][0], MUMap.aintDToM[dir][1]);
-			exploreGoal = new ArrayList<Edge>();
+			return dir;
 		}
-
+		
 		return dir;
 
 	}
 
+	private boolean isTwitching(int dir) {
+		twitching.add(Utils.shenToMove(dir));
+		if (twitching.size()>4) twitching.remove(0);
+		
+		return (twitching.size()==4 && twitching.get(0)==twitching.get(2) && 
+				twitching.get(1)==twitching.get(3) && Utils.reverseMove(twitching.get(0)) == twitching.get(1));
+	}
+	
 	private void updateCentersAndExitStatus(int[][] leftView, int[][] rightView,
 			int leftMid, int rightMid, int dx, int dy) {
 		int rightEntity = rightView[rightMid + dy][rightMid + dx];
 		int leftEntity = leftView[leftMid + dy][leftMid + dx];
 		int space = Utils.entitiesToShen(Entity.SPACE);
 		int exit = Utils.entitiesToShen(Entity.EXIT);
+		
+		if (DEBUG) System.out.println("dx: " + dx + ", dy: " + dy);
+		if (DEBUG) System.out.println("left entity: " + Utils.shenToEntities(leftEntity));
+		if (DEBUG) System.out.println("right entity: " + Utils.shenToEntities(rightEntity));
 		
 		if (leftEntity == space || leftEntity == exit) {
 			x1 += dy;
@@ -323,7 +360,7 @@ public class G6Player implements Player {
 				dir = getSingleSolutionStep();
 			}
 			if (dir < 0) {
-				dir = explore(leftView, rightView);
+				return explore(leftView, rightView);
 			}
 		}
 
@@ -398,6 +435,58 @@ public class G6Player implements Player {
 				}
 			}
 		}
+	}
+	
+	//TODO:
+	//  no accidental stepping on exit
+	//  check if path is walkable: why stuck against wall?
+	//  fix twitching behavior
+	
+	private LinkedList<Edge> getFringe(boolean prioritizeLeft) {
+		
+		Node main, other;
+		
+		if (prioritizeLeft) { 
+			main = currentLocationLeft;
+			other = currentLocationRight;
+		} else {
+			main = currentLocationRight;
+			other = currentLocationLeft;
+		}
+		
+		Queue<NodeWrapper> expanded = new LinkedList<NodeWrapper>();
+		Set<NodeWrapper> visited = new HashSet<NodeWrapper>();
+		
+		//Given main, bfs on main
+		expanded.add(new NodeWrapper(main));
+		visited.add(new NodeWrapper(main));
+		
+		if (DEBUG) System.out.println();
+		if (DEBUG) System.out.println(main);
+		while (!expanded.isEmpty()) {
+			NodeWrapper cur = expanded.remove();
+			
+			if (DEBUG) System.out.print(".");
+			if (cur.node.edges.size() < 8 && cur.node.entity == Entity.SPACE) {
+				if (DEBUG) System.out.println("Target: " + cur.node.x + "," + cur.node.y);
+				return cur.path;
+			}
+			
+			for (Edge e : cur.node.edges) {
+				
+				if (e.to.entity == Entity.EXIT) continue;
+				
+				NodeWrapper to = new NodeWrapper(e.to);
+				if (!visited.contains(to)) {
+					to.path.addAll(cur.path);
+					to.path.add(e);
+					expanded.add(to);
+					visited.add(to);
+				}
+			}
+		}
+		
+		return null;
 	}
 	
 	//TODO make it return null if no fringe is found
@@ -555,11 +644,37 @@ public class G6Player implements Player {
 		public String toString() {
 			return entity.toString();
 		}
+		
+		public int hashCode() {
+			return x * 1000 + y;
+		}
+		
+		public boolean equals(Object other) {
+			if (!(other instanceof Node)) return false;
+			return x==((Node)other).x && y == ((Node)other).y;
+		}
+	}
+	
+	//This is used during bfs search
+	private class NodeWrapper {
+		public Node node;
+		public LinkedList<Edge> path = new LinkedList<Edge>();
+		public NodeWrapper(Node n) { node = n; }
+		
+		public int hashCode() {
+			return node.hashCode();
+		}
+		
+		public boolean equals(Object other) {
+			if (!(other instanceof NodeWrapper)) return false;
+			return node.equals(((NodeWrapper)other).node);
+		}
 	}
 	
 	private class Edge {
 		public Node from;
 		public Node to;
 		public Move move;
+		public String toString() { return move.toString(); }
 	}
 }

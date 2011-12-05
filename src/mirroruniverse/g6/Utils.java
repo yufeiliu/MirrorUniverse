@@ -65,6 +65,29 @@ public class Utils {
 		E, NE, N, NW, W, SW, S, SE
 	}
 	
+	public static Move reverseMove(Move m) {
+		switch(m) {
+			case E:
+				return Move.W;
+			case NE:
+				return Move.SW;
+			case N:
+				return Move.S;
+			case NW:
+				return Move.SE;
+			case W:
+				return Move.E;
+			case SW:
+				return Move.NE;
+			case S:
+				return Move.N;
+			case SE:
+				return Move.NW;
+			default:
+				return null;
+		}
+	}
+	
 	public static int entitiesToShen(Entity e) {
 		switch(e) {
 			case SPACE:
