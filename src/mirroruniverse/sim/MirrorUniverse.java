@@ -106,7 +106,15 @@ public class MirrorUniverse
 			
 			int intMove = plrCurrent.lookAndMove( aintViewL, aintViewR );
 			try {
-				System.out.println( intStep + ":::::" );
+				System.out.println( intStep + "::::: " +
+						mumMapL.getMapOver() + "\t" + mumMapR.getMapOver());
+				
+				
+				if (mumMapL.getMapOver() || mumMapR.getMapOver()) {
+//					System.exit(1);
+				}
+				
+				
 				if ( intStep != 0 )
 				{
 					bfrReplay.write( ", " );

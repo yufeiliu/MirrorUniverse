@@ -11,9 +11,10 @@ public class State implements Comparable<State> {
 	private Entity value;
 	private boolean goal;
 	private String id;
+	private boolean banned;
 		
 	public final static byte NUM_DIRECTIONS = 8;
-	private static short idCounter = 0; 
+	private static long idCounter = 0; 
 	
 	public State(Entity value) {
 		this(value, false);
@@ -72,6 +73,14 @@ public class State implements Comparable<State> {
 	@Override
 	public int compareTo(State other) {
 		return id.compareTo(other.id);
+	}
+	
+	public boolean isBanned() {
+		return banned;
+	}
+	
+	public void setBanned(boolean banned) {
+		this.banned = banned;
 	}
 	
 }

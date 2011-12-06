@@ -1,14 +1,17 @@
 package mirroruniverse.g6.dfa;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Stack;
 
 import mirroruniverse.g6.G6Player;
+import mirroruniverse.g6.Solution;
 import mirroruniverse.g6.Utils;
 import mirroruniverse.g6.Utils.Entity;
 import mirroruniverse.g6.Utils.Move;
@@ -19,7 +22,8 @@ public class DFA {
 	private ArrayList<State> states;
 	private Map<String, State> stateMap;
 	private State startState;
-	private static final int MAX_STATES = 20 * 20;
+	private static final int THRESHOLD_PRODUCT_DIST = 100;
+	private static final boolean ENABLE_FALSIFICATION = true;
 
 	
 	public DFA() {
@@ -28,12 +32,10 @@ public class DFA {
 		stateMap = new HashMap<String, State>();
 	}
 	
-	public DFA(int[][] originalMap) {
+	public DFA(int[][] map) {
 		this();
 		HashMap<String, State> allStates = new HashMap<String, State>();
 		HashSet<String> blockedStates = new HashSet<String>();
-		
-		int[][] map = Utils.capMap(originalMap, MAX_STATES);
 		
 		int xCap = map.length;
 		int yCap = map[0].length;
@@ -42,7 +44,7 @@ public class DFA {
 
 		for (String k : allStates.keySet()) {
 			State node = allStates.get(k);
-			short[] xy = recoverKey(k);
+			int[] xy = recoverKey(k);
 			if (node != null) {
 				addTransitions(map, allStates, blockedStates, xy[0], xy[1], node);
 			}
@@ -53,8 +55,8 @@ public class DFA {
 			HashMap<String, State> allStates, HashSet<String> blockedStates,
 			int xCap, int yCap) {
 		
-		for (short x = 0; x < xCap; x++) {
-			for (short y = 0; y < yCap; y++) {
+		for (int x = 0; x < xCap; x++) {
+			for (int y = 0; y < yCap; y++) {
 				addStateFromEntity(map, allStates, blockedStates,
 						x, y);
 			}
@@ -63,7 +65,7 @@ public class DFA {
 
 	private void addStateFromEntity(int[][] map,
 			HashMap<String, State> allStates, HashSet<String> blockedStates,
-			short x, short y) {
+			int x, int y) {
 		Entity entity = Utils.shenToEntities(map[x][y]);
 		boolean isStart = (entity == Entity.PLAYER);
 		boolean isGoal = (entity == Entity.EXIT);
@@ -90,7 +92,7 @@ public class DFA {
 	}
 
 	private void addTransitions(int[][] map, HashMap<String, State> allStates,
-			HashSet<String> blockedStates, short x, short y, State node) {
+			HashSet<String> blockedStates, int x, int y, State node) {
 		for (byte dx = -1; dx <= 1; dx++) {
 			for (byte dy = -1; dy <= 1; dy++) {
 				if (dx == 0 && dy == 0) {
@@ -110,25 +112,17 @@ public class DFA {
 		}
 	}
 	
-	// Make this an int instead of a short to avoid forcing casting into a short.
 	private String makeKey(int x, int y) {
 		return x + "," + y;
 	}
 
 
-	private static short[] recoverKey(String k) {
+	private static int[] recoverKey(String k) {
 		String[] split = k.split(",");
-		short[] xy = new short[2];
-		xy[0] = Short.parseShort(split[0]);
-		xy[1] = Short.parseShort(split[1]);
+		int[] xy = new int[2];
+		xy[0] = Integer.parseInt(split[0]);
+		xy[1] = Integer.parseInt(split[1]);
 		return xy;
-	}
-	
-	private static String[] recoverStringKey(String k) {
-		String[] split = k.split(";");
-		split[0] = "" + Integer.parseInt(split[0]);
-		split[1] = "" + Integer.parseInt(split[1]);
-		return split;
 	}
 	
 	public void addStartState(State s) {
@@ -148,12 +142,85 @@ public class DFA {
 		return stateMap.get(k);
 	}
 	
-	public static boolean skip(DFA first, DFA other, State selfState, State otherState) {
+	public static boolean isPartialGoal(DFA first, DFA other, State selfState, State otherState) {
 		return (selfState.isGoal() && !otherState.isGoal() &&
 				selfState != first.startState) ||
 					(!selfState.isGoal() && otherState.isGoal() &&
 					otherState != other.startState);
 	}
+	
+	
+
+	public static ArrayList<Move> findShortestPath(DFA first, DFA other) {
+		// States to evaluate. They should return in priority order. However,
+		// since we're doing a BFS, priority order is just the order in which
+		// we insert things into the queue.
+		Stack<State> openSet = new Stack<State>();
+		
+		// Used to backtrack.
+		HashMap<State, Transition> cameFrom = new HashMap<State, Transition>();
+		
+		// Maps a State ID to the pair of states it contains. The keys represent
+		// states that have been examined.
+		HashSet<String> states = new HashSet<String>();
+		
+		String key = makeKey(first.startState, other.startState); 
+		openSet.push(new State(
+				null,
+				first.startState.isGoal() && other.startState.isGoal(),
+				key));
+		states.add(key);
+		
+		ArrayList<Move> bestPath = null;
+		
+		while (!openSet.isEmpty()) {
+			State current = openSet.pop();
+			if (current.isGoal()) {
+				ArrayList<Move> candidatePath = recoverPath(current, cameFrom);
+				if (bestPath == null || candidatePath.size() < bestPath.size()) {
+					bestPath = candidatePath;
+				}
+			} else {
+				// Iterate through different moves.
+				for (int i = 0; i < 8; i++) {
+					String[] pairKeys = current.getId().split(";");
+					Transition firstTrans = first.getState(pairKeys[0]).getTransitions()[i];
+					Transition otherTrans = other.getState(pairKeys[1]).getTransitions()[i];
+					
+					if (firstTrans != null && otherTrans != null) {
+						State firstDest = firstTrans.end;
+						State otherDest = otherTrans.end;
+						String destKey = makeKey(firstDest, otherDest);			
+						
+						// TODO - be smarter...
+//						if (states.contains(destKey) ||
+						if(isPartialGoal(first, other, firstDest, otherDest) ||
+								destKey.equals(key)) {
+							if (destKey.equals(key)) {
+								System.out.println("SELF LOOP");
+							}
+							continue;
+						}
+						
+						State next = new State(
+								null,
+								firstDest.isGoal() && otherDest.isGoal(),
+								destKey);
+						cameFrom.put(next, new Transition(
+								/* firstTrans val is the same as otherTrans val. */
+								firstTrans.value,
+								current,
+								next));
+						states.add(destKey);
+						openSet.push(next);
+					}
+				}
+			}
+		}
+		return bestPath;
+	}
+	
+	
 	
 	/*
 	 * Optimized shortest path algorithm for
@@ -161,20 +228,36 @@ public class DFA {
 	 * 
 	 * TODO - cap exploration
 	 */
-	public static ArrayList<Move> findShortestPath(DFA first, DFA other) {
+	public static Solution findShortestPathBFS(DFA first, DFA other, int offset) {
+		
+		ArrayList<Move> firstSol = first.findShortestPath();
+		ArrayList<Move> otherSol = other.findShortestPath();
+		
+		int firstDist = firstSol.size(); 
+		int otherDist = otherSol.size();
+		int productDist = firstDist * otherDist;
+		boolean isFake = false;
+		if (ENABLE_FALSIFICATION) {
+			if (productDist > THRESHOLD_PRODUCT_DIST) {
+				isFake = true;
+				falsifyExit(first, firstSol,
+						(int) Math.min(firstDist, Math.sqrt(THRESHOLD_PRODUCT_DIST)));
+				falsifyExit(other, otherSol, 
+						(int) Math.min(otherDist, Math.sqrt(THRESHOLD_PRODUCT_DIST)));
+			}
+		}
+		
 		// States to evaluate. They should return in priority order. However,
 		// since we're doing a BFS, priority order is just the order in which
 		// we insert things into the queue.
 		Queue<State> openSet = new LinkedList<State>();
+		
 		// Used to backtrack.
 		HashMap<State, Transition> cameFrom = new HashMap<State, Transition>();
+		
 		// Maps a State ID to the pair of states it contains. The keys represent
 		// states that have been examined.
 		HashSet<String> states = new HashSet<String>();
-		
-		
-//		Map<String, Pair<State, State>> states =
-//				new HashMap<String, Pair<State, State>>();
 		
 		String key = makeKey(first.startState, other.startState); 
 		openSet.add(new State(
@@ -182,55 +265,39 @@ public class DFA {
 				first.startState.isGoal() && other.startState.isGoal(),
 				key));
 		states.add(key);
-//		states.put(key,
-//				new Pair<State, State>(first.startState, other.startState));
 		
 		while (!openSet.isEmpty()) {
-			
-//			System.out.println(states.size() + "\t" + openSet.size());
-			
 			State current = openSet.poll();
 			if (current.isGoal()) {
-				return recoverPath(current, cameFrom);
+				ArrayList<Move> steps = recoverPath(current, cameFrom);
+				return new Solution(steps, offset, isFake);
 			}
-			for (Move m : Move.values()) {
-				int index = Utils.moveToShen(m) - 1;
-				
-//				String[] pairKeys = recoverStringKey(current.getId());
+			// Iterate through different moves.
+			for (int i = 0; i < 8; i++) {
 				String[] pairKeys = current.getId().split(";");
-				
-//				Pair<State, State> statePair = states.get(current.getId());
-//				Transition firstTrans = statePair.getFront().getTransitions()[index];
-//				Transition otherTrans = statePair.getBack().getTransitions()[index];
-				
-				Transition firstTrans = first.getState(pairKeys[0]).getTransitions()[index];
-				Transition otherTrans = other.getState(pairKeys[1]).getTransitions()[index];
-				
+				Transition firstTrans = first.getState(pairKeys[0]).getTransitions()[i];
+				Transition otherTrans = other.getState(pairKeys[1]).getTransitions()[i];
 				
 				if (firstTrans != null && otherTrans != null) {
-					State firstDest = firstTrans.getEnd();
-					State otherDest = otherTrans.getEnd();
-					String destKey = makeKey(firstDest, otherDest);
-					
+					State firstDest = firstTrans.end;
+					State otherDest = otherTrans.end;
+					String destKey = makeKey(firstDest, otherDest);			
 					
 					if (states.contains(destKey) ||
-							skip(first, other, firstDest, otherDest)) {
+							isPartialGoal(first, other, firstDest, otherDest)) {
 						continue;
 					}
+					
 					State next = new State(
 							null,
 							firstDest.isGoal() && otherDest.isGoal(),
 							destKey);
 					cameFrom.put(next, new Transition(
 							/* firstTrans val is the same as otherTrans val. */
-							firstTrans.getValue(),
+							firstTrans.value,
 							current,
 							next));
-					
 					states.add(destKey);
-//					states.put(
-//							destKey,
-//							new Pair<State, State>(firstDest, otherDest));
 					openSet.add(next);
 				}
 			}
@@ -238,6 +305,21 @@ public class DFA {
 		return null;
 	}
 	
+	private static void falsifyExit(DFA dfa, ArrayList<Move> sol,
+			int targetDist) {
+		State current = dfa.getStartState();
+		for (int i = 0; i < sol.size() - 1 && i < targetDist; i++) {
+			int transitionIndex = Utils.moveToShen(sol.get(i)) - 1;
+			current = current.getTransitions()[transitionIndex].getEnd();
+		}
+		for (State gs : dfa.goalStates) {
+			gs.setGoal(false);
+		}
+		dfa.goalStates.clear();
+		current.setGoal(true);
+		dfa.goalStates.add(current);
+	}
+
 	public ArrayList<Move> findShortestPath() {
 		HashMap<State, Transition> used = new HashMap<State, Transition>();
 		Queue<State> q = new LinkedList<State>();
@@ -273,20 +355,20 @@ public class DFA {
 			HashMap<State, Transition> used) {
 		ArrayList<Move> path = new ArrayList<Move>();
 		ArrayList<Transition> transPath; 
-		if (G6Player.SID_DEBUG) {
+		if (G6Player.SID_DEBUG && false) {
 			transPath = new ArrayList<Transition>();
 		}
 		Transition trans = used.get(currentState);
 		while (trans != null) {
 			path.add(trans.getValue());
 			currentState = trans.getStart();
-			if (G6Player.SID_DEBUG) {
+			if (G6Player.SID_DEBUG && false) {
 				transPath.add(trans);
 			}
 			trans = used.get(currentState);
 		}
 		Collections.reverse(path);
-		if (G6Player.SID_DEBUG) {
+		if (G6Player.SID_DEBUG && false) {
 			Collections.reverse(transPath);
 			System.out.println(transPath);
 		}

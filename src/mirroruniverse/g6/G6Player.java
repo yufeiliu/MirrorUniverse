@@ -17,7 +17,7 @@ import mirroruniverse.sim.Player;
 
 public class G6Player implements Player {
 
-	public static final boolean DEBUG = true;
+	public static final boolean DEBUG = false;
 	public static final boolean SID_DEBUG = false;
 	private static final boolean CRASH_ON_ERROR = true;
 	
@@ -108,9 +108,14 @@ public class G6Player implements Player {
 	
 	private boolean shouldRecomputeSolution() {		
 		// recompute only:
-		// when we first see the exits, 
-		// when we uncover squares around the exit, 
-		// and after we've explored all of the board.
+			// we finish examining a fake solution
+			// when we first see the exits, 
+			// when we uncover squares around the exit, 
+			// and after we've explored all of the board.
+		
+		if (solution != null && solution.isFake() && solution.isCompleted()) {
+			return true;
+		}
 		if (computedSolutionWhenFullyExplored) {
 			return false;
 		}
@@ -434,19 +439,39 @@ public class G6Player implements Player {
 		return ret;
 	}
 
+	
+	private int numExits(int[][] map) {
+		int exits = 0;
+		for (int i = 0; i < map.length; i++) {
+			for (int j = 0; j < map[0].length; j++) {
+				if (map[i][j] == Utils.entitiesToShen(Entity.EXIT)) {
+					exits++;
+				}
+			}
+		}
+		return exits;
+	}
 
-	private int doLookAndMove(int[][] leftView, int[][] rightView) {		
+	private int doLookAndMove(int[][] leftView, int[][] rightView) {
 		if (!radiiDiscovered) {
 			r1 = (leftView.length-1) / 2;
 			r2 = (rightView.length-1) / 2;
 		}
 		
 		updateKnowledge(left, x1, y1, leftView);
-		updateKnowledge(right, x2, y2, rightView);
 		
-		int dir;
+		
+//		System.out.println(solution);
+		
+//		System.out.println("exits: " + numExits(right));
+		updateKnowledge(right, x2, y2, rightView);
+//		System.out.println("exits: " + numExits(right));
+		
+		int dir = -1;
 
-		dir = getSolutionStep();
+		if (!leftExited && !rightExited) {
+			dir = getSolutionStep();
+		}
 
 		if (dir < 0) {
 			if (leftExited || rightExited || isFullyExplored()) {
@@ -476,7 +501,7 @@ public class G6Player implements Player {
 		if (solution == null || solution.isCompleted()) {
 			if (leftExited) {
 				solution = solver.solve(right);
-			} else if (rightExited ){
+			} else if (rightExited) {
 				solution = solver.solve(left);
 			} else {
 				// If we just need to solve one because
@@ -691,12 +716,6 @@ private int obstaclesEncountered(Node start, List<Edge> path) {
 	}
 
 	private int getSolutionStep() {
-		return getSolutionStepExpensive();
-		
-//		return getSolutionStepSingle();
-	}
-
-	private int getSolutionStepExpensive() {
 		if (areExitsFound()) {
 			if (!shouldRecomputeSolution()) {
 				return solution.getNextStep();

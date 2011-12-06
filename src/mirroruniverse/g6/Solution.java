@@ -10,12 +10,17 @@ public class Solution {
 	private int[] steps;
 	private int diff;
 	int currentStep;
+	private boolean fake;
 	
-	public Solution(ArrayList<Move> moves, int diff) {
+	public Solution(ArrayList<Move> moves, int diff, boolean fake) {
 		this.diff = diff;
 		this.steps = movesToInts(moves);
+		this.fake = fake;
 	}
 	
+	public boolean isFake() {
+		return fake;
+	}
 	
 	public static int[] movesToInts(ArrayList<Move> solution) {
 		if (solution == null) {
@@ -60,7 +65,7 @@ public class Solution {
 
 	public String toString() {
 		String s = "";
-		s += "Solution (" + diff + "): ";
+		s += "Solution (" + diff + ", " + (fake ? "fake" : "real") + "): ";
 		for (int i = 0; i < steps.length; i++) {
 			s += Utils.shenToMove(steps[i]);
 			if (i == currentStep) {

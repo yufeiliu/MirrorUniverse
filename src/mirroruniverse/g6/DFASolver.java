@@ -1,7 +1,6 @@
 package mirroruniverse.g6;
 
 import java.util.ArrayList;
-
 import mirroruniverse.g6.Utils.Move;
 import mirroruniverse.g6.dfa.DFA;
 
@@ -25,14 +24,14 @@ public class DFASolver extends Solver {
 		}
 		
 		DFA firstDFA, secondDFA, firstBack, secondBack;
-		ArrayList<Move> steps = null;
+		Solution steps = null;
 		int attempts = 1;
 		long startTime = System.currentTimeMillis();
 		
 		firstDFA = firstBack = new DFA(firstMap);
 		secondDFA = secondBack = new DFA(secondMap);
 		
-		steps = DFA.findShortestPath(firstDFA, secondDFA);
+		steps = DFA.findShortestPathBFS(firstDFA, secondDFA, 0);
 //		steps = DFA.intersect(firstDFA, secondDFA).findShortestPath();
 		
 		// This will try until we've found a solution, or have hit our time
@@ -48,21 +47,21 @@ public class DFASolver extends Solver {
 			
 			secondBack = secondBack.shiftGoals();
 			
-			steps = DFA.findShortestPath(firstDFA, secondBack);
+			steps = DFA.findShortestPathBFS(firstDFA, secondBack, attempts - 1);
 			if (steps == null) {
 				firstBack = firstBack.shiftGoals();
-				steps = DFA.findShortestPath(firstBack, secondDFA);
+				steps = DFA.findShortestPathBFS(firstBack, secondDFA, attempts - 1);
 			}
 			
 			attempts++;
 		}
-		return steps == null ? null : new Solution(steps, attempts - 1);
+		return steps;
 	}
 	
 	Solution solve(int[][] map) {
 		DFA dfa = new DFA(map);
 		ArrayList<Move> steps = dfa.findShortestPath();
-		return steps == null ? null : new Solution(steps, 0);
+		return steps == null ? null : new Solution(steps, 0, false);
 	}
 	
 }
