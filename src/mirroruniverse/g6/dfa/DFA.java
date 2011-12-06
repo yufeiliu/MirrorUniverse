@@ -5,9 +5,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 
 import mirroruniverse.g6.G6Player;
+import mirroruniverse.g6.Pair;
 import mirroruniverse.g6.Utils;
 import mirroruniverse.g6.Utils.Entity;
 import mirroruniverse.g6.Utils.Move;
@@ -133,6 +137,75 @@ public class DFA {
 		states.add(s);
 	}
 	
+	public static boolean skip(DFA first, DFA other, State selfState, State otherState) {
+		return (selfState.isGoal() && !otherState.isGoal() &&
+				selfState != first.startState) ||
+					(!selfState.isGoal() && otherState.isGoal() &&
+					otherState != other.startState);
+	}
+	
+	/*
+	 * This will contain the super-optimized shortest path algorithm for
+	 * the intersection of two DFAs.
+	 * 
+	 * TODO - cap exploration
+	 */
+	public static ArrayList<Move> findShortestPath(DFA first, DFA other) {
+		// States to evaluate. They should return in priority order. However,
+		// since we're doing a BFS, priority order is just the order in which
+		// we insert things into the queue.
+		Queue<State> openSet = new LinkedList<State>();
+		// Used to backtrack.
+		HashMap<State, Transition> cameFrom = new HashMap<State, Transition>();
+
+		Map<String, Pair<State, State>> states =
+				new HashMap<String, Pair<State, State>>();
+		
+		String key = makeKey(first.startState, other.startState); 
+		openSet.add(new State(
+				null,
+				first.startState.isGoal() && other.startState.isGoal(),
+				key));
+		states.put(key,
+				new Pair<State, State>(first.startState, other.startState));
+		
+		while (!openSet.isEmpty()) {
+			State current = openSet.poll();
+			if (current.isGoal()) {
+				return recoverPath(current, cameFrom);
+			}
+			for (Move m : Move.values()) {
+				int index = Utils.moveToShen(m) - 1;
+				Pair<State, State> statePair = states.get(current.getId());
+				Transition firstTrans = statePair.getFront().getTransitions()[index];
+				Transition otherTrans = statePair.getBack().getTransitions()[index];
+				if (firstTrans != null && otherTrans != null) {
+					State firstDest = firstTrans.getEnd();
+					State otherDest = otherTrans.getEnd();
+					String destKey = makeKey(firstDest, otherDest);
+					if (states.containsKey(destKey) ||
+							skip(first, other, firstDest, otherDest)) {
+						continue;
+					}
+					State next = new State(
+							null,
+							firstDest.isGoal() && otherDest.isGoal(),
+							destKey);
+					cameFrom.put(next, new Transition(
+							/* firstTrans val is the same as otherTrans val. */
+							firstTrans.getValue(),
+							current,
+							next));
+					states.put(
+							destKey,
+							new Pair<State, State>(firstDest, otherDest));
+					openSet.add(next);
+				}
+			}
+		}
+		return null;
+	}
+	
 	public ArrayList<Move> findShortestPath() {
 		HashMap<State, Transition> used = new HashMap<State, Transition>();
 		Queue<State> q = new LinkedList<State>();
@@ -164,7 +237,7 @@ public class DFA {
 		return null;
 	}
 	
-	protected ArrayList<Move> recoverPath(State currentState,
+	protected static ArrayList<Move> recoverPath(State currentState,
 			HashMap<State, Transition> used) {
 		ArrayList<Move> path = new ArrayList<Move>();
 		ArrayList<Transition> transPath; 
@@ -265,7 +338,7 @@ public class DFA {
 	private static void addIntersectionTransitions(DFA first, DFA other,
 			HashMap<String, State> newStates) {
 		for (State selfState : first.states) {
-			Transition[] selfTransArray = selfState.getTransList();
+			Transition[] selfTransArray = selfState.getTransitions();
 			for (State otherState : other.states) {
 				String startKey = makeKey(selfState, otherState);
 				State source = newStates.get(startKey);
@@ -273,7 +346,7 @@ public class DFA {
 				if (source == null) {
 					continue;
 				}
-				Transition[] otherTransArray = otherState.getTransList();
+				Transition[] otherTransArray = otherState.getTransitions();
 				for (int i = 0; i < State.NUM_DIRECTIONS; i++) {
 					Transition selfTrans = selfTransArray[i]; 
 					Transition otherTrans = otherTransArray[i];
