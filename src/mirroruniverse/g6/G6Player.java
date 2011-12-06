@@ -8,6 +8,7 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 
@@ -205,7 +206,7 @@ public class G6Player implements Player {
 				int curY = y1 + (j-jMedian);
 				
 				Node n = getFromCache(cache, v[i][j], curX, curY);
-				if (Utils.shenToEntities(v[i][j]) == Entity.OBSTACLE || Utils.shenToEntities(v[i][j]) == Entity.EXIT) {
+				if (Utils.shenToEntities(v[i][j]) == Entity.OBSTACLE) {
 					continue;
 				}
 				
@@ -529,9 +530,14 @@ public class G6Player implements Player {
 			NodeWrapper cur = expanded.remove();
 			
 			if (DEBUG) System.out.print(".");
+			
 			if (cur.node.edges.size() < 8 && cur.node.entity == Entity.SPACE) {
-				if (DEBUG) System.out.println("Target: " + cur.node.x + "," + cur.node.y);
-				return cur.path;
+				int uncoveredInOtherMap = squaresUncovered(other, cur.path);
+				
+				if (uncoveredInOtherMap > -1) {
+					if (DEBUG) System.out.println("Target: " + cur.node.x + "," + cur.node.y);
+					return cur.path;
+				}
 			}
 			
 			for (Edge e : cur.node.edges) {
@@ -549,6 +555,35 @@ public class G6Player implements Player {
 		}
 		
 		return null;
+	}
+	
+	/*
+	 * return -1 if the path actually steps over an exit
+	 */
+	private int squaresUncovered(Node start, List<Edge> path) {
+		
+		int uncovered = 0;
+		
+		for (Edge e : path) {
+			if (start.entity == Entity.EXIT) return -1;
+			if (start.edges.size() < 8) uncovered++;
+			
+			boolean found = false;
+			
+			for (Edge e2 : start.edges) {
+				if (e.move == e2.move) {
+					start = e2.to;
+					found = true;
+					break;
+				}
+			}
+			
+			if (!found) {
+				return ++uncovered;
+			}
+		}
+		
+		return uncovered;
 	}
 	
 	private boolean areExitsFound() {
