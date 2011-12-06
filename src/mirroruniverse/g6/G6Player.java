@@ -83,6 +83,9 @@ public class G6Player implements Player {
 	
 	private boolean didExhaustiveCheck;
 	private boolean computedSolutionWhenFullyExplored;
+	private boolean leftCompletelyExplored, rightCompletelyExplored;
+	private boolean oldLeftExitFound, oldRightExitFound;
+	private int leftUnknownAroundExit, rightUnknownAroundExit;
 
 	public G6Player() {
 		// Set all points to be unknown.
@@ -101,21 +104,47 @@ public class G6Player implements Player {
 		rightUnknown = right.length * right[0].length;
 	}
 	
-	private boolean shouldNotRecomputeSolution() {		
-		// recompute only if a certain number of squares have been uncovered
-		// or if a player moves such that the exit is now in their sight radius.
+	private boolean shouldRecomputeSolution() {		
+		// recompute only:
+		// when we first see the exits, 
+		// when we uncover squares around the exit, 
+		// and after we've explored all of the board.
+		if (computedSolutionWhenFullyExplored) {
+			return false;
+		}
+		if (solution == null) {
+			if (isFullyExplored()) {
+				computedSolutionWhenFullyExplored = true;
+			}
+			return true;
+		}
+		// This means we don't recompute a good solution if we see a better
+		// path as we explore. 
+		if (solution.getDiff() == 0) {
+			return false;
+		}
+		if (isFullyExplored()) {
+			computedSolutionWhenFullyExplored = true;
+			return true;
+		}
 		
-		int newLeftUnknown = numSquaresUnknown(left);
-		int newRightUnknown = numSquaresUnknown(right);
-		boolean enoughUncovered = leftUnknown - newLeftUnknown > 5 || rightUnknown > newRightUnknown;
-		leftUnknown = newLeftUnknown;
-		rightUnknown = newRightUnknown;
+		boolean newLeftCompletelyExplored = numSquaresUnknown(left) == 0;
+		boolean newRightCompletelyExplored = numSquaresUnknown(right) == 0;
+		boolean eitherNewlyCompletelyExplored = 
+				(!leftCompletelyExplored && newLeftCompletelyExplored) 
+				|| (!rightCompletelyExplored && newRightCompletelyExplored);
+		leftCompletelyExplored = newLeftCompletelyExplored;
+		rightCompletelyExplored = newRightCompletelyExplored;
 		
-		boolean closeEnough = (isExitInSight(left, x1, y1, r1)) || (isExitInSight(right, x2, y2, r2));
-		boolean movedCloseEnough = !closeToExit && closeEnough;
-		closeToExit = closeEnough;
+		boolean eitherExitNewlyFound = (!oldLeftExitFound && leftExitFound) || (!oldRightExitFound && rightExitFound);
 		
-		return !movedCloseEnough && !enoughUncovered && isFullyExplored();
+		int newLeftUnknownAroundExit = numSquaresUnknownAroundExit(left, r1);
+		int newRightUnknownAroundExit = numSquaresUnknownAroundExit(right, r2);
+		boolean eitherUnknownAroundExitNewlyUncovered = (newLeftUnknownAroundExit < leftUnknownAroundExit) || (newRightUnknownAroundExit < rightUnknownAroundExit);
+		leftUnknownAroundExit = newLeftUnknownAroundExit;
+		rightUnknownAroundExit = newRightUnknownAroundExit;
+
+		return eitherNewlyCompletelyExplored || eitherExitNewlyFound || eitherUnknownAroundExitNewlyUncovered;
 	}
 	
 	private int numSquaresUnknown(int[][] knowledge) {
@@ -130,15 +159,24 @@ public class G6Player implements Player {
 		return count;
 	}
 	
-	private boolean isExitInSight(int[][] knowledge, int x, int y, int r) {
+	private int numSquaresUnknownAroundExit(int[][] knowledge, int r) {
+		int x = 0;
+		int y = 0;
+		for(int i = 0; i < knowledge.length; i++)
+			for(int j = 0; j < knowledge[0].length; j++)
+				if(knowledge[i][j] == Utils.entitiesToShen(Entity.EXIT)) {
+					y = i;
+					x = j;
+				}
+		int count = 0;
 		for(int i = x - r; i < x + r + 1; i++) {
 			for(int j = y - r; j < y + r + 1; j++) {
-				if(knowledge[j][i] == Utils.entitiesToShen(Entity.EXIT)) {
-					return true;
+				if(knowledge[j][i] == Utils.entitiesToShen(Entity.UNKNOWN)) {
+					count++;
 				}
 			}
 		}
-		return false;
+		return count;
 	}
 	
 	private boolean isFullyExplored() {
@@ -442,18 +480,6 @@ public class G6Player implements Player {
 	}
 
 
-	private boolean hasExit(int[][] leftView) {
-		for (int i[] : leftView) {
-			for (int j : i) {
-				if (j == Utils.entitiesToShen(Entity.EXIT)) {
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-
-
 	private int getSingleSolutionStep() {
 		// if there's no solution or old solution is completed
 		if (solution == null || solution.isCompleted()) {
@@ -692,7 +718,7 @@ public class G6Player implements Player {
 
 	private int getSolutionStepExpensive() {
 		if (areExitsFound()) {
-			if (shouldNotRecomputeSolution()) {
+			if (!shouldRecomputeSolution()) {
 				return solution.getNextStep();
 			}
 			if (!didExhaustiveCheck && isFullyExplored()) {
