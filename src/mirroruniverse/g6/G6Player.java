@@ -1,11 +1,8 @@
 package mirroruniverse.g6;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -87,7 +84,6 @@ public class G6Player implements Player {
 	private Solver solver;
 	
 	private boolean didExhaustiveCheck;
-	private boolean computedSolutionWhenFullyExplored;
 
 	public G6Player() {
 		// Set all points to be unknown.
@@ -272,16 +268,6 @@ public class G6Player implements Player {
 			r1 = (leftView.length-1) / 2;
 			r2 = (rightView.length-1) / 2;
 		}
-		
-		/*
-		REMOVE_THIS--;
-		if (REMOVE_THIS<=0) {
-			int dir = exploreRandom(leftView, rightView);
-			updateCentersAndExitStatus(leftView, rightView, leftView.length/2, rightView.length/2, MUMap.aintDToM[dir][0], MUMap.aintDToM[dir][1]);
-			return dir;
-		}
-		*/
-		
 		
 		currentLocationLeft = updateGraph(cacheLeft, leftView, x1, y1, r1);
 		currentLocationRight = updateGraph(cacheRight, rightView, x2, y2, r2);
@@ -539,10 +525,12 @@ public class G6Player implements Player {
 			
 			if (cur.node.edges.size() < 8 && cur.node.entity == Entity.SPACE) {
 				int uncoveredInOtherMap = squaresUncovered(other, cur.path);
+				int obstaclesEncountered = obstaclesEncountered(other, cur.path);
 				
 				if (uncoveredInOtherMap > -1) {
 					//TODO: apparently uncoveredInOtherMap alone is a horrible ranking heuristic on random maps
-					paths.add(new Pair<Integer, LinkedList<Edge>>(-1 * cur.path.size() + uncoveredInOtherMap, cur.path));
+					//TODO: why 10? just putting an arbitrary value for now
+					paths.add(new Pair<Integer, LinkedList<Edge>>(-1 * cur.path.size() + uncoveredInOtherMap - obstaclesEncountered * 10, cur.path));
 					
 					if (paths.size() >= PATHS_TO_TRY_IN_EXPLORATION) {
 						break;
@@ -553,6 +541,7 @@ public class G6Player implements Player {
 			for (Edge e : cur.node.edges) {
 				
 				if (e.to.entity == Entity.EXIT) continue;
+				if (e.to.hashCode() == e.from.hashCode()) continue;
 				
 				NodeWrapper to = new NodeWrapper(e.to);
 				if (!visited.contains(to)) {
@@ -599,6 +588,30 @@ public class G6Player implements Player {
 		}
 		
 		return uncovered;
+	}
+	
+private int obstaclesEncountered(Node start, List<Edge> path) {
+		
+		int obstacles = 0;
+		
+		for (Edge e : path) {
+			boolean found = false;
+			
+			for (Edge e2 : start.edges) {
+				if (e.move == e2.move) {
+					if (e2.to.hashCode() == start.hashCode()) obstacles++;
+					start = e2.to;
+					found = true;
+					break;
+				}
+			}
+			
+			if (!found) {
+				return obstacles;
+			}
+		}
+		
+		return obstacles;
 	}
 	
 	private boolean areExitsFound() {
