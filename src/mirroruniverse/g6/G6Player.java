@@ -441,19 +441,6 @@ public class G6Player implements Player {
 		return dir;
 	}
 
-
-	private boolean hasExit(int[][] leftView) {
-		for (int i[] : leftView) {
-			for (int j : i) {
-				if (j == Utils.entitiesToShen(Entity.EXIT)) {
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-
-
 	private int getSingleSolutionStep() {
 		// if there's no solution or old solution is completed
 		if (solution == null || solution.isCompleted()) {
