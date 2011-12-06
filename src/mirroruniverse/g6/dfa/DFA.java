@@ -5,13 +5,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.Set;
 
 import mirroruniverse.g6.G6Player;
-import mirroruniverse.g6.Pair;
 import mirroruniverse.g6.Utils;
 import mirroruniverse.g6.Utils.Entity;
 import mirroruniverse.g6.Utils.Move;
@@ -20,6 +17,7 @@ public class DFA {
 	
 	private ArrayList<State> goalStates;
 	private ArrayList<State> states;
+	private Map<String, State> stateMap;
 	private State startState;
 	private static final int MAX_STATES = 20 * 20;
 
@@ -27,6 +25,7 @@ public class DFA {
 	public DFA() {
 		goalStates = new ArrayList<State>();
 		states = new ArrayList<State>();
+		stateMap = new HashMap<String, State>();
 	}
 	
 	public DFA(int[][] originalMap) {
@@ -117,12 +116,19 @@ public class DFA {
 	}
 
 
-	private short[] recoverKey(String k) {
+	private static short[] recoverKey(String k) {
 		String[] split = k.split(",");
 		short[] xy = new short[2];
 		xy[0] = Short.parseShort(split[0]);
 		xy[1] = Short.parseShort(split[1]);
 		return xy;
+	}
+	
+	private static String[] recoverStringKey(String k) {
+		String[] split = k.split(";");
+		split[0] = "" + Integer.parseInt(split[0]);
+		split[1] = "" + Integer.parseInt(split[1]);
+		return split;
 	}
 	
 	public void addStartState(State s) {
@@ -135,6 +141,11 @@ public class DFA {
 			goalStates.add(s);
 		}
 		states.add(s);
+		stateMap.put(s.getId(), s);
+	}
+	
+	public State getState(String k) {
+		return stateMap.get(k);
 	}
 	
 	public static boolean skip(DFA first, DFA other, State selfState, State otherState) {
@@ -145,7 +156,7 @@ public class DFA {
 	}
 	
 	/*
-	 * This will contain the super-optimized shortest path algorithm for
+	 * Optimized shortest path algorithm for
 	 * the intersection of two DFAs.
 	 * 
 	 * TODO - cap exploration
@@ -157,33 +168,52 @@ public class DFA {
 		Queue<State> openSet = new LinkedList<State>();
 		// Used to backtrack.
 		HashMap<State, Transition> cameFrom = new HashMap<State, Transition>();
-
-		Map<String, Pair<State, State>> states =
-				new HashMap<String, Pair<State, State>>();
+		// Maps a State ID to the pair of states it contains. The keys represent
+		// states that have been examined.
+		HashSet<String> states = new HashSet<String>();
+		
+		
+//		Map<String, Pair<State, State>> states =
+//				new HashMap<String, Pair<State, State>>();
 		
 		String key = makeKey(first.startState, other.startState); 
 		openSet.add(new State(
 				null,
 				first.startState.isGoal() && other.startState.isGoal(),
 				key));
-		states.put(key,
-				new Pair<State, State>(first.startState, other.startState));
+		states.add(key);
+//		states.put(key,
+//				new Pair<State, State>(first.startState, other.startState));
 		
 		while (!openSet.isEmpty()) {
+			
+//			System.out.println(states.size() + "\t" + openSet.size());
+			
 			State current = openSet.poll();
 			if (current.isGoal()) {
 				return recoverPath(current, cameFrom);
 			}
 			for (Move m : Move.values()) {
 				int index = Utils.moveToShen(m) - 1;
-				Pair<State, State> statePair = states.get(current.getId());
-				Transition firstTrans = statePair.getFront().getTransitions()[index];
-				Transition otherTrans = statePair.getBack().getTransitions()[index];
+				
+//				String[] pairKeys = recoverStringKey(current.getId());
+				String[] pairKeys = current.getId().split(";");
+				
+//				Pair<State, State> statePair = states.get(current.getId());
+//				Transition firstTrans = statePair.getFront().getTransitions()[index];
+//				Transition otherTrans = statePair.getBack().getTransitions()[index];
+				
+				Transition firstTrans = first.getState(pairKeys[0]).getTransitions()[index];
+				Transition otherTrans = other.getState(pairKeys[1]).getTransitions()[index];
+				
+				
 				if (firstTrans != null && otherTrans != null) {
 					State firstDest = firstTrans.getEnd();
 					State otherDest = otherTrans.getEnd();
 					String destKey = makeKey(firstDest, otherDest);
-					if (states.containsKey(destKey) ||
+					
+					
+					if (states.contains(destKey) ||
 							skip(first, other, firstDest, otherDest)) {
 						continue;
 					}
@@ -196,9 +226,11 @@ public class DFA {
 							firstTrans.getValue(),
 							current,
 							next));
-					states.put(
-							destKey,
-							new Pair<State, State>(firstDest, otherDest));
+					
+					states.add(destKey);
+//					states.put(
+//							destKey,
+//							new Pair<State, State>(firstDest, otherDest));
 					openSet.add(next);
 				}
 			}
@@ -368,9 +400,10 @@ public class DFA {
 	}
 
 	private static String makeKey(State selfState, State otherState) {
-		String key = selfState.getValue() + selfState.getId() + "; " +
-				otherState.getValue() + otherState.getId();
-		return key;
+		return selfState.getId() + ";" + otherState.getId();
+//		String key = selfState.getValue() + selfState.getId() + "; " +
+//				otherState.getValue() + otherState.getId();
+//		return key;
 	}
 	
 	/*

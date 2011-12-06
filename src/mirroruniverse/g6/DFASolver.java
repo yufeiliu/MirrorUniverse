@@ -34,9 +34,6 @@ public class DFASolver extends Solver {
 		
 		steps = DFA.findShortestPath(firstDFA, secondDFA);
 //		steps = DFA.intersect(firstDFA, secondDFA).findShortestPath();
-		if (steps == null) {
-			System.exit(1);
-		}
 		
 		// This will try until we've found a solution, or have hit our time
 		// limit or max number of attempts. We can guarantee to try some min

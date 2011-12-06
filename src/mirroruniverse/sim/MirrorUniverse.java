@@ -13,6 +13,8 @@ public class MirrorUniverse
 	
 	public static void main( String[] args )
 	{
+		long startTime = System.currentTimeMillis();
+		
 		FileWriter frtReplay = null;
 		try {
 			frtReplay = new FileWriter( "replays/" + "LastGame" + ".txt" );
@@ -141,5 +143,7 @@ public class MirrorUniverse
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		System.out.println("TOTAL TIME: " +
+				(System.currentTimeMillis() - startTime));
 	}
 }
