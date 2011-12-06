@@ -18,7 +18,8 @@ import mirroruniverse.sim.Player;
 public class G6Player implements Player {
 
 	public static final boolean DEBUG = false;
-	public static final boolean SID_DEBUG = false;
+	public static final boolean SID_DEBUG = true;
+	public static final boolean SID_DEBUG_VERBOSE = false;
 	private static final boolean CRASH_ON_ERROR = true;
 	
 	private static final int MAX_MAP_SIZE = 100;
@@ -437,19 +438,6 @@ public class G6Player implements Player {
 			}
 		}
 		return ret;
-	}
-
-	
-	private int numExits(int[][] map) {
-		int exits = 0;
-		for (int i = 0; i < map.length; i++) {
-			for (int j = 0; j < map[0].length; j++) {
-				if (map[i][j] == Utils.entitiesToShen(Entity.EXIT)) {
-					exits++;
-				}
-			}
-		}
-		return exits;
 	}
 
 	private int doLookAndMove(int[][] leftView, int[][] rightView) {

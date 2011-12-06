@@ -1,14 +1,12 @@
 package mirroruniverse.g6.dfa;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
-import java.util.Stack;
 
 import mirroruniverse.g6.G6Player;
 import mirroruniverse.g6.Solution;
@@ -24,6 +22,7 @@ public class DFA {
 	private State startState;
 	private static final int THRESHOLD_PRODUCT_DIST = 100;
 	private static final boolean ENABLE_FALSIFICATION = true;
+	private static final int THRESHOLD_DIST = 20;
 
 	
 	public DFA() {
@@ -44,8 +43,8 @@ public class DFA {
 
 		for (String k : allStates.keySet()) {
 			State node = allStates.get(k);
-			int[] xy = recoverKey(k);
 			if (node != null) {
+				int[] xy = recoverKey(k);
 				addTransitions(map, allStates, blockedStates, xy[0], xy[1], node);
 			}
 		}
@@ -54,7 +53,6 @@ public class DFA {
 	private void addStates(int[][] map,
 			HashMap<String, State> allStates, HashSet<String> blockedStates,
 			int xCap, int yCap) {
-		
 		for (int x = 0; x < xCap; x++) {
 			for (int y = 0; y < yCap; y++) {
 				addStateFromEntity(map, allStates, blockedStates,
@@ -143,84 +141,12 @@ public class DFA {
 	}
 	
 	public static boolean isPartialGoal(DFA first, DFA other, State selfState, State otherState) {
-		return (selfState.isGoal() && !otherState.isGoal() &&
-				selfState != first.startState) ||
-					(!selfState.isGoal() && otherState.isGoal() &&
-					otherState != other.startState);
+		return selfState.isBanned() || otherState.isBanned() ||
+				(selfState.isGoal() && !otherState.isGoal() &&
+						selfState != first.startState) ||
+				(!selfState.isGoal() && otherState.isGoal() &&
+							otherState != other.startState);
 	}
-	
-	
-
-	public static ArrayList<Move> findShortestPath(DFA first, DFA other) {
-		// States to evaluate. They should return in priority order. However,
-		// since we're doing a BFS, priority order is just the order in which
-		// we insert things into the queue.
-		Stack<State> openSet = new Stack<State>();
-		
-		// Used to backtrack.
-		HashMap<State, Transition> cameFrom = new HashMap<State, Transition>();
-		
-		// Maps a State ID to the pair of states it contains. The keys represent
-		// states that have been examined.
-		HashSet<String> states = new HashSet<String>();
-		
-		String key = makeKey(first.startState, other.startState); 
-		openSet.push(new State(
-				null,
-				first.startState.isGoal() && other.startState.isGoal(),
-				key));
-		states.add(key);
-		
-		ArrayList<Move> bestPath = null;
-		
-		while (!openSet.isEmpty()) {
-			State current = openSet.pop();
-			if (current.isGoal()) {
-				ArrayList<Move> candidatePath = recoverPath(current, cameFrom);
-				if (bestPath == null || candidatePath.size() < bestPath.size()) {
-					bestPath = candidatePath;
-				}
-			} else {
-				// Iterate through different moves.
-				for (int i = 0; i < 8; i++) {
-					String[] pairKeys = current.getId().split(";");
-					Transition firstTrans = first.getState(pairKeys[0]).getTransitions()[i];
-					Transition otherTrans = other.getState(pairKeys[1]).getTransitions()[i];
-					
-					if (firstTrans != null && otherTrans != null) {
-						State firstDest = firstTrans.end;
-						State otherDest = otherTrans.end;
-						String destKey = makeKey(firstDest, otherDest);			
-						
-						// TODO - be smarter...
-//						if (states.contains(destKey) ||
-						if(isPartialGoal(first, other, firstDest, otherDest) ||
-								destKey.equals(key)) {
-							if (destKey.equals(key)) {
-								System.out.println("SELF LOOP");
-							}
-							continue;
-						}
-						
-						State next = new State(
-								null,
-								firstDest.isGoal() && otherDest.isGoal(),
-								destKey);
-						cameFrom.put(next, new Transition(
-								/* firstTrans val is the same as otherTrans val. */
-								firstTrans.value,
-								current,
-								next));
-						states.add(destKey);
-						openSet.push(next);
-					}
-				}
-			}
-		}
-		return bestPath;
-	}
-	
-	
 	
 	/*
 	 * Optimized shortest path algorithm for
@@ -238,7 +164,9 @@ public class DFA {
 		int productDist = firstDist * otherDist;
 		boolean isFake = false;
 		if (ENABLE_FALSIFICATION) {
-			if (productDist > THRESHOLD_PRODUCT_DIST) {
+			if (productDist > THRESHOLD_PRODUCT_DIST ||
+					firstDist > THRESHOLD_DIST ||
+					otherDist > THRESHOLD_DIST) {
 				isFake = true;
 				falsifyExit(first, firstSol,
 						(int) Math.min(firstDist, Math.sqrt(THRESHOLD_PRODUCT_DIST)));
@@ -259,7 +187,8 @@ public class DFA {
 		// states that have been examined.
 		HashSet<String> states = new HashSet<String>();
 		
-		String key = makeKey(first.startState, other.startState); 
+		String key = makeKey(first.startState, other.startState);
+		
 		openSet.add(new State(
 				null,
 				first.startState.isGoal() && other.startState.isGoal(),
@@ -267,6 +196,12 @@ public class DFA {
 		states.add(key);
 		
 		while (!openSet.isEmpty()) {
+			
+			if (firstDist == 1) {
+				@SuppressWarnings("unused")
+				boolean ig = first.startState.isGoal();
+			}
+			
 			State current = openSet.poll();
 			if (current.isGoal()) {
 				ArrayList<Move> steps = recoverPath(current, cameFrom);
@@ -307,6 +242,7 @@ public class DFA {
 	
 	private static void falsifyExit(DFA dfa, ArrayList<Move> sol,
 			int targetDist) {
+		
 		State current = dfa.getStartState();
 		for (int i = 0; i < sol.size() - 1 && i < targetDist; i++) {
 			int transitionIndex = Utils.moveToShen(sol.get(i)) - 1;
@@ -314,6 +250,7 @@ public class DFA {
 		}
 		for (State gs : dfa.goalStates) {
 			gs.setGoal(false);
+			gs.setBanned(true);
 		}
 		dfa.goalStates.clear();
 		current.setGoal(true);
@@ -355,20 +292,20 @@ public class DFA {
 			HashMap<State, Transition> used) {
 		ArrayList<Move> path = new ArrayList<Move>();
 		ArrayList<Transition> transPath; 
-		if (G6Player.SID_DEBUG && false) {
+		if (G6Player.SID_DEBUG_VERBOSE) {
 			transPath = new ArrayList<Transition>();
 		}
 		Transition trans = used.get(currentState);
 		while (trans != null) {
 			path.add(trans.getValue());
 			currentState = trans.getStart();
-			if (G6Player.SID_DEBUG && false) {
+			if (G6Player.SID_DEBUG_VERBOSE) {
 				transPath.add(trans);
 			}
 			trans = used.get(currentState);
 		}
 		Collections.reverse(path);
-		if (G6Player.SID_DEBUG && false) {
+		if (G6Player.SID_DEBUG_VERBOSE) {
 			Collections.reverse(transPath);
 			System.out.println(transPath);
 		}

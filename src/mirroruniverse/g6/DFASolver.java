@@ -20,7 +20,7 @@ public class DFASolver extends Solver {
 			int minAttempts, int maxAttempts) {
 		
 		if (G6Player.SID_DEBUG) {
-			System.out.println("Solving");
+			System.out.println("\nSolving");
 		}
 		
 		DFA firstDFA, secondDFA, firstBack, secondBack;
@@ -30,6 +30,10 @@ public class DFASolver extends Solver {
 		
 		firstDFA = firstBack = new DFA(firstMap);
 		secondDFA = secondBack = new DFA(secondMap);
+		
+		if (G6Player.SID_DEBUG) {
+			System.out.println("DFAs Created");
+		}
 		
 		steps = DFA.findShortestPathBFS(firstDFA, secondDFA, 0);
 //		steps = DFA.intersect(firstDFA, secondDFA).findShortestPath();
@@ -59,6 +63,10 @@ public class DFASolver extends Solver {
 	}
 	
 	Solution solve(int[][] map) {
+		if (G6Player.SID_DEBUG) {
+			System.out.println("\nSolving");
+		}
+		
 		DFA dfa = new DFA(map);
 		ArrayList<Move> steps = dfa.findShortestPath();
 		return steps == null ? null : new Solution(steps, 0, false);
