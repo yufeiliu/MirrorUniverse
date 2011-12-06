@@ -1,13 +1,12 @@
 package mirroruniverse.g6;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Deque;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 
@@ -18,7 +17,7 @@ import mirroruniverse.sim.Player;
 
 public class G6Player implements Player {
 
-	public static final boolean DEBUG = false;
+	public static final boolean DEBUG = true;
 	public static final boolean SID_DEBUG = false;
 	private static final boolean CRASH_ON_ERROR = true;
 	
@@ -29,6 +28,9 @@ public class G6Player implements Player {
 	// Stores maps.
 	private int[][] left = new int[INTERNAL_MAP_SIZE][INTERNAL_MAP_SIZE];
 	private int[][] right = new int[INTERNAL_MAP_SIZE][INTERNAL_MAP_SIZE];
+	
+	//TODO: tune this
+	private static final int PATHS_TO_TRY_IN_EXPLORATION = 50;
 	
 	private Node currentLocationLeft;
 	private Node currentLocationRight;
@@ -243,7 +245,7 @@ public class G6Player implements Player {
 				int curY = y1 + (j-jMedian);
 				
 				Node n = getFromCache(cache, v[i][j], curX, curY);
-				if (Utils.shenToEntities(v[i][j]) == Entity.OBSTACLE || Utils.shenToEntities(v[i][j]) == Entity.EXIT) {
+				if (Utils.shenToEntities(v[i][j]) == Entity.OBSTACLE) {
 					continue;
 				}
 				
@@ -305,16 +307,6 @@ public class G6Player implements Player {
 			r1 = (leftView.length-1) / 2;
 			r2 = (rightView.length-1) / 2;
 		}
-		
-		/*
-		REMOVE_THIS--;
-		if (REMOVE_THIS<=0) {
-			int dir = exploreRandom(leftView, rightView);
-			updateCentersAndExitStatus(leftView, rightView, leftView.length/2, rightView.length/2, MUMap.aintDToM[dir][0], MUMap.aintDToM[dir][1]);
-			return dir;
-		}
-		*/
-		
 		
 		currentLocationLeft = updateGraph(cacheLeft, leftView, x1, y1, r1);
 		currentLocationRight = updateGraph(cacheRight, rightView, x2, y2, r2);
@@ -479,7 +471,6 @@ public class G6Player implements Player {
 		return dir;
 	}
 
-
 	private int getSingleSolutionStep() {
 		// if there's no solution or old solution is completed
 		if (solution == null || solution.isCompleted()) {
@@ -558,6 +549,8 @@ public class G6Player implements Player {
 		Queue<NodeWrapper> expanded = new LinkedList<NodeWrapper>();
 		Set<NodeWrapper> visited = new HashSet<NodeWrapper>();
 		
+		List<Pair<Integer, LinkedList<Edge>>> paths = new ArrayList<Pair<Integer, LinkedList<Edge>>>();
+		
 		//Given main, bfs on main
 		expanded.add(new NodeWrapper(main));
 		visited.add(new NodeWrapper(main));
@@ -568,14 +561,26 @@ public class G6Player implements Player {
 			NodeWrapper cur = expanded.remove();
 			
 			if (DEBUG) System.out.print(".");
+			
 			if (cur.node.edges.size() < 8 && cur.node.entity == Entity.SPACE) {
-				if (DEBUG) System.out.println("Target: " + cur.node.x + "," + cur.node.y);
-				return cur.path;
+				int uncoveredInOtherMap = squaresUncovered(other, cur.path);
+				int obstaclesEncountered = obstaclesEncountered(other, cur.path);
+				
+				if (uncoveredInOtherMap > -1) {
+					//TODO: apparently uncoveredInOtherMap alone is a horrible ranking heuristic on random maps
+					//TODO: why 10? just putting an arbitrary value for now
+					paths.add(new Pair<Integer, LinkedList<Edge>>(-1 * cur.path.size() + uncoveredInOtherMap - obstaclesEncountered * 10, cur.path));
+					
+					if (paths.size() >= PATHS_TO_TRY_IN_EXPLORATION) {
+						break;
+					}
+				}
 			}
 			
 			for (Edge e : cur.node.edges) {
 				
 				if (e.to.entity == Entity.EXIT) continue;
+				if (e.to.hashCode() == e.from.hashCode()) continue;
 				
 				NodeWrapper to = new NodeWrapper(e.to);
 				if (!visited.contains(to)) {
@@ -587,72 +592,65 @@ public class G6Player implements Player {
 			}
 		}
 		
-		return null;
+		if (paths.isEmpty()) {
+			return null;
+		}
+		
+		Collections.sort(paths);
+		return paths.get(0).getBack();
 	}
 	
-	//TODO make it return null if no fringe is found
-	private ArrayList<Edge> getFringe(Collection<Node> nodeGraph) {
-		ArrayList<Deque<Edge>> paths = new ArrayList<Deque<Edge>>();
-		HashSet<Edge> visited = new HashSet<Edge>();
-		int oldSize = 0;
+	/*
+	 * return -1 if the path actually steps over an exit
+	 */
+	private int squaresUncovered(Node start, List<Edge> path) {
 		
-		Deque<Edge> firstFringe = null;
+		int uncovered = 0;
 		
-		//add first edges to stacks
-		for(Node node : nodeGraph) {
-			for(Edge edge : node.edges) {
-				if(edge.to.x != edge.from.x && edge.to.y != edge.from.y) {
-					Deque<Edge> pathStack = new ArrayDeque<Edge>();
-					pathStack.add(edge);
-					paths.add(pathStack);
+		for (Edge e : path) {
+			if (start.entity == Entity.EXIT) return -1;
+			if (start.edges.size() < 8) uncovered++;
+			
+			boolean found = false;
+			
+			for (Edge e2 : start.edges) {
+				if (e.move == e2.move) {
+					start = e2.to;
+					found = true;
+					break;
 				}
+			}
+			
+			if (!found) {
+				return ++uncovered;
 			}
 		}
 		
-		//TODO: what do we do if the fringe cannot be found?
-		search: while (firstFringe == null) {
-			for(int i = 0; i < paths.size(); i++) {
-				Deque<Edge> pathStack = paths.get(i);
-				//System.out.println("\nstart path");
-				//for(Edge e : pathStack)
-				//	System.out.println(e.from.x+" "+e.from.y+" "+e.from.entity+" : "+e.to.x+" "+e.to.y+" "+e.to.entity);
-				///.println("end path");
-				//peek at top of each stack.
-				Edge top = pathStack.peek();
-				
-				visited.add(top);
-				if(Math.abs(visited.size() - oldSize) < 1) {
-					//System.out.println("delta 0");
-					return null;
+		return uncovered;
+	}
+	
+private int obstaclesEncountered(Node start, List<Edge> path) {
+		
+		int obstacles = 0;
+		
+		for (Edge e : path) {
+			boolean found = false;
+			
+			for (Edge e2 : start.edges) {
+				if (e.move == e2.move) {
+					if (e2.to.hashCode() == start.hashCode()) obstacles++;
+					start = e2.to;
+					found = true;
+					break;
 				}
-				oldSize = visited.size();
-				
-				//check for fringe (fewer than 8 edges)
-				if(top.to.entity == Entity.SPACE && top.to.edges.size() < 8) {
-					//if fringe, return that stack.
-					//System.out.println("fringe found.");
-					firstFringe = pathStack;
-					System.out.println("Target: " + top.to.x + ", " + top.to.y);
-					break search;
-				} else {
-					//else, copy stack and push new edges onto tops of each new one
-					paths.remove(i);
-					if(top.to.entity != Entity.OBSTACLE) {
-						//System.out.println(top.to.x+" "+top.to.y+" "+top.to.entity);
-						for(Edge edge : top.to.edges) {
-							if(edge.to.entity != Entity.OBSTACLE && edge.to.x != edge.from.x && edge.to.y != edge.from.y) {
-								Deque<Edge> newPathStack = new ArrayDeque<Edge>();
-								newPathStack.addAll(pathStack);
-								newPathStack.add(edge);
-								paths.add(newPathStack);
-							}
-						}
-					}
-				}
+			}
+			
+			if (!found) {
+				return obstacles;
 			}
 		}
 		
-		return new ArrayList<Edge>(firstFringe);
+		return obstacles;
 	}
 	
 	private boolean areExitsFound() {
@@ -696,24 +694,6 @@ public class G6Player implements Player {
 		return getSolutionStepExpensive();
 		
 //		return getSolutionStepSingle();
-	}
-
-	private int getSolutionStepSingle() {
-		if (solution == null && areExitsFound()) {
-			solution = solver.solve(right, left);
-			if (solution != null) {
-				if (DEBUG) {
-					System.out.println(solution);
-					System.out.println("Solution size: " + solution.numTotalSteps());
-					System.out.println("Solution diff: " + solution.getDiff());
-				}
-			}
-		}
-		// If solutionStep >= solution.length, the solution was invalid
-		if(solution != null) {
-			return solution.getNextStep();
-		}
-		return -1;
 	}
 
 	private int getSolutionStepExpensive() {
