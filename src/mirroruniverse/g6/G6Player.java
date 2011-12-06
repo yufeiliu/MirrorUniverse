@@ -4,6 +4,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -30,6 +31,9 @@ public class G6Player implements Player {
 	// Stores maps.
 	private int[][] left = new int[INTERNAL_MAP_SIZE][INTERNAL_MAP_SIZE];
 	private int[][] right = new int[INTERNAL_MAP_SIZE][INTERNAL_MAP_SIZE];
+	
+	//TODO: tune this
+	private static final int PATHS_TO_TRY_IN_EXPLORATION = 50;
 	
 	private Node currentLocationLeft;
 	private Node currentLocationRight;
@@ -520,6 +524,8 @@ public class G6Player implements Player {
 		Queue<NodeWrapper> expanded = new LinkedList<NodeWrapper>();
 		Set<NodeWrapper> visited = new HashSet<NodeWrapper>();
 		
+		List<Pair<Integer, LinkedList<Edge>>> paths = new ArrayList<Pair<Integer, LinkedList<Edge>>>();
+		
 		//Given main, bfs on main
 		expanded.add(new NodeWrapper(main));
 		visited.add(new NodeWrapper(main));
@@ -535,8 +541,12 @@ public class G6Player implements Player {
 				int uncoveredInOtherMap = squaresUncovered(other, cur.path);
 				
 				if (uncoveredInOtherMap > -1) {
-					if (DEBUG) System.out.println("Target: " + cur.node.x + "," + cur.node.y);
-					return cur.path;
+					//TODO: apparently uncoveredInOtherMap alone is a horrible ranking heuristic on random maps
+					paths.add(new Pair<Integer, LinkedList<Edge>>(-1 * cur.path.size() + uncoveredInOtherMap, cur.path));
+					
+					if (paths.size() >= PATHS_TO_TRY_IN_EXPLORATION) {
+						break;
+					}
 				}
 			}
 			
@@ -554,7 +564,12 @@ public class G6Player implements Player {
 			}
 		}
 		
-		return null;
+		if (paths.isEmpty()) {
+			return null;
+		}
+		
+		Collections.sort(paths);
+		return paths.get(0).getBack();
 	}
 	
 	/*
