@@ -70,7 +70,8 @@ public class G6Player implements Player {
 	private LinkedList<Edge> exploreGoal = new LinkedList<Edge>();
 	
 	
-	private ArrayList<Move> twitching = new ArrayList<Move>();
+	private ArrayList<Pair<Integer,Integer>> leftTwitching = new ArrayList<Pair<Integer,Integer>>();
+	private ArrayList<Pair<Integer,Integer>> rightTwitching = new ArrayList<Pair<Integer,Integer>>();
 	
 	/*
 	 * Array of moves for the solution. null if unsolved.
@@ -335,7 +336,7 @@ public class G6Player implements Player {
 		Edge edge = exploreGoal.remove(0);
 		dir = Utils.moveToShen(edge.move);
 		
-		if (isTwitching(dir)) {
+		if (isTwitching()) {
 			if (DEBUG) System.out.println("***twitching, random walk!");
 			exploreGoal = null;
 			dir = exploreRandom(leftView, rightView);
@@ -358,12 +359,20 @@ public class G6Player implements Player {
 		return dir;
 	}
 
-	private boolean isTwitching(int dir) {
-		twitching.add(Utils.shenToMove(dir));
-		if (twitching.size()>4) twitching.remove(0);
+	private boolean isTwitching() {
+		int MAX_CACHE = 10;
+		if(leftTwitching.size() == MAX_CACHE)
+			leftTwitching.remove(0);
+		if(rightTwitching.size() == MAX_CACHE)
+			rightTwitching.remove(0);
+		leftTwitching.add(new Pair<Integer,Integer>(x1, y1));
+		rightTwitching.add(new Pair<Integer, Integer>(x2, y2));
 		
-		return (twitching.size()==4 && twitching.get(0)==twitching.get(2) && 
-				twitching.get(1)==twitching.get(3) && Utils.reverseMove(twitching.get(0)) == twitching.get(1));
+		Pair<Integer, Integer> oldestLeft = leftTwitching.get(0);
+		Pair<Integer, Integer> oldestRight = rightTwitching.get(0);
+		int THRESHOLD = 5;
+		return ((Math.abs(oldestLeft.getFront() - x1) < THRESHOLD && Math.abs(oldestLeft.getBack() - y1) < THRESHOLD)
+				|| (Math.abs(oldestRight.getFront() - x2) < THRESHOLD && Math.abs(oldestRight.getBack() - y2) < THRESHOLD));
 	}
 	
 	/*
