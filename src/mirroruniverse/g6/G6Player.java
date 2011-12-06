@@ -607,24 +607,6 @@ public class G6Player implements Player {
 //		return getSolutionStepSingle();
 	}
 
-	private int getSolutionStepSingle() {
-		if (solution == null && areExitsFound()) {
-			solution = solver.solve(right, left);
-			if (solution != null) {
-				if (DEBUG) {
-					System.out.println(solution);
-					System.out.println("Solution size: " + solution.numTotalSteps());
-					System.out.println("Solution diff: " + solution.getDiff());
-				}
-			}
-		}
-		// If solutionStep >= solution.length, the solution was invalid
-		if(solution != null) {
-			return solution.getNextStep();
-		}
-		return -1;
-	}
-
 	private int getSolutionStepExpensive() {
 		if (areExitsFound()) {
 			if (shouldNotRecomputeSolution()) {
