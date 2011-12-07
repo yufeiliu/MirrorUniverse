@@ -31,7 +31,7 @@ public class SolutionTest {
 		initVars();
 		//make sure its set correctly
 		@SuppressWarnings("unused")
-		Solution tester = new Solution(moves, diff);
+		Solution tester = new Solution(moves, diff, false);
 		assertNotNull("moves to shen results:", Solution.movesToInts(moves));
 		
 	}
@@ -39,35 +39,35 @@ public class SolutionTest {
 	@Test
 	public void testGetDiff() {
 		initVars();
-		Solution tester = new Solution(moves, diff);
+		Solution tester = new Solution(moves, diff, false);
 		assertEquals("get diff:", 0, tester.getDiff());
 	}
 
 	@Test
 	public void testGetNextStep() {
 		initVars();
-		Solution tester = new Solution(moves, diff);
+		Solution tester = new Solution(moves, diff, false);
 		assertNotNull("get next step:", tester.getNextStep());
 	}
 
 	@Test
 	public void testNumTotalSteps() {
 		initVars();
-		Solution tester = new Solution(moves, diff);
+		Solution tester = new Solution(moves, diff, false);
 		assertEquals("get total steps:", 6, tester.numTotalSteps());
 	}
 
 	@Test
 	public void testIsCompleted() {
 		initVars();
-		Solution tester = new Solution(moves, diff);
+		Solution tester = new Solution(moves, diff, false);
 		assertNotNull("isCompleted:", tester.isCompleted());
 	}
 
 	@Test
 	public void testToString() {
 		initVars();
-		Solution tester = new Solution(moves, diff);
+		Solution tester = new Solution(moves, diff, false);
 		assertNotNull("path to string:", tester.toString());
 	}
 

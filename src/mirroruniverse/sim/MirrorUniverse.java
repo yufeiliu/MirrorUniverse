@@ -13,6 +13,8 @@ public class MirrorUniverse
 	
 	public static void main( String[] args )
 	{
+		long startTime = System.currentTimeMillis();
+		
 		FileWriter frtReplay = null;
 		try {
 			frtReplay = new FileWriter( "replays/" + "LastGame" + ".txt" );
@@ -92,7 +94,7 @@ public class MirrorUniverse
 		}
 		
 		//TODO remove this
-		int cutOff = 50;
+		int cutOff = 10000;
 		
 		int intStep = 0;
 		while ( !mumMapL.getMapOver() || !mumMapR.getMapOver() )
@@ -104,7 +106,15 @@ public class MirrorUniverse
 			
 			int intMove = plrCurrent.lookAndMove( aintViewL, aintViewR );
 			try {
-				//System.out.println( intStep + ":::::" );
+				System.out.println( intStep + "::::: " +
+						mumMapL.getMapOver() + "\t" + mumMapR.getMapOver());
+				
+				
+				if (mumMapL.getMapOver() || mumMapR.getMapOver()) {
+//					System.exit(1);
+				}
+				
+				
 				if ( intStep != 0 )
 				{
 					bfrReplay.write( ", " );
@@ -118,9 +128,6 @@ public class MirrorUniverse
 			mumMapL.move( intMove );
 			mumMapR.move( intMove );
 			intStep ++;
-			if (intStep > 10000) {
-				break;
-			}
 		}
 		int intStepL = mumMapL.getStep();
 		int intStepR = mumMapR.getStep();
@@ -144,5 +151,7 @@ public class MirrorUniverse
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		System.out.println("TOTAL TIME: " +
+				(System.currentTimeMillis() - startTime));
 	}
 }

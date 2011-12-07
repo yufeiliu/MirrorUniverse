@@ -4,16 +4,17 @@ import mirroruniverse.g6.Utils;
 import mirroruniverse.g6.Utils.Entity;
 import mirroruniverse.g6.Utils.Move;
 
-public class State {
+public class State implements Comparable<State> {
 
 	private Transition[] transList;
 
 	private Entity value;
 	private boolean goal;
 	private String id;
+	private boolean banned;
 		
 	public final static byte NUM_DIRECTIONS = 8;
-	private static short idCounter = 0; 
+	private static long idCounter = 0; 
 	
 	public State(Entity value) {
 		this(value, false);
@@ -51,7 +52,8 @@ public class State {
 	public String getId() {
 		return this.id;
 	}
-
+	
+	// Can have null elements.
 	public Transition[] getTransitions() {
 		return transList;
 	}
@@ -64,13 +66,25 @@ public class State {
 		this.goal = goal;
 	}
 	
-	// Can have null elements.
-	public Transition[] getTransList() {
-		return transList;
-	}
-	
 	public int hashCode() {
 		return id.hashCode();
+	}
+
+	@Override
+	public int compareTo(State other) {
+		return id.compareTo(other.id);
+	}
+	
+	public boolean isBanned() {
+		boolean isExit = value == Entity.EXIT;
+		if (banned != isExit) {
+			System.err.println("Invalid isBanned state.");
+		}
+		return isExit;
+	}
+	
+	public void setBanned(boolean banned) {
+		this.banned = banned;
 	}
 	
 }
