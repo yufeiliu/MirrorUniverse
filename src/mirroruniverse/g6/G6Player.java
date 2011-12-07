@@ -46,10 +46,6 @@ public class G6Player implements Player {
 	 */
 	private int r1 = -1, r2 = -1;
 	
-	/*
-	 * True if the exists have been found. Used to cache this knowledge
-	 * and avoid unnecessary computation.
-	 */
 	private boolean exitsFound;
 	private boolean leftExitFound;
 	private boolean rightExitFound;
@@ -57,11 +53,17 @@ public class G6Player implements Player {
 	private boolean leftExited;
 	private boolean rightExited;
 	
-	private int leftUnknown;
-	private int rightUnknown;
-	
 	private boolean radiiDiscovered;
-	private boolean closeToExit;
+	
+	private boolean didExhaustiveCheck;
+	
+	private boolean computedSolution;
+	private boolean computedSolutionWhenRightFullyExplored;
+	private boolean computedSolutionWhenLeftFullyExplored;
+	
+	private boolean leftExplored;
+	private boolean rightExplored;
+
 
 	private HashMap<String, Node> cacheLeft = new HashMap<String, Node>();
 	private HashMap<String, Node> cacheRight = new HashMap<String, Node>();
@@ -83,11 +85,7 @@ public class G6Player implements Player {
 	 */
 	private Solver solver;
 	
-	private boolean didExhaustiveCheck;
-	private boolean computedSolution;	
-	private boolean computedSolutionWhenRightFullyExplored;
-	private boolean computedSolutionWhenLeftFullyExplored;
-
+	
 	public G6Player() {
 		// Set all points to be unknown.
 		for (int i = 0; i < INTERNAL_MAP_SIZE; i++) {
@@ -101,8 +99,6 @@ public class G6Player implements Player {
 		// to account for 0 based indexing.
 		x1 = x2 = y1 = y2 = INTERNAL_MAP_SIZE / 2 - 1;
 		solver = new DFASolver();
-		leftUnknown = left.length * left[0].length;
-		rightUnknown = right.length * right[0].length;
 	}
 	
 	private boolean shouldRecomputeSolution() {		
@@ -120,14 +116,14 @@ public class G6Player implements Player {
 			return false;
 		}
 		if (solution == null || solution.getDiff() > 0) {
-			if (isLeftFullyExplored() && !computedSolutionWhenLeftFullyExplored) {
-				if (isRightFullyExplored()) {
+			if (isRightFullyExplored() && !computedSolutionWhenLeftFullyExplored) {
+				if (isLeftFullyExplored()) {
 					computedSolutionWhenRightFullyExplored = true;	
 				}
 				computedSolutionWhenLeftFullyExplored = true;
 				return true;
 			}
-			if (isRightFullyExplored() && !computedSolutionWhenRightFullyExplored) {
+			if (isLeftFullyExplored() && !computedSolutionWhenRightFullyExplored) {
 				computedSolutionWhenRightFullyExplored = true;
 				return true;
 			}
@@ -156,19 +152,31 @@ public class G6Player implements Player {
 	}
 	
 	private boolean isFullyExplored() {
-		return isLeftFullyExplored() && isRightFullyExplored();
+		return isRightFullyExplored() && isLeftFullyExplored();
 	}
 	
-	private boolean isRightFullyExplored() {
-		return leftExitFound && isFullyExplored(left);
-	}
-
 	private boolean isLeftFullyExplored() {
-		return rightExitFound && isFullyExplored(right);
+		if (!leftExitFound) {
+			return false;
+		}
+		if (leftExplored) {
+			return true;
+		}
+		leftExplored = isFullyExplored(left);
+		return leftExplored;
 	}
 
+	private boolean isRightFullyExplored() {
+		if (!rightExitFound) {
+			return false;
+		}
+		if (rightExplored) {
+			return true;
+		}
+		rightExplored = isFullyExplored(right);
+		return rightExplored;
+	}
 
-	// TODO - test this for correctness, cache
 	private boolean isFullyExplored(int[][] map) {
 		for (int i = 0; i < INTERNAL_MAP_SIZE; i++) {
 			for (int j = 0; j < INTERNAL_MAP_SIZE; j++) {
@@ -201,7 +209,6 @@ public class G6Player implements Player {
 	 */
 	private Node updateGraph(HashMap<String, Node> cache, int[][] v, int x, int y, int r) {
 		
-		//TODO lazy eval these
 		int iMax = v.length - 1;
 		int jMax = v[0].length - 1;
 		int iMedian = v.length/2;
@@ -291,7 +298,6 @@ public class G6Player implements Player {
 		
 		int dir;
 		
-		//TODO uh oh, getFringe failed, use random
 		if (exploreGoal==null || exploreGoal.size()==0) {
 			// TODO - we can do something smarter than random. This seems to
 			// happen after one player has exited.
