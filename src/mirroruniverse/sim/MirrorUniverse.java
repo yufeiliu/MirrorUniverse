@@ -92,6 +92,7 @@ public class MirrorUniverse
 		}
 		
 		//TODO remove this
+
 		int cutOff = 2000;
 		
 		int intStep = 0;
