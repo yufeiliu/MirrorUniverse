@@ -29,9 +29,9 @@ public class G6Player implements Player {
 	
 	
 	/* TODO: tune these */
-	private static final int WEIGHT_ON_PATH_LENGTH = 1;
+	private static final int WEIGHT_ON_PATH_LENGTH = 5;
 	private static final int WEIGHT_ON_SQUARES_UNCOVERED_BY_OTHER_PLAYER = 3;
-	private static final int WEIGHT_ON_KEEPING_ALIGNMENT = 10;
+	private static final int WEIGHT_ON_KEEPING_ALIGNMENT = 5;
 	
 	private boolean leftExitReachable;
 	private boolean rightExitReachable;
@@ -41,7 +41,7 @@ public class G6Player implements Player {
 	private int[][] right = new int[INTERNAL_MAP_SIZE][INTERNAL_MAP_SIZE];
 	
 	//TODO: tune this
-	private static final int PATHS_TO_TRY_IN_EXPLORATION = 100;
+	private static final int PATHS_TO_TRY_IN_EXPLORATION = 500;
 	
 	private Node currentLocationLeft;
 	private Node currentLocationRight;
