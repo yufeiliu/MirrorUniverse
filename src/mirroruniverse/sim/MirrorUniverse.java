@@ -108,7 +108,6 @@ public class MirrorUniverse
 			try {
 				System.out.println( intStep + "::::: " +
 						mumMapL.getMapOver() + "\t" + mumMapR.getMapOver());
-				System.out.println( intStep + ":::::" );
 				if ( intStep != 0 )
 				{
 					bfrReplay.write( ", " );

@@ -166,8 +166,17 @@ public class DFA {
 	 */
 	public static Solution findShortestPath(DFA first, DFA other, int offset) {
 		boolean isFabricated = false;
+		
+		ArrayList<Move> firstSol = first.findShortestPath();
+		ArrayList<Move> otherSol = other.findShortestPath();
+		
+		if (firstSol == null || otherSol == null) {
+			System.out.println("null sol");
+			return null;
+		}
+		
 		if (ENABLE_GOAL_FABRICATION) {
-			isFabricated = fabricate(first, other);
+			isFabricated = fabricate(first, other, firstSol, otherSol);
 		}
 		
 		// States to evaluate. They should return in priority order. However,
@@ -235,17 +244,8 @@ public class DFA {
 		return null;
 	}
 
-	private static boolean fabricate(DFA first, DFA other) {
-		ArrayList<Move> firstSol = first.findShortestPath();
-		ArrayList<Move> otherSol = other.findShortestPath();
-		
-		if (G6Player.SID_DEBUG) {
-			if (firstSol == null || otherSol == null) {
-				System.err.println("This should not be called after solving.");
-				System.exit(1);
-			}
-		}
-		
+	private static boolean fabricate(DFA first, DFA other,
+			ArrayList<Move> firstSol, ArrayList<Move> otherSol) {
 		int firstDist = firstSol.size(); 
 		int otherDist = otherSol.size();
 		int productDist = firstDist * otherDist;

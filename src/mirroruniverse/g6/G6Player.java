@@ -110,7 +110,6 @@ public class G6Player implements Player {
 			// when we first see the exits, 
 			// after we've explored all of either board.
 			// when we're adjacent to an exit
-		
 		if (solution != null && solution.isFake() && solution.isCompleted()) {
 			return true;
 		}
@@ -775,7 +774,11 @@ private int obstaclesEncountered(Node start, List<Edge> path) {
 	private int getMultiSolutionStep() {
 		if (areExitsFound()) {
 			if (!shouldRecomputeSolution()) {
-				return solution.getNextStep();
+				if (solution == null) {
+					return -1; 
+				} else {
+					return solution.getNextStep();
+				}
 			}
 			if (!didExhaustiveCheck && isFullyExplored()) {
 				didExhaustiveCheck = true;
