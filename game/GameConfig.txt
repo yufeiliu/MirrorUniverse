@@ -1,5 +1,4 @@
--1, -1, 100, -1, maps/g7maps/map_50_50_illusion_1.txt
--1, -1, 100, -1, maps/g7maps/map_50_50_illusion_2.txt
+
 
 60, 60, 100, 1, 0.4, 2
 60, 60, 100, 2, 0.2, 3
