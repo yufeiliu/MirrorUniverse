@@ -311,11 +311,23 @@ public class G6Player implements Player {
 			// happen after one player has exited.
 			dir = exploreRandom(leftView, rightView);
 			updateCentersAndExitStatus(leftView, rightView, leftView.length/2, rightView.length/2, MUMap.aintDToM[dir][0], MUMap.aintDToM[dir][1]);
+			if (DEBUG) System.out.println("This was random!");
 			return dir;
 		}
 		//System.out.println(exploreGoal);
 		Edge edge = exploreGoal.remove(0);
 		dir = Utils.moveToShen(edge.move);
+		
+		int leftMid = leftView.length / 2;
+		int rightMid = rightView.length / 2;
+		if (leftView[leftMid + MUMap.aintDToM[dir][1]][leftMid + MUMap.aintDToM[dir][0]] == Utils.entitiesToShen(Entity.EXIT)
+				|| rightView[rightMid + MUMap.aintDToM[dir][1]][rightMid + MUMap.aintDToM[dir][0]] == Utils.entitiesToShen(Entity.EXIT)) {
+			dir = exploreRandom(leftView, rightView);
+			exploreGoal = null;
+			updateCentersAndExitStatus(leftView, rightView, leftView.length/2, rightView.length/2, MUMap.aintDToM[dir][0], MUMap.aintDToM[dir][1]);
+			if (DEBUG) System.out.println("This was random!");
+			return dir;
+		}
 		
 		/*
 		if (isTwitching()) {
@@ -339,7 +351,7 @@ public class G6Player implements Player {
 			updateCentersAndExitStatus(leftView, rightView, leftView.length/2, rightView.length/2, MUMap.aintDToM[dir][0], MUMap.aintDToM[dir][1]);
 			return dir;
 		}
-		
+		if (DEBUG) System.out.println("This was planned");
 		return dir;
 	}
 
