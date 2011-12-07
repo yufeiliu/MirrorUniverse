@@ -242,11 +242,11 @@ public class G6Player implements Player {
 		for (int i = 0; i < v.length; i++) {
 			for (int j = 0; j < v[0].length; j++) {
 				
-				int curX = x1 + (i-iMedian);
-				int curY = y1 + (j-jMedian);
+				int curX = x + (i-iMedian);
+				int curY = y + (j-jMedian);
 				
 				Node n = getFromCache(cache, v[i][j], curX, curY);
-				if (Utils.shenToEntities(v[i][j]) == Entity.OBSTACLE) {
+				if (Utils.shenToEntities(v[i][j]==Utils.entitiesToShen(Entity.PLAYER) ? Utils.entitiesToShen(Entity.SPACE) : v[i][j]) == Entity.OBSTACLE) {
 					continue;
 				}
 				
@@ -255,15 +255,16 @@ public class G6Player implements Player {
 					int di = MUMap.aintDToM[d][1];
 					
 					if (i + di <= iMax && i + di >= 0 &&
-							j + dj <= jMax && j + dj >= 0 && curX + di >= 0 && curY + dj >= 0) {
+							j + dj <= jMax && j + dj >= 0) {
 						int neighborVal = v[i+di][j+dj];
-						if (Utils.shenToEntities(neighborVal) == Entity.SPACE || Utils.shenToEntities(neighborVal) == Entity.EXIT) {
-							Node neighbor = getFromCache(cache, v[i+di][j+dj], curX + di, curY + dj);
+						if (Utils.shenToEntities(neighborVal) == Entity.SPACE || Utils.shenToEntities(neighborVal) == Entity.PLAYER || Utils.shenToEntities(neighborVal) == Entity.EXIT) {
+							Node neighbor = getFromCache(cache, (v[i+di][j+dj]==Utils.entitiesToShen(Entity.PLAYER) ? Utils.entitiesToShen(Entity.SPACE) : v[i+di][j+dj]), curX + di, curY + dj);
 							Edge edge = new Edge();
 							edge.from = n;
 							edge.to = neighbor;
 							edge.move = Utils.shenToMove(d);
 							n.edges.add(edge);
+						
 						} else if (Utils.shenToEntities(neighborVal) == Entity.OBSTACLE) {
 							Edge edge = new Edge();
 							edge.from = n;
@@ -313,12 +314,8 @@ public class G6Player implements Player {
 		currentLocationRight = updateGraph(cacheRight, rightView, x2, y2, r2);
 		
 		if (exploreGoal == null || exploreGoal.size()==0) {
-			//We always do it by left, then by right
-			// TODO: optimize for both
-			exploreGoal = getFringe(true);
-			if (exploreGoal == null) {
-				exploreGoal = getFringe(false);
-			}
+			//exploreGoal = getFringe(!isLeftExitFound());
+			exploreGoal = getFringe(false);
 			
 			if (DEBUG) System.out.println("Goal path generated");
 			if (DEBUG) System.out.println(exploreGoal);
@@ -336,6 +333,7 @@ public class G6Player implements Player {
 		Edge edge = exploreGoal.remove(0);
 		dir = Utils.moveToShen(edge.move);
 		
+		/*
 		if (isTwitching()) {
 			if (DEBUG) System.out.println("***twitching, random walk!");
 			exploreGoal = null;
@@ -343,6 +341,7 @@ public class G6Player implements Player {
 			updateCentersAndExitStatus(leftView, rightView, leftView.length/2, rightView.length/2, MUMap.aintDToM[dir][0], MUMap.aintDToM[dir][1]);
 			return dir;
 		}
+		*/
 		
 		int oldX1 = x1, oldY1 = y1, oldX2 = x2, oldY2 = y2;
 		
@@ -372,7 +371,7 @@ public class G6Player implements Player {
 		
 		Pair<Integer, Integer> oldestLeft = leftTwitching.get(0);
 		Pair<Integer, Integer> oldestRight = rightTwitching.get(0);
-		int THRESHOLD = 5;
+		int THRESHOLD = 1;
 		for(int i = 0; i < MAX_CACHE; i++) {
 			//if either player moved outside of the threshold even once, they are not twitching
 			if((Math.abs(oldestLeft.getFront() - x1) > THRESHOLD && Math.abs(oldestLeft.getBack() - y1) > THRESHOLD)
@@ -585,7 +584,7 @@ public class G6Player implements Player {
 				if (uncoveredInOtherMap > -1) {
 					//TODO: apparently uncoveredInOtherMap alone is a horrible ranking heuristic on random maps
 					//TODO: why 10? just putting an arbitrary value for now
-					paths.add(new Pair<Integer, LinkedList<Edge>>(-1 * cur.path.size() + uncoveredInOtherMap - obstaclesEncountered * 10, cur.path));
+					paths.add(new Pair<Integer, LinkedList<Edge>>(-1 * cur.path.size() + 3 * uncoveredInOtherMap - obstaclesEncountered * 10, cur.path));
 					
 					if (paths.size() >= PATHS_TO_TRY_IN_EXPLORATION) {
 						break;
@@ -614,7 +613,18 @@ public class G6Player implements Player {
 		}
 		
 		Collections.sort(paths);
-		return paths.get(0).getBack();
+		
+		LinkedList<Edge> result = paths.get(0).getBack();
+		
+		if (DEBUG) {
+			System.out.println();
+			for (Edge e : result) {
+				System.out.print(" => " + e.to.entity + "(" + e.to.x + "," + e.to.y + ")");
+			}
+			System.out.println();
+		}
+		
+		return result;
 	}
 	
 	/*
