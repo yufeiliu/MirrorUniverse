@@ -17,8 +17,8 @@ import mirroruniverse.sim.Player;
 
 public class G6Player implements Player {
 
-	public static final boolean DEBUG = false;
-	public static final boolean SID_DEBUG = true;
+	public static final boolean DEBUG = true;
+	public static final boolean SID_DEBUG = false;
 	public static final boolean SID_DEBUG_VERBOSE = false;
 	public static final boolean SID_DEBUG_RECOMPUTE_INFO = true;
 	private static final boolean CRASH_ON_ERROR = false;
@@ -41,7 +41,7 @@ public class G6Player implements Player {
 	private int[][] right = new int[INTERNAL_MAP_SIZE][INTERNAL_MAP_SIZE];
 	
 	//TODO: tune this
-	private static final int PATHS_TO_TRY_IN_EXPLORATION = 50;
+	private static final int PATHS_TO_TRY_IN_EXPLORATION = 100;
 	
 	private Node currentLocationLeft;
 	private Node currentLocationRight;
@@ -344,16 +344,20 @@ public class G6Player implements Player {
 		Edge edge = exploreGoal.remove(0);
 		dir = Utils.moveToShen(edge.move);
 		
+		/*
 		int leftMid = leftView.length / 2;
 		int rightMid = rightView.length / 2;
 		if (leftView[leftMid + MUMap.aintDToM[dir][1]][leftMid + MUMap.aintDToM[dir][0]] == Utils.entitiesToShen(Entity.EXIT)
 				|| rightView[rightMid + MUMap.aintDToM[dir][1]][rightMid + MUMap.aintDToM[dir][0]] == Utils.entitiesToShen(Entity.EXIT)) {
+			System.exit(1);
 			dir = exploreRandom(leftView, rightView);
 			exploreGoal = null;
 			updateCentersAndExitStatus(leftView, rightView, leftView.length/2, rightView.length/2, MUMap.aintDToM[dir][0], MUMap.aintDToM[dir][1]);
-			if (DEBUG) System.out.println("This was random!");
+			if (DEBUG) System.out.println("This was random! 2");
 			return dir;
 		}
+		*/
+		
 		
 		/*
 		if (isTwitching()) {
@@ -665,14 +669,31 @@ public class G6Player implements Player {
 	 */
 	private int squaresUncovered(Node startingNode, List<Edge> path) {
 		
+		
+		if (DEBUG) {
+			System.out.println();
+			System.out.print("%% Expanded nodes: ");
+		}
+		
 		Node start = startingNode;
 		int uncovered = 0;
 		
-		for (Edge e : path) {
-			if (start.entity == Entity.EXIT) return -1;
+		for (int i = 0; i < path.size() + 1; i++) {
+			
+			if (DEBUG) System.out.print(start.x + "," + start.y + "," + start.entity);
+			
+			if (start.entity == Entity.EXIT) {
+				if (DEBUG) System.out.println("%%% OOPSIE, EXIT!");
+				return -1;
+			}
 			if (start.edges.size() < 8) uncovered++;
 			
 			boolean found = false;
+			
+			if (i==path.size()) break;
+			
+			Edge e = path.get(i);
+			System.out.print( " (" + e.move + "); ");
 			
 			for (Edge e2 : start.edges) {
 				if (e.move == e2.move) {
@@ -683,10 +704,12 @@ public class G6Player implements Player {
 			}
 			
 			if (!found) {
+				if (DEBUG) System.out.println("%%% not found!");
 				return uncovered;
 			}
 		}
 		
+		if (DEBUG) System.out.println();
 		return uncovered;
 	}
 	
