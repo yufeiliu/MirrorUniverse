@@ -20,6 +20,7 @@ public class G6Player implements Player {
 	public static final boolean DEBUG = false;
 	public static final boolean SID_DEBUG = true;
 	public static final boolean SID_DEBUG_VERBOSE = false;
+	public static final boolean SID_DEBUG_RECOMPUTE_INFO = true;
 	private static final boolean CRASH_ON_ERROR = true;
 	
 	private static final int MAX_MAP_SIZE = 100;
@@ -111,31 +112,54 @@ public class G6Player implements Player {
 			// after we've explored all of either board.
 			// when we're adjacent to an exit
 		if (solution != null && solution.isFake() && solution.isCompleted()) {
+			if (SID_DEBUG_RECOMPUTE_INFO) {
+				System.out.println("recompute: finished fake");
+			}
 			return true;
 		}
 		if (computedSolutionWhenLeftFullyExplored &&
 				computedSolutionWhenRightFullyExplored) {
+			if (SID_DEBUG_RECOMPUTE_INFO) {
+				System.out.println("no recompute: everything already explored");
+			}
 			return false;
 		}
 		if (solution == null || solution.getDiff() > 0) {
-			if (isRightFullyExplored() && !computedSolutionWhenLeftFullyExplored) {
-				if (isLeftFullyExplored()) {
+			if (isLeftFullyExplored() && !computedSolutionWhenLeftFullyExplored) {
+				if (isRightFullyExplored()) {
 					computedSolutionWhenRightFullyExplored = true;	
 				}
 				computedSolutionWhenLeftFullyExplored = true;
+				if (SID_DEBUG_RECOMPUTE_INFO) {
+					System.out.println("recompute: left newly explored");
+				}
 				return true;
 			}
-			if (isLeftFullyExplored() && !computedSolutionWhenRightFullyExplored) {
+			if (isRightFullyExplored() && !computedSolutionWhenRightFullyExplored) {
 				computedSolutionWhenRightFullyExplored = true;
+				if (SID_DEBUG_RECOMPUTE_INFO) {
+					System.out.println("recompute: right newly explored");
+				}
 				return true;
 			}
 			if (!computedSolution) {
 				computedSolution = true;
+				if (SID_DEBUG_RECOMPUTE_INFO) {
+					System.out.println("recompute: first computation");
+				}
 				return true;
 			}
+		}
+		if (solution != null && solution.getDiff() > 0 && !solution.isFake()) {
 			if (isNextToExit(left, x1, y1) || isNextToExit(right, x2, y2)) {
+				if (SID_DEBUG_RECOMPUTE_INFO) {
+					System.out.println("recompute: next to exit");
+				}
 				return true;
 			}
+		}
+		if (SID_DEBUG_RECOMPUTE_INFO) {
+			System.out.println("no recompute: fall through");
 		}
 		return false;
 	}
