@@ -17,10 +17,10 @@ import mirroruniverse.sim.Player;
 
 public class G6Player implements Player {
 
-	public static final boolean DEBUG = true;
+	public static final boolean DEBUG = false;
 	public static final boolean SID_DEBUG = false;
 	public static final boolean SID_DEBUG_VERBOSE = false;
-	public static final boolean SID_DEBUG_RECOMPUTE_INFO = true;
+	public static final boolean SID_DEBUG_RECOMPUTE_INFO = false;
 	private static final boolean CRASH_ON_ERROR = false;
 	
 	private static final int MAX_MAP_SIZE = 100;
@@ -41,7 +41,7 @@ public class G6Player implements Player {
 	private int[][] right = new int[INTERNAL_MAP_SIZE][INTERNAL_MAP_SIZE];
 	
 	//TODO: tune this
-	private static final int PATHS_TO_TRY_IN_EXPLORATION = 500;
+	private static final int PATHS_TO_TRY_IN_EXPLORATION = 200;
 	
 	private Node currentLocationLeft;
 	private Node currentLocationRight;
@@ -703,7 +703,7 @@ public class G6Player implements Player {
 			if (i==path.size()) break;
 			
 			Edge e = path.get(i);
-			System.out.print( " (" + e.move + "); ");
+			if (DEBUG) System.out.print( " (" + e.move + "); ");
 			
 			for (Edge e2 : start.edges) {
 				if (e.move == e2.move) {

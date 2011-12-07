@@ -1,35 +1,32 @@
-1, 30, 1, -1, maps/g7maps/map_50_50_illusion_1.txt
-1, 30, 1, -1, maps/g7maps/map_50_50_illusion_2.txt
-
--1, -1, 2, -1, maps/g5maps/g5bigmap1.txt
--1, -1, 2, -1, maps/g5maps/g5bigmap2.txt
-
-25, 25, 5, 3, 0.2, 2
-25, 25, 5, 4, 0.2, 3
-
-1, 30, 1, -1, maps/g7maps/map_50_50_illusion_1.txt
-1, 30, 1, -1, maps/g7maps/map_50_50_illusion_2.txt
-
--1, -1, 5, -1, maps/Board1_L.txt
--1, -1, 5, -1, maps/Board1_R.txt
-
 1, 30, 1, -1, maps/g2maps/PipeMaze_A_51_12.txt
 1, 30, 1, -1, maps/g2maps/PipeMaze_B_51_12.txt
 
-80, 80, 5, 3, 0.2, 2
-80, 80, 5, 4, 0.2, 3
+1, 30, 1, -1, maps/g1Maps/secondbigmap1.txt
+1, 30, 1, -1, maps/g1Maps/secondbigmap2.txt
+
+-1, -1, 2, -1, maps/lessEasyLeft.txt
+-1, -1, 2, -1, maps/lessEasyRight.txt
+
+100, 100, 1, 6, 0.2, 100
+100, 100, 1, 5, 0.2, 101
+
+-1, -1, 1, -1, maps/Board1_L.txt
+-1, -1, 1, -1, maps/Board1_R.txt
+
+-1, -1, 5, -1, maps/g5maps/g5bigmap1.txt
+-1, -1, 5, -1, maps/g5maps/g5bigmap2.txt
+
+1, 30, 5, -1, maps/g7maps/map_50_50_illusion_1.txt
+1, 30, 5, -1, maps/g7maps/map_50_50_illusion_2.txt
+
+25, 25, 5, 3, 0.2, 2
+25, 25, 5, 4, 0.2, 3
 
 1, 30, 1, -1, maps/g1Maps/secondbigmap1.txt
 1, 30, 1, -1, maps/g1Maps/secondbigmap2.txt
 
 1, 30, 100, -1, maps/g7maps/map_50_50_illusion_1.txt
 1, 30, 100, -1, maps/g7maps/map_50_50_illusion_2.txt
-
-1, 30, 2, -1, maps/g1Maps/secondbigmap1.txt
-1, 30, 2, -1, maps/g1Maps/secondbigmap2.txt
-
--1, -1, 2, -1, maps/lessEasyLeft.txt
--1, -1, 2, -1, maps/lessEasyRight.txt
 
 -1, -1, 2, -1, maps/empty_massive_l.txt
 -1, -1, 2, -1, maps/empty_massive_r.txt
