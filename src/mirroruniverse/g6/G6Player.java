@@ -305,7 +305,7 @@ public class G6Player implements Player {
 		return i+","+j;
 	}
 	
-	private int explore(int[][] leftView, int[][] rightView) {
+	int explore(int[][] leftView, int[][] rightView) {
 		if (!radiiDiscovered) {
 			radiiDiscovered = true;
 			r1 = (leftView.length-1) / 2;
@@ -440,6 +440,9 @@ public class G6Player implements Player {
 
 	private int doLookAndMove(int[][] leftView, int[][] rightView) {
 		if (!radiiDiscovered) {
+			if (G6Player.SID_DEBUG) {
+				System.out.println("Player called.");
+			}
 			r1 = (leftView.length-1) / 2;
 			r2 = (rightView.length-1) / 2;
 		}

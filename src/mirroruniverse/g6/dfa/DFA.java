@@ -21,7 +21,7 @@ public class DFA {
 	private Map<String, State> stateMap;
 	private State startState;
 	private static final int THRESHOLD_PRODUCT_DIST = 100;
-	private static final boolean ENABLE_GOAL_FABRICATION = false;
+	private static final boolean ENABLE_GOAL_FABRICATION = true;
 	private static final int THRESHOLD_DIST = 20;
 	
 	// Anything bigger than 1 isn't actually guaranteed if the sol length is
