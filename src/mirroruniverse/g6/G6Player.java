@@ -609,6 +609,7 @@ public class G6Player implements Player {
 		}
 		
 		if (paths.isEmpty()) {
+			if (DEBUG) System.out.println("\nThis is bad, no paths found!");
 			return null;
 		}
 		
@@ -778,6 +779,13 @@ private int obstaclesEncountered(Node start, List<Edge> path) {
 		public Node from;
 		public Node to;
 		public Move move;
+		public int hashCode() {
+			return move.hashCode();
+		}
+		public boolean equals(Object other) {
+			if (!(other instanceof Edge)) return false;
+			return move == ((Edge)other).move;
+		}
 		public String toString() { return move.toString(); }
 	}
 }
