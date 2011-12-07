@@ -17,7 +17,7 @@ import mirroruniverse.sim.Player;
 
 public class G6Player implements Player {
 
-	public static final boolean DEBUG = false;
+	public static final boolean DEBUG = true;
 	public static final boolean SID_DEBUG = true;
 	public static final boolean SID_DEBUG_VERBOSE = false;
 	private static final boolean CRASH_ON_ERROR = true;
@@ -403,14 +403,13 @@ public class G6Player implements Player {
 		int dir = 0;
 		int dx, dy;
 		int leftMidX = leftView.length / 2;
-		int leftMidY = leftView[0].length / 2;
 		int rightMidX = rightView.length / 2;
 		do {
 			int[] deltas = { -1, 0, 1 };
 			dx = deltas[(int) (Math.random() * 3)];
 			dy = deltas[(int) (Math.random() * 3)];
-		} while(leftView[leftMidX + dx][leftMidY + dy] == exit ||
-				rightView[rightMidX + dx][rightMidX + dy] == exit);
+		} while((dx==0 && dy==0) || leftView[leftMidX + dy][leftMidX + dx] == exit ||
+				rightView[rightMidX + dy][rightMidX + dx] == exit);
 		dir = Utils.moveToShen(Utils.dxdyToMove(dx, dy));
 		if (DEBUG) {
 			System.out.println(dir);
