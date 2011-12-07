@@ -94,7 +94,8 @@ public class MirrorUniverse
 		}
 		
 		//TODO remove this
-		int cutOff = 10000;		
+		int cutOff = 10000;
+		
 		int intStep = 0;
 		while ( !mumMapL.getMapOver() || !mumMapR.getMapOver() )
 		{
@@ -107,13 +108,7 @@ public class MirrorUniverse
 			try {
 				System.out.println( intStep + "::::: " +
 						mumMapL.getMapOver() + "\t" + mumMapR.getMapOver());
-				
-				
-				if (mumMapL.getMapOver() || mumMapR.getMapOver()) {
-//					System.exit(1);
-				}
-				
-				
+				System.out.println( intStep + ":::::" );
 				if ( intStep != 0 )
 				{
 					bfrReplay.write( ", " );
