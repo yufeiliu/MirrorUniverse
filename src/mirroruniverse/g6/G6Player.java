@@ -84,10 +84,9 @@ public class G6Player implements Player {
 	private Solver solver;
 	
 	private boolean didExhaustiveCheck;
-	private boolean computedSolutionWhenFullyExplored;
-	private boolean leftCompletelyExplored, rightCompletelyExplored;
-	private boolean oldLeftExitFound, oldRightExitFound;
-	private int leftUnknownAroundExit, rightUnknownAroundExit;
+	private boolean computedSolution;	
+	private boolean computedSolutionWhenRightFullyExplored;
+	private boolean computedSolutionWhenLeftFullyExplored;
 
 	public G6Player() {
 		// Set all points to be unknown.
@@ -107,85 +106,40 @@ public class G6Player implements Player {
 	}
 	
 	private boolean shouldRecomputeSolution() {		
-		// recompute only:
+		// recompute when:
 			// we finish examining a fake solution
 			// when we first see the exits, 
-			// when we uncover squares around the exit, 
-			// and after we've explored all of the board.
+			// after we've explored all of either board.
+			// when we're adjacent to an exit
 		
 		if (solution != null && solution.isFake() && solution.isCompleted()) {
 			return true;
 		}
-		if (computedSolutionWhenFullyExplored) {
+		if (computedSolutionWhenLeftFullyExplored &&
+				computedSolutionWhenRightFullyExplored) {
 			return false;
 		}
-		if (solution == null) {
-			if (isFullyExplored()) {
-				computedSolutionWhenFullyExplored = true;
-			}
-			return true;
-		}
-		// This means we don't recompute a good solution if we see a better
-		// path as we explore. 
-		if (solution != null && solution.getDiff() == 0) {
-			return false;
-		}
-		
-		boolean nextToLeftExit = isNextToExit(left, x1, y1);
-		boolean nextToRightExit = isNextToExit(right, x2, y2);
-		boolean nextToEitherExit = nextToLeftExit || nextToRightExit;
-		
-		boolean newLeftCompletelyExplored = numSquaresUnknown(left) == 0;
-		boolean newRightCompletelyExplored = numSquaresUnknown(right) == 0;
-		boolean eitherNewlyCompletelyExplored = 
-				(!leftCompletelyExplored && newLeftCompletelyExplored) 
-				|| (!rightCompletelyExplored && newRightCompletelyExplored);
-		leftCompletelyExplored = newLeftCompletelyExplored;
-		rightCompletelyExplored = newRightCompletelyExplored;
-		
-		boolean eitherExitNewlyFound = (!oldLeftExitFound && leftExitFound) || (!oldRightExitFound && rightExitFound);
-		oldLeftExitFound = leftExitFound;
-		oldRightExitFound = rightExitFound;
-		
-		int newLeftUnknownAroundExit = numSquaresUnknownAroundExit(left, r1);
-		int newRightUnknownAroundExit = numSquaresUnknownAroundExit(right, r2);
-		boolean eitherUnknownAroundExitNewlyUncovered = (newLeftUnknownAroundExit < leftUnknownAroundExit) || (newRightUnknownAroundExit < rightUnknownAroundExit);
-		leftUnknownAroundExit = newLeftUnknownAroundExit;
-		rightUnknownAroundExit = newRightUnknownAroundExit;
-
-		return nextToEitherExit || eitherNewlyCompletelyExplored || eitherExitNewlyFound || eitherUnknownAroundExitNewlyUncovered;
-	}
-	
-	private int numSquaresUnknown(int[][] knowledge) {
-		int count = 0;
-		for(int i = 0; i < knowledge.length; i++) {
-			for(int j = 0; j < knowledge[0].length; j++) {
-				if(knowledge[j][i] == Utils.entitiesToShen(Entity.UNKNOWN)) {
-					count++;
+		if (solution == null || solution.getDiff() > 0) {
+			if (isLeftFullyExplored() && !computedSolutionWhenLeftFullyExplored) {
+				if (isRightFullyExplored()) {
+					computedSolutionWhenRightFullyExplored = true;	
 				}
+				computedSolutionWhenLeftFullyExplored = true;
+				return true;
+			}
+			if (isRightFullyExplored() && !computedSolutionWhenRightFullyExplored) {
+				computedSolutionWhenRightFullyExplored = true;
+				return true;
+			}
+			if (!computedSolution) {
+				computedSolution = true;
+				return true;
+			}
+			if (isNextToExit(left, x1, y1) || isNextToExit(right, x2, y2)) {
+				return true;
 			}
 		}
-		return count;
-	}
-	
-	private int numSquaresUnknownAroundExit(int[][] knowledge, int r) {
-		int x = 0;
-		int y = 0;
-		for(int i = 0; i < knowledge.length; i++)
-			for(int j = 0; j < knowledge[0].length; j++)
-				if(knowledge[i][j] == Utils.entitiesToShen(Entity.EXIT)) {
-					y = i;
-					x = j;
-				}
-		int count = 0;
-		for(int i = Math.max(x - r, 0); i < Math.min(x + r + 1, knowledge[0].length); i++) {
-			for(int j = Math.max(y - r, 0); j < Math.min(y + r + 1, knowledge.length); j++) {
-				if(knowledge[j][i] == Utils.entitiesToShen(Entity.UNKNOWN)) {
-					count++;
-				}
-			}
-		}
-		return count;
+		return false;
 	}
 	
 	private boolean isNextToExit(int[][] knowledge, int x, int y) {
