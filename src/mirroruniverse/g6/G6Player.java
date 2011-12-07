@@ -21,11 +21,17 @@ public class G6Player implements Player {
 	public static final boolean SID_DEBUG = true;
 	public static final boolean SID_DEBUG_VERBOSE = false;
 	public static final boolean SID_DEBUG_RECOMPUTE_INFO = true;
-	private static final boolean CRASH_ON_ERROR = true;
+	private static final boolean CRASH_ON_ERROR = false;
 	
 	private static final int MAX_MAP_SIZE = 100;
 	private static final int INTERNAL_MAP_SIZE = MAX_MAP_SIZE * 2;
 	private static final double NUM_MOVES = 8;
+	
+	
+	/* TODO: tune these */
+	private static final int WEIGHT_ON_PATH_LENGTH = 1;
+	private static final int WEIGHT_ON_SQUARES_UNCOVERED_BY_OTHER_PLAYER = 3;
+	private static final int WEIGHT_ON_KEEPING_ALIGNMENT = 10;
 	
 	private boolean leftExitReachable;
 	private boolean rightExitReachable;
@@ -329,11 +335,23 @@ public class G6Player implements Player {
 			// happen after one player has exited.
 			dir = exploreRandom(leftView, rightView);
 			updateCentersAndExitStatus(leftView, rightView, leftView.length/2, rightView.length/2, MUMap.aintDToM[dir][0], MUMap.aintDToM[dir][1]);
+			if (DEBUG) System.out.println("This was random!");
 			return dir;
 		}
 		//System.out.println(exploreGoal);
 		Edge edge = exploreGoal.remove(0);
 		dir = Utils.moveToShen(edge.move);
+		
+		int leftMid = leftView.length / 2;
+		int rightMid = rightView.length / 2;
+		if (leftView[leftMid + MUMap.aintDToM[dir][1]][leftMid + MUMap.aintDToM[dir][0]] == Utils.entitiesToShen(Entity.EXIT)
+				|| rightView[rightMid + MUMap.aintDToM[dir][1]][rightMid + MUMap.aintDToM[dir][0]] == Utils.entitiesToShen(Entity.EXIT)) {
+			dir = exploreRandom(leftView, rightView);
+			exploreGoal = null;
+			updateCentersAndExitStatus(leftView, rightView, leftView.length/2, rightView.length/2, MUMap.aintDToM[dir][0], MUMap.aintDToM[dir][1]);
+			if (DEBUG) System.out.println("This was random!");
+			return dir;
+		}
 		
 		/*
 		if (isTwitching()) {
@@ -357,7 +375,7 @@ public class G6Player implements Player {
 			updateCentersAndExitStatus(leftView, rightView, leftView.length/2, rightView.length/2, MUMap.aintDToM[dir][0], MUMap.aintDToM[dir][1]);
 			return dir;
 		}
-		
+		if (DEBUG) System.out.println("This was planned");
 		return dir;
 	}
 
@@ -421,14 +439,13 @@ public class G6Player implements Player {
 		int dir = 0;
 		int dx, dy;
 		int leftMidX = leftView.length / 2;
-		int leftMidY = leftView[0].length / 2;
 		int rightMidX = rightView.length / 2;
 		do {
 			int[] deltas = { -1, 0, 1 };
 			dx = deltas[(int) (Math.random() * 3)];
 			dy = deltas[(int) (Math.random() * 3)];
-		} while(leftView[leftMidX + dx][leftMidY + dy] == exit ||
-				rightView[rightMidX + dx][rightMidX + dy] == exit);
+		} while((dx==0 && dy==0) || leftView[leftMidX + dy][leftMidX + dx] == exit ||
+				rightView[rightMidX + dy][rightMidX + dx] == exit);
 		dir = Utils.moveToShen(Utils.dxdyToMove(dx, dy));
 		if (DEBUG) {
 			System.out.println(dir);
@@ -591,7 +608,7 @@ public class G6Player implements Player {
 				if (uncoveredInOtherMap > -1) {
 					//TODO: apparently uncoveredInOtherMap alone is a horrible ranking heuristic on random maps
 					//TODO: why 10? just putting an arbitrary value for now
-					paths.add(new Pair<Integer, LinkedList<Edge>>(-1 * cur.path.size() + 3 * uncoveredInOtherMap - obstaclesEncountered * 10, cur.path));
+					paths.add(new Pair<Integer, LinkedList<Edge>>(-WEIGHT_ON_PATH_LENGTH * cur.path.size() + WEIGHT_ON_SQUARES_UNCOVERED_BY_OTHER_PLAYER * uncoveredInOtherMap - obstaclesEncountered * WEIGHT_ON_KEEPING_ALIGNMENT, cur.path));
 					
 					if (paths.size() >= PATHS_TO_TRY_IN_EXPLORATION) {
 						break;
