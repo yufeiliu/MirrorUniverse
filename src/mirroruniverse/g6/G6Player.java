@@ -46,6 +46,9 @@ public class G6Player implements Player {
 	private Node currentLocationLeft;
 	private Node currentLocationRight;
 	
+	
+	private boolean exploreGoalIsExit = true;
+	
 	/*
 	 * The current location of each player within the 200x200 grid.
 	 */
@@ -322,7 +325,14 @@ public class G6Player implements Player {
 		currentLocationRight = updateGraph(cacheRight, rightView, x2, y2, r2);
 		
 		if (exploreGoal == null || exploreGoal.size()==0) {
-			exploreGoal = getFringe(!isLeftExitReachable());
+			
+			if (exploreGoalIsExit) {
+				exploreGoal = getFringe(!isLeftExitReachable());
+			} else {
+				exploreGoal = getFringe(!isLeftFullyExplored());
+			}
+			
+			
 			
 			if (DEBUG) {
 				System.out.println("Goal path generated");
@@ -840,6 +850,9 @@ private int obstaclesEncountered(Node start, List<Edge> path) {
 
 	private int getMultiSolutionStep() {
 		if (areExitsFound()) {
+			
+			exploreGoalIsExit = false;
+			
 			if (!shouldRecomputeSolution()) {
 				if (solution == null) {
 					return -1; 
