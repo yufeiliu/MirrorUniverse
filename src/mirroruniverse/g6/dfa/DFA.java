@@ -21,8 +21,15 @@ public class DFA {
 	private Map<String, State> stateMap;
 	private State startState;
 	private static final int THRESHOLD_PRODUCT_DIST = 100;
-	private static final boolean ENABLE_FALSIFICATION = true;
+	private static final boolean ENABLE_GOAL_FABRICATION = true;
 	private static final int THRESHOLD_DIST = 20;
+	
+	// Anything bigger than 1 isn't actually guaranteed if the sol length is
+	// less than 1
+	private static final int MIN_STATES = 1;
+	
+	// TODO - experiment with this
+	private static final int MIN_DIST = 3;
 
 	
 	public DFA() {
@@ -81,6 +88,10 @@ public class DFA {
 
 		State node = new State(entity, isGoal);
 		allStates.put(makeKey(x, y), node);
+		
+		if (isGoal) {
+			node.setBanned(true);
+		}
 		
 		if (isStart) {
 			addStartState(node);
@@ -141,11 +152,10 @@ public class DFA {
 	}
 	
 	public static boolean isPartialGoal(DFA first, DFA other, State selfState, State otherState) {
-		return selfState.isBanned() || otherState.isBanned() ||
-				(selfState.isGoal() && !otherState.isGoal() &&
+		return (selfState.isBanned() && !otherState.isBanned() &&
 						selfState != first.startState) ||
-				(!selfState.isGoal() && otherState.isGoal() &&
-							otherState != other.startState);
+				(!selfState.isBanned() && otherState.isBanned() &&
+						otherState != other.startState);
 	}
 	
 	/*
@@ -154,25 +164,10 @@ public class DFA {
 	 * 
 	 * TODO - cap exploration
 	 */
-	public static Solution findShortestPathBFS(DFA first, DFA other, int offset) {
-		
-		ArrayList<Move> firstSol = first.findShortestPath();
-		ArrayList<Move> otherSol = other.findShortestPath();
-		
-		int firstDist = firstSol.size(); 
-		int otherDist = otherSol.size();
-		int productDist = firstDist * otherDist;
-		boolean isFake = false;
-		if (ENABLE_FALSIFICATION) {
-			if (productDist > THRESHOLD_PRODUCT_DIST ||
-					firstDist > THRESHOLD_DIST ||
-					otherDist > THRESHOLD_DIST) {
-				isFake = true;
-				falsifyExit(first, firstSol,
-						(int) Math.min(firstDist, Math.sqrt(THRESHOLD_PRODUCT_DIST)));
-				falsifyExit(other, otherSol, 
-						(int) Math.min(otherDist, Math.sqrt(THRESHOLD_PRODUCT_DIST)));
-			}
+	public static Solution findShortestPath(DFA first, DFA other, int offset) {
+		boolean isFabricated = false;
+		if (ENABLE_GOAL_FABRICATION) {
+			isFabricated = fabricate(first, other);
 		}
 		
 		// States to evaluate. They should return in priority order. However,
@@ -189,23 +184,18 @@ public class DFA {
 		
 		String key = makeKey(first.startState, other.startState);
 		
-		openSet.add(new State(
+		State start = new State(
 				null,
 				first.startState.isGoal() && other.startState.isGoal(),
-				key));
+				key);
+		openSet.add(start);
 		states.add(key);
 		
 		while (!openSet.isEmpty()) {
-			
-			if (firstDist == 1) {
-				@SuppressWarnings("unused")
-				boolean ig = first.startState.isGoal();
-			}
-			
 			State current = openSet.poll();
 			if (current.isGoal()) {
 				ArrayList<Move> steps = recoverPath(current, cameFrom);
-				return new Solution(steps, offset, isFake);
+				return new Solution(steps, offset, isFabricated);
 			}
 			// Iterate through different moves.
 			for (int i = 0; i < 8; i++) {
@@ -213,48 +203,83 @@ public class DFA {
 				Transition firstTrans = first.getState(pairKeys[0]).getTransitions()[i];
 				Transition otherTrans = other.getState(pairKeys[1]).getTransitions()[i];
 				
-				if (firstTrans != null && otherTrans != null) {
-					State firstDest = firstTrans.end;
-					State otherDest = otherTrans.end;
-					String destKey = makeKey(firstDest, otherDest);			
-					
-					if (states.contains(destKey) ||
-							isPartialGoal(first, other, firstDest, otherDest)) {
-						continue;
-					}
-					
-					State next = new State(
-							null,
-							firstDest.isGoal() && otherDest.isGoal(),
-							destKey);
-					cameFrom.put(next, new Transition(
-							/* firstTrans val is the same as otherTrans val. */
-							firstTrans.value,
-							current,
-							next));
-					states.add(destKey);
-					openSet.add(next);
+				if (firstTrans == null || otherTrans == null) {
+					continue;
 				}
+				
+				State firstDest = firstTrans.end;
+				State otherDest = otherTrans.end;
+				String destKey = makeKey(firstDest, otherDest);
+				
+				if (states.contains(destKey) ||
+						isPartialGoal(first, other, firstDest, otherDest)) {
+					continue;
+				}
+				
+				State next = new State(
+						null,
+						firstDest.isGoal() && otherDest.isGoal(),
+						destKey);
+				cameFrom.put(next, new Transition(
+						/* firstTrans val is the same as otherTrans val. */
+						firstTrans.value,
+						current,
+						next));
+				states.add(destKey);
+				openSet.add(next);
 			}
 		}
+		System.err.println("No approximation found!");
+		// TODO - remove
+		System.exit(1);
 		return null;
 	}
-	
-	private static void falsifyExit(DFA dfa, ArrayList<Move> sol,
-			int targetDist) {
+
+	private static boolean fabricate(DFA first, DFA other) {
+		ArrayList<Move> firstSol = first.findShortestPath();
+		ArrayList<Move> otherSol = other.findShortestPath();
 		
-		State current = dfa.getStartState();
-		for (int i = 0; i < sol.size() - 1 && i < targetDist; i++) {
-			int transitionIndex = Utils.moveToShen(sol.get(i)) - 1;
-			current = current.getTransitions()[transitionIndex].getEnd();
+		int firstDist = firstSol.size(); 
+		int otherDist = otherSol.size();
+		int productDist = firstDist * otherDist;
+		boolean isFake = false;
+		if (productDist > THRESHOLD_PRODUCT_DIST ||
+				firstDist > THRESHOLD_DIST ||
+				otherDist > THRESHOLD_DIST) {
+			isFake = true;
+			if (G6Player.SID_DEBUG) {
+				System.out.println("FAKE");
+			}
+			fabricateExits(first, firstSol,
+					(int) Math.min(firstDist, Math.sqrt(THRESHOLD_PRODUCT_DIST)));
+			fabricateExits(other, otherSol, 
+					(int) Math.min(otherDist, Math.sqrt(THRESHOLD_PRODUCT_DIST)));
+		} else {
+			if (G6Player.SID_DEBUG) {
+				System.out.println("REAL");
+			}
 		}
+		return isFake;
+	}
+	
+	private static void fabricateExits(DFA dfa, ArrayList<Move> sol,
+			int targetDist) {
 		for (State gs : dfa.goalStates) {
 			gs.setGoal(false);
 			gs.setBanned(true);
 		}
 		dfa.goalStates.clear();
-		current.setGoal(true);
-		dfa.goalStates.add(current);
+		
+		State current = dfa.getStartState();
+		for (int i = 0; i < sol.size() && i < targetDist; i++) {
+			if (i > MIN_DIST - 1 ||
+					(Math.min(sol.size(), targetDist) - 1 - MIN_STATES) <= i) {
+				current.setGoal(true);
+				dfa.goalStates.add(current);
+			}
+			int transitionIndex = Utils.moveToShen(sol.get(i)) - 1;
+			current = current.getTransitions()[transitionIndex].getEnd();
+		}
 	}
 
 	public ArrayList<Move> findShortestPath() {
@@ -376,6 +401,8 @@ public class DFA {
 						key);
 				newStates.put(key, s);
 				
+				s.setBanned(selfState.isBanned() || otherState.isBanned());
+				
 				// Add the state to the DFA
 				if (selfState == first.startState && otherState == other.startState) {
 					intersection.addStartState(s);
@@ -436,6 +463,7 @@ public class DFA {
 		for (State s : states) {
 			boolean isStart = (s == startState);
 			State newS = new State(s.getValue(), false);
+			newS.setBanned(s.isBanned());
 			copiedStates.put(s, newS);
 			if (isStart) {
 				other.addStartState(newS);
@@ -454,7 +482,12 @@ public class DFA {
 				State dest = copiedStates.get(t.getEnd());
 				newS.addTransition(t.getValue(), dest);
 				// TODO: we really want to check !s.isExit, not s.isGoal
-				if (!s.isGoal() && t.getEnd().isGoal() && !newS.isGoal()) {
+				if (/* Don't step on goal state by accident. */
+						!s.isBanned() &&
+						/* It's a goal if it's one away from the goal. */
+						t.getEnd().isGoal() &&
+						/* Don't add to the goal list twice. */
+						!newS.isGoal()) {
 					newS.setGoal(true);
 					other.goalStates.add(newS);
 				}

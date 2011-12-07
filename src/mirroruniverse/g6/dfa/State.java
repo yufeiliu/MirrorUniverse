@@ -76,7 +76,11 @@ public class State implements Comparable<State> {
 	}
 	
 	public boolean isBanned() {
-		return banned;
+		boolean isExit = value == Entity.EXIT;
+		if (banned != isExit) {
+			System.err.println("Invalid isBanned state.");
+		}
+		return isExit;
 	}
 	
 	public void setBanned(boolean banned) {

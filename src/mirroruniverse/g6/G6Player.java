@@ -18,7 +18,7 @@ import mirroruniverse.sim.Player;
 public class G6Player implements Player {
 
 	public static final boolean DEBUG = false;
-	public static final boolean SID_DEBUG = true;
+	public static final boolean SID_DEBUG = false;
 	public static final boolean SID_DEBUG_VERBOSE = false;
 	private static final boolean CRASH_ON_ERROR = true;
 	
@@ -35,8 +35,6 @@ public class G6Player implements Player {
 	
 	private Node currentLocationLeft;
 	private Node currentLocationRight;
-	// kept for debugging purposes
-	private int steps;
 	
 	/*
 	 * The current location of each player within the 200x200 grid.
@@ -307,7 +305,7 @@ public class G6Player implements Player {
 		return i+","+j;
 	}
 	
-	public int explore(int[][] leftView, int[][] rightView) {
+	private int explore(int[][] leftView, int[][] rightView) {
 		if (!radiiDiscovered) {
 			radiiDiscovered = true;
 			r1 = (leftView.length-1) / 2;
@@ -480,7 +478,6 @@ public class G6Player implements Player {
 			System.out.println(Utils.shenToMove(dir));
 		}
 
-		steps++;
 		return dir;
 	}
 
@@ -710,7 +707,7 @@ private int obstaclesEncountered(Node start, List<Edge> path) {
 			}
 			if (!didExhaustiveCheck && isFullyExplored()) {
 				didExhaustiveCheck = true;
-				solution = solver.solve(right, left, Solver.MAX_CUTOFF_TIME,
+				solution = solver.solve(left, right, Solver.MAX_CUTOFF_TIME,
 						Solver.DEFAULT_MIN_DISTANCE, Solver.MAX_DISTANCE);
 			} else {
 				if (SID_DEBUG) {
@@ -719,7 +716,7 @@ private int obstaclesEncountered(Node start, List<Edge> path) {
 					System.out.println("------");
 					System.out.println(Arrays.deepToString(left));
 				}
-				solution = solver.solve(right, left);
+				solution = solver.solve(left, right);
 			}
 			
 			if (solution != null) {

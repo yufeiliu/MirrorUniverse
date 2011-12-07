@@ -12,9 +12,6 @@ public class DFASolver extends Solver {
 				DEFAULT_MIN_DISTANCE, DEFAULT_MAX_DISTANCE);
 	}
 	
-	
-	// TODO: can this fail if we step back before the start state? This might
-	// mean that we generate a DFA with no exit state.
 	@Override
 	Solution solve(int[][] firstMap, int[][] secondMap, long cutoffTime,
 			int minAttempts, int maxAttempts) {
@@ -35,8 +32,13 @@ public class DFASolver extends Solver {
 			System.out.println("DFAs Created");
 		}
 		
-		steps = DFA.findShortestPathBFS(firstDFA, secondDFA, 0);
-//		steps = DFA.intersect(firstDFA, secondDFA).findShortestPath();
+		steps = DFA.findShortestPath(firstDFA, secondDFA, 0);
+		
+		
+		// TODO - remove
+		if (steps == null) {
+			return null;
+		}
 		
 		// This will try until we've found a solution, or have hit our time
 		// limit or max number of attempts. We can guarantee to try some min
@@ -51,10 +53,10 @@ public class DFASolver extends Solver {
 			
 			secondBack = secondBack.shiftGoals();
 			
-			steps = DFA.findShortestPathBFS(firstDFA, secondBack, attempts - 1);
+			steps = DFA.findShortestPath(firstDFA, secondBack, attempts);
 			if (steps == null) {
 				firstBack = firstBack.shiftGoals();
-				steps = DFA.findShortestPathBFS(firstBack, secondDFA, attempts - 1);
+				steps = DFA.findShortestPath(firstBack, secondDFA, attempts);
 			}
 			
 			attempts++;
