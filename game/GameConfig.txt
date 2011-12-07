@@ -1,3 +1,6 @@
+1, 30, 2, -1, maps/g1Maps/secondbigmap1.txt
+1, 30, 2, -1, maps/g1Maps/secondbigmap2.txt
+
 1, 30, 2, -1, maps/g7maps/map_50_50_illusion_1.txt
 1, 30, 2, -1, maps/g7maps/map_50_50_illusion_2.txt
 

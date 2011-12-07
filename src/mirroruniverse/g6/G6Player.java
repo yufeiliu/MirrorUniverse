@@ -652,10 +652,11 @@ public class G6Player implements Player {
 	}
 	
 	/*
-	 * return -1 if the path actually steps over an exit
+	 * return -1 if the path actually steps over an exit on the other map
 	 */
-	private int squaresUncovered(Node start, List<Edge> path) {
+	private int squaresUncovered(Node startingNode, List<Edge> path) {
 		
+		Node start = startingNode;
 		int uncovered = 0;
 		
 		for (Edge e : path) {
@@ -673,7 +674,7 @@ public class G6Player implements Player {
 			}
 			
 			if (!found) {
-				return ++uncovered;
+				return uncovered;
 			}
 		}
 		
