@@ -92,7 +92,7 @@ public class MirrorUniverse
 		}
 		
 		//TODO remove this
-		int cutOff = 10000;
+		int cutOff = 50;
 		
 		int intStep = 0;
 		while ( !mumMapL.getMapOver() || !mumMapR.getMapOver() )
