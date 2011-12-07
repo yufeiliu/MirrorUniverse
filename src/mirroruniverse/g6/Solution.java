@@ -77,4 +77,8 @@ public class Solution {
 		return s;
 	}
 
+	public boolean onFinalStep() {
+		return currentStep == steps.length - 1;
+	}
+
 }

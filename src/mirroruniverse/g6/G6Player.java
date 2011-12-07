@@ -156,6 +156,7 @@ public class G6Player implements Player {
 				return true;
 			}
 		}
+		/*
 		if (solution != null && solution.getDiff() > 0 && !solution.isFake()) {
 			if (isNextToExit(left, x1, y1) || isNextToExit(right, x2, y2)) {
 				if (SID_DEBUG_RECOMPUTE_INFO) {
@@ -164,6 +165,7 @@ public class G6Player implements Player {
 				return true;
 			}
 		}
+		*/
 		if (SID_DEBUG_RECOMPUTE_INFO) {
 			System.out.println("no recompute: fall through");
 		}
@@ -819,6 +821,9 @@ private int obstaclesEncountered(Node start, List<Edge> path) {
 				if (solution == null) {
 					return -1; 
 				} else {
+					if (solution.onFinalStep() && !isFullyExplored()) {
+						return -1;
+					}
 					return solution.getNextStep();
 				}
 			}
@@ -837,6 +842,9 @@ private int obstaclesEncountered(Node start, List<Edge> path) {
 			}
 			
 			if (solution != null) {
+				if (solution.onFinalStep() && !isFullyExplored()) {
+					return -1;
+				}
 				return solution.getNextStep();
 			}
 		}
