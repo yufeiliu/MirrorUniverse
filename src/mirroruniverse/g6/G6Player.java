@@ -277,12 +277,6 @@ public class G6Player implements Player {
 	}
 	
 	int explore(int[][] leftView, int[][] rightView) {
-		if (!radiiDiscovered) {
-			radiiDiscovered = true;
-			r1 = (leftView.length-1) / 2;
-			r2 = (rightView.length-1) / 2;
-		}
-		
 		currentLocationLeft = updateGraph(cacheLeft, leftView, x1, y1, r1);
 		currentLocationRight = updateGraph(cacheRight, rightView, x2, y2, r2);
 		
@@ -424,7 +418,7 @@ public class G6Player implements Player {
 	private int doLookAndMove(int[][] leftView, int[][] rightView) {
 		if (!radiiDiscovered) {
 			if (G6Player.SID_DEBUG) {
-				System.out.println("Player called.");
+				System.out.println("Player activated.");
 			}
 			r1 = (leftView.length-1) / 2;
 			r2 = (rightView.length-1) / 2;
@@ -437,7 +431,7 @@ public class G6Player implements Player {
 		int dir = -1;
 
 		if (!leftExited && !rightExited) {
-			dir = getSolutionStep();
+			dir = getMultiSolutionStep();
 		}
 
 		if (dir < 0) {
@@ -463,7 +457,7 @@ public class G6Player implements Player {
 	}
 
 	private int getSingleSolutionStep() {
-		// if there's no solution or old solution is completed
+		// If there's no solution or old solution is completed.
 		if (solution == null || solution.isCompleted()) {
 			if (leftExited) {
 				solution = solver.solve(right);
@@ -693,7 +687,7 @@ private int obstaclesEncountered(Node start, List<Edge> path) {
 		return false;
 	}
 
-	private int getSolutionStep() {
+	private int getMultiSolutionStep() {
 		if (areExitsFound()) {
 			if (!shouldRecomputeSolution()) {
 				return solution.getNextStep();

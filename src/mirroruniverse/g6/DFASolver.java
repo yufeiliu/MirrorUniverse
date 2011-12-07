@@ -46,7 +46,6 @@ public class DFASolver extends Solver {
 			}
 			
 			secondBack = secondBack.shiftGoals();
-			
 			steps = DFA.findShortestPath(firstDFA, secondBack, attempts);
 			if (steps == null) {
 				firstBack = firstBack.shiftGoals();
