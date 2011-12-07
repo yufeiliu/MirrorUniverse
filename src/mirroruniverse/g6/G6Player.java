@@ -361,18 +361,25 @@ public class G6Player implements Player {
 
 	private boolean isTwitching() {
 		int MAX_CACHE = 10;
-		if(leftTwitching.size() == MAX_CACHE)
-			leftTwitching.remove(0);
-		if(rightTwitching.size() == MAX_CACHE)
-			rightTwitching.remove(0);
-		leftTwitching.add(new Pair<Integer,Integer>(x1, y1));
-		rightTwitching.add(new Pair<Integer, Integer>(x2, y2));
+		if(leftTwitching.size() < MAX_CACHE || rightTwitching.size() < MAX_CACHE) {
+			leftTwitching.add(new Pair<Integer,Integer>(x1, y1));
+			rightTwitching.add(new Pair<Integer, Integer>(x2, y2));
+			return false;
+		}
+			
+		leftTwitching.remove(0);
+		rightTwitching.remove(0);
 		
 		Pair<Integer, Integer> oldestLeft = leftTwitching.get(0);
 		Pair<Integer, Integer> oldestRight = rightTwitching.get(0);
 		int THRESHOLD = 5;
-		return ((Math.abs(oldestLeft.getFront() - x1) < THRESHOLD && Math.abs(oldestLeft.getBack() - y1) < THRESHOLD)
-				|| (Math.abs(oldestRight.getFront() - x2) < THRESHOLD && Math.abs(oldestRight.getBack() - y2) < THRESHOLD));
+		for(int i = 0; i < MAX_CACHE; i++) {
+			//if either player moved outside of the threshold even once, they are not twitching
+			if((Math.abs(oldestLeft.getFront() - x1) > THRESHOLD && Math.abs(oldestLeft.getBack() - y1) > THRESHOLD)
+				|| (Math.abs(oldestRight.getFront() - x2) > THRESHOLD && Math.abs(oldestRight.getBack() - y2) > THRESHOLD))
+				return false;
+		}
+		return true;
 	}
 	
 	/*
