@@ -18,7 +18,7 @@ import mirroruniverse.sim.Player;
 public class G6Player implements Player {
 
 	public static final boolean DEBUG = false;
-	public static final boolean SID_DEBUG = false;
+	public static final boolean SID_DEBUG = true;
 	public static final boolean SID_DEBUG_VERBOSE = false;
 	private static final boolean CRASH_ON_ERROR = true;
 	
@@ -60,8 +60,8 @@ public class G6Player implements Player {
 	private int leftUnknown;
 	private int rightUnknown;
 	
-	private boolean radiiDiscovered = false;
-	private boolean closeToExit = false;
+	private boolean radiiDiscovered;
+	private boolean closeToExit;
 
 	private HashMap<String, Node> cacheLeft = new HashMap<String, Node>();
 	private HashMap<String, Node> cacheRight = new HashMap<String, Node>();
@@ -445,6 +445,7 @@ public class G6Player implements Player {
 			}
 			r1 = (leftView.length-1) / 2;
 			r2 = (rightView.length-1) / 2;
+			radiiDiscovered = true;
 		}
 		
 		updateKnowledge(left, x1, y1, leftView);

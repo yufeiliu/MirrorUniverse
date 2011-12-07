@@ -151,10 +151,10 @@ public class DFA {
 		return stateMap.get(k);
 	}
 	
-	public static boolean isPartialGoal(DFA first, DFA other, State selfState, State otherState) {
-		return (selfState.isBanned() && !otherState.isBanned() &&
-						selfState != first.startState) ||
-				(!selfState.isBanned() && otherState.isBanned() &&
+	public static boolean isPartialGoal(DFA first, DFA other, State firstState, State otherState) {
+		return (firstState.isBanned() && !(otherState.isBanned() || otherState.isGoal()) &&
+						firstState != first.startState) ||
+				(!(firstState.isBanned() || firstState.isGoal())&& otherState.isBanned() &&
 						otherState != other.startState);
 	}
 	
@@ -229,9 +229,9 @@ public class DFA {
 				openSet.add(next);
 			}
 		}
-		System.err.println("No path to exit found!");
-		// TODO - remove
-		System.exit(1);
+		if (G6Player.SID_DEBUG) {
+			System.out.println("No path to exit found!");
+		}
 		return null;
 	}
 

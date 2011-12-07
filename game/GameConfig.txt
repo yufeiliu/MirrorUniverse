@@ -1,8 +1,8 @@
--1, -1, 100, -1, maps/empty_massive_l.txt
--1, -1, 100, -1, maps/empty_massive_r.txt
+-1, -1, 30, -1, maps/Board1_L.txt
+-1, -1, 30, -1, maps/Board1_R.txt
 
-100, 100, 100, 1, 0.01, 2
-100, 100, 100, 2, 0.01, 3
+-1, -1, 100, -1, maps/g7maps/map_50_50_illusion_1.txt
+-1, -1, 100, -1, maps/g7maps/map_50_50_illusion_2.txt
 
 60, 60, 100, 1, 0.4, 2
 60, 60, 100, 2, 0.2, 3
@@ -10,14 +10,11 @@
 100, 100, 100, 3, 0.4, 2
 100, 100, 100, 4, 0.2, 3
 
+-1, -1, 100, -1, maps/empty_massive_l.txt
+-1, -1, 100, -1, maps/empty_massive_r.txt
+
 -1, -1, 100, -1, maps/g2maps/PipeMaze_A_51_12.txt
 -1, -1, 100, -1, maps/g2maps/PipeMaze_B_51_12.txt
-
--1, -1, 2, -1, maps/g7maps/map_50_50_illusion_1.txt
--1, -1, 2, -1, maps/g7maps/map_50_50_illusion_2.txt
-
--1, -1, 30, -1, maps/Board1_L.txt
--1, -1, 30, -1, maps/Board1_R.txt
 
 -1, -1, 2, -1, maps/identical/left.txt
 -1, -1, 2, -1, maps/identical/right.txt

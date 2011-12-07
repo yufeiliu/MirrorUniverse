@@ -29,23 +29,17 @@ public class DFASolver extends Solver {
 		secondDFA = secondBack = new DFA(secondMap);
 		
 		if (G6Player.SID_DEBUG) {
-			System.out.println("DFAs Created");
+			System.out.println("DFAs created; finding shortest path.");
 		}
 		
 		steps = DFA.findShortestPath(firstDFA, secondDFA, 0);
-		
-		
-		// TODO - remove
-		if (steps == null) {
-			return null;
-		}
 		
 		// This will try until we've found a solution, or have hit our time
 		// limit or max number of attempts. We can guarantee to try some min
 		// number of attempts before we stop because of time.
 		while (steps == null && attempts < maxAttempts &&
 				(System.currentTimeMillis() - startTime < cutoffTime
-						|| attempts < minAttempts)) {
+						|| attempts <= minAttempts)) {
 			
 			if (G6Player.SID_DEBUG) {
 				System.out.println("Attempt " + attempts);
