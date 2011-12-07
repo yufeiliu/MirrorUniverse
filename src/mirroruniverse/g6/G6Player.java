@@ -314,8 +314,7 @@ public class G6Player implements Player {
 		currentLocationRight = updateGraph(cacheRight, rightView, x2, y2, r2);
 		
 		if (exploreGoal == null || exploreGoal.size()==0) {
-			//exploreGoal = getFringe(!isLeftExitFound());
-			exploreGoal = getFringe(false);
+			exploreGoal = getFringe(!isLeftExitFound());
 			
 			if (DEBUG) System.out.println("Goal path generated");
 			if (DEBUG) System.out.println(exploreGoal);
