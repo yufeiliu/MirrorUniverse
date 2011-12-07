@@ -239,6 +239,13 @@ public class DFA {
 		ArrayList<Move> firstSol = first.findShortestPath();
 		ArrayList<Move> otherSol = other.findShortestPath();
 		
+		if (G6Player.DEBUG) {
+			if (firstSol == null || otherSol == null) {
+				System.err.println("This should not be called after solving.");
+				System.exit(1);
+			}
+		}
+		
 		int firstDist = firstSol.size(); 
 		int otherDist = otherSol.size();
 		int productDist = firstDist * otherDist;
