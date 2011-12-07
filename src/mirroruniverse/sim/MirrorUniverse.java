@@ -93,7 +93,7 @@ public class MirrorUniverse
 		
 		//TODO remove this
 
-		int cutOff = 2000;
+		int cutOff = 2500;
 		
 		int intStep = 0;
 		while ( !mumMapL.getMapOver() || !mumMapR.getMapOver() )
@@ -105,7 +105,7 @@ public class MirrorUniverse
 			
 			int intMove = plrCurrent.lookAndMove( aintViewL, aintViewR );
 			try {
-				//System.out.println( intStep + ":::::" );
+				System.out.println( intStep + ":::::" );
 				if ( intStep != 0 )
 				{
 					bfrReplay.write( ", " );

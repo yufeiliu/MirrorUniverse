@@ -25,6 +25,9 @@ public class G6Player implements Player {
 	private static final int INTERNAL_MAP_SIZE = MAX_MAP_SIZE * 2;
 	private static final double NUM_MOVES = 8;
 	
+	private boolean leftExitReachable;
+	private boolean rightExitReachable;
+	
 	// Stores maps.
 	private int[][] left = new int[INTERNAL_MAP_SIZE][INTERNAL_MAP_SIZE];
 	private int[][] right = new int[INTERNAL_MAP_SIZE][INTERNAL_MAP_SIZE];
@@ -270,7 +273,7 @@ public class G6Player implements Player {
 					int di = MUMap.aintDToM[d][1];
 					
 					if (i + di <= iMax && i + di >= 0 &&
-							j + dj <= jMax && j + dj >= 0) {
+							j + dj <= jMax && j + dj >= 0 && curX + di >=0 && curY + dj >= 0) {
 						int neighborVal = v[i+di][j+dj];
 						if (Utils.shenToEntities(neighborVal) == Entity.SPACE || Utils.shenToEntities(neighborVal) == Entity.PLAYER || Utils.shenToEntities(neighborVal) == Entity.EXIT) {
 							Node neighbor = getFromCache(cache, (v[i+di][j+dj]==Utils.entitiesToShen(Entity.PLAYER) ? Utils.entitiesToShen(Entity.SPACE) : v[i+di][j+dj]), curX + di, curY + dj);
@@ -329,7 +332,7 @@ public class G6Player implements Player {
 		currentLocationRight = updateGraph(cacheRight, rightView, x2, y2, r2);
 		
 		if (exploreGoal == null || exploreGoal.size()==0) {
-			exploreGoal = getFringe(!isLeftExitFound());
+			exploreGoal = getFringe(!isLeftExitReachable());
 			
 			if (DEBUG) System.out.println("Goal path generated");
 			if (DEBUG) System.out.println(exploreGoal);
@@ -701,6 +704,70 @@ private int obstaclesEncountered(Node start, List<Edge> path) {
 			exitsFound = isLeftExitFound() && isRightExitFound(); 
 		}
 		return exitsFound;
+	}
+	
+	private boolean isLeftExitReachable() {
+		if (!isLeftExitFound()) {
+			if (DEBUG) System.out.println("Still not reachable 1");
+			return false;
+		}
+		
+		if (leftExitReachable) return true;
+		
+		Node start = currentLocationLeft;
+		
+		HashSet<Node> visited = new HashSet<Node>();
+		Queue<Node> expanded = new LinkedList<Node>();
+		expanded.add(start);
+		visited.add(start);
+		
+		while (!expanded.isEmpty()) {
+			Node fringe = expanded.remove();
+			if (visited.contains(fringe)) continue;
+			
+			if (fringe.entity == Entity.EXIT) {
+				leftExitReachable = true;
+				return true;
+			}
+			
+			visited.add(fringe);
+			for (Edge e : fringe.edges) {
+				expanded.add(e.to);
+			}
+		}
+		
+		if (DEBUG) System.out.println("Still not reachable 2");
+		return false;
+	}
+	
+	private boolean isRightExitReachable() {
+		if (!isRightExitFound()) return false;
+		
+		if (rightExitReachable) return true;
+		
+		Node start = currentLocationRight;
+		
+		HashSet<Node> visited = new HashSet<Node>();
+		Queue<Node> expanded = new LinkedList<Node>();
+		expanded.add(start);
+		visited.add(start);
+		
+		while (!expanded.isEmpty()) {
+			Node fringe = expanded.remove();
+			if (visited.contains(fringe)) continue;
+			
+			if (fringe.entity == Entity.EXIT) {
+				rightExitReachable = true;
+				return true;
+			}
+			
+			visited.add(fringe);
+			for (Edge e : fringe.edges) {
+				expanded.add(e.to);
+			}
+		}
+		
+		return false;
 	}
 	
 	private boolean isLeftExitFound() {
