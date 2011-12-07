@@ -280,17 +280,21 @@ public class G6Player implements Player {
 		currentLocationLeft = updateGraph(cacheLeft, leftView, x1, y1, r1);
 		currentLocationRight = updateGraph(cacheRight, rightView, x2, y2, r2);
 		
-		if (exploreGoal == null || exploreGoal.size()==0) {
+		if (exploreGoal == null || exploreGoal.size() == 0) {
 			exploreGoal = getFringe(!isLeftExitFound());
 			
-			if (DEBUG) System.out.println("Goal path generated");
-			if (DEBUG) System.out.println(exploreGoal);
+			if (DEBUG) {
+				System.out.println("Goal path generated");
+				System.out.println(exploreGoal);
+			}
 		}
 		
 		int dir;
 		
 		//TODO uh oh, getFringe failed, use random
 		if (exploreGoal==null || exploreGoal.size()==0) {
+			// TODO - we can do something smarter than random. This seems to
+			// happen after one player has exited.
 			dir = exploreRandom(leftView, rightView);
 			updateCentersAndExitStatus(leftView, rightView, leftView.length/2, rightView.length/2, MUMap.aintDToM[dir][0], MUMap.aintDToM[dir][1]);
 			return dir;
@@ -316,6 +320,7 @@ public class G6Player implements Player {
 		if (oldX1==x1 && oldY1 == y1 && oldX2 == x2 && oldY2 == y2) {
 			if (DEBUG) System.out.println("***got stuck, random walk!");
 			exploreGoal = null;
+			// TODO - under what cases does this happen?
 			dir = exploreRandom(leftView, rightView);
 			updateCentersAndExitStatus(leftView, rightView, leftView.length/2, rightView.length/2, MUMap.aintDToM[dir][0], MUMap.aintDToM[dir][1]);
 			return dir;

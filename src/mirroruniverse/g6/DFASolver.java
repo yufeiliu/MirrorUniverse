@@ -17,7 +17,7 @@ public class DFASolver extends Solver {
 			int minAttempts, int maxAttempts) {
 		
 		if (G6Player.SID_DEBUG) {
-			System.out.println("\nSolving");
+			System.out.println("\nSolving multi");
 		}
 		
 		DFA firstDFA, secondDFA, firstBack, secondBack;
@@ -59,11 +59,12 @@ public class DFASolver extends Solver {
 	
 	Solution solve(int[][] map) {
 		if (G6Player.SID_DEBUG) {
-			System.out.println("\nSolving");
+			System.out.println("\nSolving single");
 		}
 		
 		DFA dfa = new DFA(map);
 		ArrayList<Move> steps = dfa.findShortestPath();
+
 		return steps == null ? null : new Solution(steps, 0, false);
 	}
 	
