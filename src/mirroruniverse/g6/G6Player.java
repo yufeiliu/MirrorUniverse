@@ -445,13 +445,7 @@ public class G6Player implements Player {
 		}
 		
 		updateKnowledge(left, x1, y1, leftView);
-		
-		
-//		System.out.println(solution);
-		
-//		System.out.println("exits: " + numExits(right));
 		updateKnowledge(right, x2, y2, rightView);
-//		System.out.println("exits: " + numExits(right));
 		
 		int dir = -1;
 
