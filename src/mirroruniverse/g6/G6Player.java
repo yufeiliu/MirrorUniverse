@@ -821,9 +821,11 @@ private int obstaclesEncountered(Node start, List<Edge> path) {
 				if (solution == null) {
 					return -1; 
 				} else {
-//					if (solution.onFinalStep() && !isFullyExplored()) {
-//						return -1;
-//					}
+					// TODO - remove this if we can't solve wallflower...
+					if (solution.getDiff() > 0 && solution.onFinalStep() &&
+							!isFullyExplored()) {
+						return -1;
+					}
 					return solution.getNextStep();
 				}
 			}
