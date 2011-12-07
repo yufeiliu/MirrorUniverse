@@ -4,9 +4,9 @@ import mirroruniverse.g6.Utils.Move;
 
 public class Transition {
 	
-	private State end;
-	private Move value;
-	private State start;
+	protected State end;
+	protected Move value;
+	protected State start;
 	private String id;
 	
 	private static short idCounter = 0;

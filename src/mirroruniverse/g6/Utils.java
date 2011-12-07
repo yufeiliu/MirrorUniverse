@@ -133,6 +133,26 @@ public class Utils {
 		}
 	}
 	
+	public static int distFromExit(int[][] map) {
+		int playerX = 0, playerY = 0, exitX = 0, exitY = 0;
+		for (int i = 0; i < map.length; i++) {
+			for (int j = 0; j < map[0].length; j++) {
+				if (map[i][j] == Utils.entitiesToShen(Entity.EXIT)) {
+					exitX = j;
+					exitY = i;
+				} else if (map[i][j] == Utils.entitiesToShen(Entity.PLAYER)) {
+					playerX = j;
+					playerY = i;
+				}
+			}
+		}
+		int deltaX = Math.abs(playerX - exitX);
+		int deltaY = Math.abs(playerY - exitY);
+		return Math.max(deltaX, deltaY);
+	}
+	
+	
+	
 	/*
 	 * Given a map, returns a new map that has at most maxEntities players +
 	 * exits + spaces + obstacles. It should not affect the number of players

@@ -1,7 +1,6 @@
 package mirroruniverse.g6;
 
 import java.util.ArrayList;
-
 import mirroruniverse.g6.Utils.Move;
 import mirroruniverse.g6.dfa.DFA;
 
@@ -13,60 +12,60 @@ public class DFASolver extends Solver {
 				DEFAULT_MIN_DISTANCE, DEFAULT_MAX_DISTANCE);
 	}
 	
-	
-	// TODO: can this fail if we step back before the start state? This might
-	// mean that we generate a DFA with no exit state.
 	@Override
 	Solution solve(int[][] firstMap, int[][] secondMap, long cutoffTime,
 			int minAttempts, int maxAttempts) {
 		
 		if (G6Player.SID_DEBUG) {
-			System.out.println("Solving");
+			System.out.println("\nSolving multi");
 		}
 		
 		DFA firstDFA, secondDFA, firstBack, secondBack;
-		ArrayList<Move> steps = null;
+		Solution steps = null;
 		int attempts = 1;
 		long startTime = System.currentTimeMillis();
 		
 		firstDFA = firstBack = new DFA(firstMap);
 		secondDFA = secondBack = new DFA(secondMap);
 		
-		DFA intersection = DFA.intersect(firstDFA, secondDFA);
-		
-		if (intersection.getStartState() == null) {
-			System.err.println("DFA failed.");
-			return null;
+		if (G6Player.SID_DEBUG) {
+			System.out.println("DFAs created; finding shortest path.");
 		}
 		
-		steps = intersection.findShortestPath();
+		steps = DFA.findShortestPath(firstDFA, secondDFA, 0);
+		
 		// This will try until we've found a solution, or have hit our time
 		// limit or max number of attempts. We can guarantee to try some min
 		// number of attempts before we stop because of time.
 		while (steps == null && attempts < maxAttempts &&
 				(System.currentTimeMillis() - startTime < cutoffTime
-						|| attempts < minAttempts)) {
+						|| attempts <= minAttempts)) {
 			
 			if (G6Player.SID_DEBUG) {
 				System.out.println("Attempt " + attempts);
 			}
 			
 			secondBack = secondBack.shiftGoals();
-			steps = DFA.intersect(firstDFA, secondBack).findShortestPath();
+			steps = DFA.findShortestPath(firstDFA, secondBack, attempts);
 			if (steps == null) {
 				firstBack = firstBack.shiftGoals();
-				steps = DFA.intersect(firstBack, secondDFA).findShortestPath();
+				steps = DFA.findShortestPath(firstBack, secondDFA, attempts);
 			}
 			
 			attempts++;
 		}
-		return steps == null ? null : new Solution(steps, attempts - 1);
+		return steps;
 	}
 	
 	Solution solve(int[][] map) {
+		if (G6Player.SID_DEBUG) {
+			System.out.println("\nSolving single");
+		}
+		
 		DFA dfa = new DFA(map);
 		ArrayList<Move> steps = dfa.findShortestPath();
-		return steps == null ? null : new Solution(steps, 0);
+
+		return steps == null ? null : new Solution(steps, 0, false);
 	}
 	
 }

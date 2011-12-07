@@ -17,8 +17,9 @@ import mirroruniverse.sim.Player;
 
 public class G6Player implements Player {
 
-	public static final boolean DEBUG = true;
-	public static final boolean SID_DEBUG = false;
+	public static final boolean DEBUG = false;
+	public static final boolean SID_DEBUG = true;
+	public static final boolean SID_DEBUG_VERBOSE = false;
 	private static final boolean CRASH_ON_ERROR = true;
 	
 	private static final int MAX_MAP_SIZE = 100;
@@ -37,8 +38,6 @@ public class G6Player implements Player {
 	
 	private Node currentLocationLeft;
 	private Node currentLocationRight;
-	// kept for debugging purposes
-	private int steps;
 	
 	/*
 	 * The current location of each player within the 200x200 grid.
@@ -50,10 +49,6 @@ public class G6Player implements Player {
 	 */
 	private int r1 = -1, r2 = -1;
 	
-	/*
-	 * True if the exists have been found. Used to cache this knowledge
-	 * and avoid unnecessary computation.
-	 */
 	private boolean exitsFound;
 	private boolean leftExitFound;
 	private boolean rightExitFound;
@@ -61,11 +56,17 @@ public class G6Player implements Player {
 	private boolean leftExited;
 	private boolean rightExited;
 	
-	private int leftUnknown;
-	private int rightUnknown;
+	private boolean radiiDiscovered;
 	
-	private boolean radiiDiscovered = false;
-	private boolean closeToExit = false;
+	private boolean didExhaustiveCheck;
+	
+	private boolean computedSolution;
+	private boolean computedSolutionWhenRightFullyExplored;
+	private boolean computedSolutionWhenLeftFullyExplored;
+	
+	private boolean leftExplored;
+	private boolean rightExplored;
+
 
 	private HashMap<String, Node> cacheLeft = new HashMap<String, Node>();
 	private HashMap<String, Node> cacheRight = new HashMap<String, Node>();
@@ -87,12 +88,7 @@ public class G6Player implements Player {
 	 */
 	private Solver solver;
 	
-	private boolean didExhaustiveCheck;
-	private boolean computedSolutionWhenFullyExplored;
-	private boolean leftCompletelyExplored, rightCompletelyExplored;
-	private boolean oldLeftExitFound, oldRightExitFound;
-	private int leftUnknownAroundExit, rightUnknownAroundExit;
-
+	
 	public G6Player() {
 		// Set all points to be unknown.
 		for (int i = 0; i < INTERNAL_MAP_SIZE; i++) {
@@ -106,85 +102,42 @@ public class G6Player implements Player {
 		// to account for 0 based indexing.
 		x1 = x2 = y1 = y2 = INTERNAL_MAP_SIZE / 2 - 1;
 		solver = new DFASolver();
-		leftUnknown = left.length * left[0].length;
-		rightUnknown = right.length * right[0].length;
 	}
 	
 	private boolean shouldRecomputeSolution() {		
-		// recompute only:
-		// when we first see the exits, 
-		// when we uncover squares around the exit, 
-		// and after we've explored all of the board.
-		if (computedSolutionWhenFullyExplored) {
-			return false;
-		}
-		if (solution == null) {
-			if (isFullyExplored()) {
-				computedSolutionWhenFullyExplored = true;
-			}
+		// recompute when:
+			// we finish examining a fake solution
+			// when we first see the exits, 
+			// after we've explored all of either board.
+			// when we're adjacent to an exit
+		if (solution != null && solution.isFake() && solution.isCompleted()) {
 			return true;
 		}
-		// This means we don't recompute a good solution if we see a better
-		// path as we explore. 
-		if (solution != null && solution.getDiff() == 0) {
+		if (computedSolutionWhenLeftFullyExplored &&
+				computedSolutionWhenRightFullyExplored) {
 			return false;
 		}
-		
-		boolean nextToLeftExit = isNextToExit(left, x1, y1);
-		boolean nextToRightExit = isNextToExit(right, x2, y2);
-		boolean nextToEitherExit = nextToLeftExit || nextToRightExit;
-		
-		boolean newLeftCompletelyExplored = numSquaresUnknown(left) == 0;
-		boolean newRightCompletelyExplored = numSquaresUnknown(right) == 0;
-		boolean eitherNewlyCompletelyExplored = 
-				(!leftCompletelyExplored && newLeftCompletelyExplored) 
-				|| (!rightCompletelyExplored && newRightCompletelyExplored);
-		leftCompletelyExplored = newLeftCompletelyExplored;
-		rightCompletelyExplored = newRightCompletelyExplored;
-		
-		boolean eitherExitNewlyFound = (!oldLeftExitFound && leftExitFound) || (!oldRightExitFound && rightExitFound);
-		oldLeftExitFound = leftExitFound;
-		oldRightExitFound = rightExitFound;
-		
-		int newLeftUnknownAroundExit = numSquaresUnknownAroundExit(left, r1);
-		int newRightUnknownAroundExit = numSquaresUnknownAroundExit(right, r2);
-		boolean eitherUnknownAroundExitNewlyUncovered = (newLeftUnknownAroundExit < leftUnknownAroundExit) || (newRightUnknownAroundExit < rightUnknownAroundExit);
-		leftUnknownAroundExit = newLeftUnknownAroundExit;
-		rightUnknownAroundExit = newRightUnknownAroundExit;
-
-		return nextToEitherExit || eitherNewlyCompletelyExplored || eitherExitNewlyFound || eitherUnknownAroundExitNewlyUncovered;
-	}
-	
-	private int numSquaresUnknown(int[][] knowledge) {
-		int count = 0;
-		for(int i = 0; i < knowledge.length; i++) {
-			for(int j = 0; j < knowledge[0].length; j++) {
-				if(knowledge[j][i] == Utils.entitiesToShen(Entity.UNKNOWN)) {
-					count++;
+		if (solution == null || solution.getDiff() > 0) {
+			if (isRightFullyExplored() && !computedSolutionWhenLeftFullyExplored) {
+				if (isLeftFullyExplored()) {
+					computedSolutionWhenRightFullyExplored = true;	
 				}
+				computedSolutionWhenLeftFullyExplored = true;
+				return true;
+			}
+			if (isLeftFullyExplored() && !computedSolutionWhenRightFullyExplored) {
+				computedSolutionWhenRightFullyExplored = true;
+				return true;
+			}
+			if (!computedSolution) {
+				computedSolution = true;
+				return true;
+			}
+			if (isNextToExit(left, x1, y1) || isNextToExit(right, x2, y2)) {
+				return true;
 			}
 		}
-		return count;
-	}
-	
-	private int numSquaresUnknownAroundExit(int[][] knowledge, int r) {
-		int x = 0;
-		int y = 0;
-		for(int i = 0; i < knowledge.length; i++)
-			for(int j = 0; j < knowledge[0].length; j++)
-				if(knowledge[i][j] == Utils.entitiesToShen(Entity.EXIT)) {
-					y = i;
-					x = j;
-				}
-		int count = 0;
-		for(int i = Math.max(x - r, 0); i < Math.min(x + r + 1, knowledge[0].length); i++) {
-			for(int j = Math.max(y - r, 0); j < Math.min(y + r + 1, knowledge.length); j++) {
-				if(knowledge[j][i] == Utils.entitiesToShen(Entity.UNKNOWN)) {
-					count++;
-				}
-			}
-		}
-		return count;
+		return false;
 	}
 	
 	private boolean isNextToExit(int[][] knowledge, int x, int y) {
@@ -201,19 +154,31 @@ public class G6Player implements Player {
 	}
 	
 	private boolean isFullyExplored() {
-		return isLeftFullyExplored() && isRightFullyExplored();
+		return isRightFullyExplored() && isLeftFullyExplored();
 	}
 	
-	private boolean isRightFullyExplored() {
-		return leftExitFound && isFullyExplored(left);
-	}
-
 	private boolean isLeftFullyExplored() {
-		return rightExitFound && isFullyExplored(right);
+		if (!leftExitFound) {
+			return false;
+		}
+		if (leftExplored) {
+			return true;
+		}
+		leftExplored = isFullyExplored(left);
+		return leftExplored;
 	}
 
+	private boolean isRightFullyExplored() {
+		if (!rightExitFound) {
+			return false;
+		}
+		if (rightExplored) {
+			return true;
+		}
+		rightExplored = isFullyExplored(right);
+		return rightExplored;
+	}
 
-	// TODO - test this for correctness, cache
 	private boolean isFullyExplored(int[][] map) {
 		for (int i = 0; i < INTERNAL_MAP_SIZE; i++) {
 			for (int j = 0; j < INTERNAL_MAP_SIZE; j++) {
@@ -246,7 +211,6 @@ public class G6Player implements Player {
 	 */
 	private Node updateGraph(HashMap<String, Node> cache, int[][] v, int x, int y, int r) {
 		
-		//TODO lazy eval these
 		int iMax = v.length - 1;
 		int jMax = v[0].length - 1;
 		int iMedian = v.length/2;
@@ -321,27 +285,24 @@ public class G6Player implements Player {
 		return i+","+j;
 	}
 	
-	public int explore(int[][] leftView, int[][] rightView) {
-		if (!radiiDiscovered) {
-			radiiDiscovered = true;
-			r1 = (leftView.length-1) / 2;
-			r2 = (rightView.length-1) / 2;
-		}
-		
+	int explore(int[][] leftView, int[][] rightView) {
 		currentLocationLeft = updateGraph(cacheLeft, leftView, x1, y1, r1);
 		currentLocationRight = updateGraph(cacheRight, rightView, x2, y2, r2);
 		
 		if (exploreGoal == null || exploreGoal.size()==0) {
 			exploreGoal = getFringe(!isLeftExitReachable());
 			
-			if (DEBUG) System.out.println("Goal path generated");
-			if (DEBUG) System.out.println(exploreGoal);
+			if (DEBUG) {
+				System.out.println("Goal path generated");
+				System.out.println(exploreGoal);
+			}
 		}
 		
 		int dir;
 		
-		//TODO uh oh, getFringe failed, use random
 		if (exploreGoal==null || exploreGoal.size()==0) {
+			// TODO - we can do something smarter than random. This seems to
+			// happen after one player has exited.
 			dir = exploreRandom(leftView, rightView);
 			updateCentersAndExitStatus(leftView, rightView, leftView.length/2, rightView.length/2, MUMap.aintDToM[dir][0], MUMap.aintDToM[dir][1]);
 			return dir;
@@ -367,6 +328,7 @@ public class G6Player implements Player {
 		if (oldX1==x1 && oldY1 == y1 && oldX2 == x2 && oldY2 == y2) {
 			if (DEBUG) System.out.println("***got stuck, random walk!");
 			exploreGoal = null;
+			// TODO - under what cases does this happen?
 			dir = exploreRandom(leftView, rightView);
 			updateCentersAndExitStatus(leftView, rightView, leftView.length/2, rightView.length/2, MUMap.aintDToM[dir][0], MUMap.aintDToM[dir][1]);
 			return dir;
@@ -466,19 +428,24 @@ public class G6Player implements Player {
 		return ret;
 	}
 
-
-	private int doLookAndMove(int[][] leftView, int[][] rightView) {		
+	private int doLookAndMove(int[][] leftView, int[][] rightView) {
 		if (!radiiDiscovered) {
+			if (G6Player.SID_DEBUG) {
+				System.out.println("Player activated.");
+			}
 			r1 = (leftView.length-1) / 2;
 			r2 = (rightView.length-1) / 2;
+			radiiDiscovered = true;
 		}
 		
 		updateKnowledge(left, x1, y1, leftView);
 		updateKnowledge(right, x2, y2, rightView);
 		
-		int dir;
+		int dir = -1;
 
-		dir = getSolutionStep();
+		if (!leftExited && !rightExited) {
+			dir = getMultiSolutionStep();
+		}
 
 		if (dir < 0) {
 			if (leftExited || rightExited || isFullyExplored()) {
@@ -499,16 +466,15 @@ public class G6Player implements Player {
 			System.out.println(Utils.shenToMove(dir));
 		}
 
-		steps++;
 		return dir;
 	}
 
 	private int getSingleSolutionStep() {
-		// if there's no solution or old solution is completed
+		// If there's no solution or old solution is completed.
 		if (solution == null || solution.isCompleted()) {
 			if (leftExited) {
 				solution = solver.solve(right);
-			} else if (rightExited ){
+			} else if (rightExited) {
 				solution = solver.solve(left);
 			} else {
 				// If we just need to solve one because
@@ -806,20 +772,18 @@ private int obstaclesEncountered(Node start, List<Edge> path) {
 		return false;
 	}
 
-	private int getSolutionStep() {
-		return getSolutionStepExpensive();
-		
-//		return getSolutionStepSingle();
-	}
-
-	private int getSolutionStepExpensive() {
+	private int getMultiSolutionStep() {
 		if (areExitsFound()) {
 			if (!shouldRecomputeSolution()) {
-				return solution.getNextStep();
+				if (solution == null) {
+					return -1; 
+				} else {
+					return solution.getNextStep();
+				}
 			}
 			if (!didExhaustiveCheck && isFullyExplored()) {
 				didExhaustiveCheck = true;
-				solution = solver.solve(right, left, Solver.MAX_CUTOFF_TIME,
+				solution = solver.solve(left, right, Solver.MAX_CUTOFF_TIME,
 						Solver.DEFAULT_MIN_DISTANCE, Solver.MAX_DISTANCE);
 			} else {
 				if (SID_DEBUG) {
@@ -828,7 +792,7 @@ private int obstaclesEncountered(Node start, List<Edge> path) {
 					System.out.println("------");
 					System.out.println(Arrays.deepToString(left));
 				}
-				solution = solver.solve(right, left);
+				solution = solver.solve(left, right);
 			}
 			
 			if (solution != null) {
