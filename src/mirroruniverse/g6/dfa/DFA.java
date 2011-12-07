@@ -20,7 +20,7 @@ public class DFA {
 	private ArrayList<State> states;
 	private Map<String, State> stateMap;
 	private State startState;
-	private static final int THRESHOLD_PRODUCT_DIST = 100;
+	private static final int THRESHOLD_PRODUCT_DIST = 400;
 	private static final boolean ENABLE_GOAL_FABRICATION = true;
 	private static final int THRESHOLD_DIST = 20;
 	
@@ -170,6 +170,7 @@ public class DFA {
 		ArrayList<Move> firstSol = first.findShortestPath();
 		ArrayList<Move> otherSol = other.findShortestPath();
 		
+		// Happens if we see the exit but can't reach it.
 		if (firstSol == null || otherSol == null) {
 			System.out.println("null sol");
 			return null;

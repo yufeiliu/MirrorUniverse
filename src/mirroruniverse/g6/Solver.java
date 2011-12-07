@@ -7,7 +7,7 @@ public abstract class Solver {
 	public static final int MAX_CUTOFF_TIME = 90 * 1000;
 	
 	public static final int DEFAULT_MIN_DISTANCE = 1;
-	public static final int DEFAULT_MAX_DISTANCE = 3;
+	public static final int DEFAULT_MAX_DISTANCE = 20;
 	public static final long DEFAULT_CUTOFF_TIME = 20 * 1000;
 	
 	abstract Solution solve(int[][] firstMap, int[][] secondMap);
