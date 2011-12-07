@@ -123,13 +123,13 @@ public class G6Player implements Player {
 		}
 		// This means we don't recompute a good solution if we see a better
 		// path as we explore. 
-		if (solution.getDiff() == 0) {
+		if (solution != null && solution.getDiff() == 0) {
 			return false;
 		}
-		if (isFullyExplored()) {
-			computedSolutionWhenFullyExplored = true;
-			return true;
-		}
+		
+		boolean nextToLeftExit = isNextToExit(left, x1, y1);
+		boolean nextToRightExit = isNextToExit(right, x2, y2);
+		boolean nextToEitherExit = nextToLeftExit || nextToRightExit;
 		
 		boolean newLeftCompletelyExplored = numSquaresUnknown(left) == 0;
 		boolean newRightCompletelyExplored = numSquaresUnknown(right) == 0;
@@ -140,6 +140,8 @@ public class G6Player implements Player {
 		rightCompletelyExplored = newRightCompletelyExplored;
 		
 		boolean eitherExitNewlyFound = (!oldLeftExitFound && leftExitFound) || (!oldRightExitFound && rightExitFound);
+		oldLeftExitFound = leftExitFound;
+		oldRightExitFound = rightExitFound;
 		
 		int newLeftUnknownAroundExit = numSquaresUnknownAroundExit(left, r1);
 		int newRightUnknownAroundExit = numSquaresUnknownAroundExit(right, r2);
@@ -147,7 +149,7 @@ public class G6Player implements Player {
 		leftUnknownAroundExit = newLeftUnknownAroundExit;
 		rightUnknownAroundExit = newRightUnknownAroundExit;
 
-		return eitherNewlyCompletelyExplored || eitherExitNewlyFound || eitherUnknownAroundExitNewlyUncovered;
+		return nextToEitherExit || eitherNewlyCompletelyExplored || eitherExitNewlyFound || eitherUnknownAroundExitNewlyUncovered;
 	}
 	
 	private int numSquaresUnknown(int[][] knowledge) {
@@ -172,14 +174,27 @@ public class G6Player implements Player {
 					x = j;
 				}
 		int count = 0;
-		for(int i = x - r; i < x + r + 1; i++) {
-			for(int j = y - r; j < y + r + 1; j++) {
+		for(int i = Math.max(x - r, 0); i < Math.min(x + r + 1, knowledge[0].length); i++) {
+			for(int j = Math.max(y - r, 0); j < Math.min(y + r + 1, knowledge.length); j++) {
 				if(knowledge[j][i] == Utils.entitiesToShen(Entity.UNKNOWN)) {
 					count++;
 				}
 			}
 		}
 		return count;
+	}
+	
+	private boolean isNextToExit(int[][] knowledge, int x, int y) {
+		int exit_y = -999;
+		int exit_x = -999;
+		for(int i = 0; i < knowledge.length; i++)
+			for(int j = 0; j < knowledge[0].length; j++)
+				if(knowledge[i][j] == Utils.entitiesToShen(Entity.EXIT)) {
+					exit_y = i;
+					exit_x = j;
+				}
+		
+		return (Math.abs(exit_y - y) == 1) || (Math.abs(exit_x - x) == 1);
 	}
 	
 	private boolean isFullyExplored() {
@@ -372,7 +387,7 @@ public class G6Player implements Player {
 		
 		Pair<Integer, Integer> oldestLeft = leftTwitching.get(0);
 		Pair<Integer, Integer> oldestRight = rightTwitching.get(0);
-		int THRESHOLD = 5;
+		int THRESHOLD = 1;
 		for(int i = 0; i < MAX_CACHE; i++) {
 			//if either player moved outside of the threshold even once, they are not twitching
 			if((Math.abs(oldestLeft.getFront() - x1) > THRESHOLD && Math.abs(oldestLeft.getBack() - y1) > THRESHOLD)
