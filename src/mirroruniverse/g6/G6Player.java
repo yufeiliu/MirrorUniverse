@@ -821,9 +821,9 @@ private int obstaclesEncountered(Node start, List<Edge> path) {
 				if (solution == null) {
 					return -1; 
 				} else {
-					if (solution.onFinalStep() && !isFullyExplored()) {
-						return -1;
-					}
+//					if (solution.onFinalStep() && !isFullyExplored()) {
+//						return -1;
+//					}
 					return solution.getNextStep();
 				}
 			}

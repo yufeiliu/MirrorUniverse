@@ -23,6 +23,7 @@ public class DFA {
 	private static final int THRESHOLD_PRODUCT_DIST = 400;
 	private static final boolean ENABLE_GOAL_FABRICATION = true;
 	private static final int THRESHOLD_DIST = 20;
+	private static final double MAX_HEAP_USAGE = 0.8;
 	
 	// Anything bigger than 1 isn't actually guaranteed if the sol length is
 	// less than 1
@@ -201,7 +202,16 @@ public class DFA {
 		openSet.add(start);
 		states.add(key);
 		
+		
+		Runtime rt = Runtime.getRuntime();
+		
 		while (!openSet.isEmpty()) {
+			if (1.0 * rt.freeMemory() / rt.maxMemory() < (1 - MAX_HEAP_USAGE)) {
+				break;
+			} else {
+				System.out.println(
+						1.0 * rt.freeMemory() / rt.maxMemory() < (1 - MAX_HEAP_USAGE));
+			}
 			State current = openSet.poll();
 			if (current.isGoal()) {
 				ArrayList<Move> steps = recoverPath(current, cameFrom);
