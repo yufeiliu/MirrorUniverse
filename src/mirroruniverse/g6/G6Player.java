@@ -611,7 +611,14 @@ public class G6Player implements Player {
 			
 			for (Edge e : cur.node.edges) {
 				
-				if (e.to.entity == Entity.EXIT) continue;
+				if (e.to.entity == Entity.EXIT) {
+					if (prioritizeLeft) {
+						leftExitReachable = true;
+					} else {
+						rightExitReachable = true;
+					}
+					continue;
+				}
 				if (e.to.hashCode() == e.from.hashCode()) continue;
 				
 				NodeWrapper to = new NodeWrapper(e.to);
